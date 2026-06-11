@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard · Contenidos</title>
+  <title>Dashboard · Content</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <style>
@@ -116,14 +116,24 @@
     .titulo-cell { font-weight: 500; max-width: 260px; }
     .empty-row td { text-align: center; color: var(--muted); padding: 2rem; font-size: .85rem; }
 
-    /* ── Edit row button ────────────────────────────── */
-    .btn-row-edit {
+    /* ── Sortable headers ───────────────────────────── */
+    .tbl th.sortable { cursor: pointer; user-select: none; transition: color .15s; }
+    .tbl th.sortable:hover { color: var(--text); }
+    .tbl th.sort-asc  { color: var(--blue); }
+    .tbl th.sort-desc { color: var(--blue); }
+    .tbl th.sort-asc::after  { content: ' ▲'; font-size: .6rem; }
+    .tbl th.sort-desc::after { content: ' ▼'; font-size: .6rem; }
+
+    /* ── Edit / delete row buttons ──────────────────── */
+    .btn-row-edit, .btn-row-delete {
       background: none; border: none; color: var(--muted); cursor: pointer;
       padding: .25rem; border-radius: 5px; opacity: 0; transition: opacity .15s, color .15s;
       display: inline-flex; align-items: center;
     }
-    .tbl tbody tr:hover .btn-row-edit { opacity: 1; }
-    .btn-row-edit:hover { color: var(--blue); }
+    .tbl tbody tr:hover .btn-row-edit,
+    .tbl tbody tr:hover .btn-row-delete { opacity: 1; }
+    .btn-row-edit:hover   { color: var(--blue); }
+    .btn-row-delete:hover { color: var(--red);  }
 
     /* ── Charts ─────────────────────────────────────── */
     .chart-wrap { position: relative; height: 230px; }
@@ -201,15 +211,6 @@
     .btn-danger:hover { background: #dc2626; }
     .btn-danger:disabled { opacity: .5; cursor: default; }
 
-    /* ── Row delete button ──────────────────────────────── */
-    .btn-row-delete {
-      background: none; border: none; color: var(--muted); cursor: pointer;
-      padding: .25rem; border-radius: 5px; opacity: 0; transition: opacity .15s, color .15s;
-      display: inline-flex; align-items: center;
-    }
-    .tbl tbody tr:hover .btn-row-delete { opacity: 1; }
-    .btn-row-delete:hover { color: var(--red); }
-
     /* ── Toast ──────────────────────────────────────── */
     #toast {
       position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
@@ -233,11 +234,11 @@
 <!-- ── Header ───────────────────────────────────────────── -->
 <header class="header">
   <div class="header-left">
-    <h1>Dashboard · <span>Contenidos</span></h1>
-    <span class="header-meta" id="last-update">Cargando...</span>
+    <h1>Dashboard · <span>Content</span></h1>
+    <span class="header-meta" id="last-update">Loading...</span>
   </div>
   <div class="header-right">
-    <button class="btn-icon" title="Configuración" onclick="openSettings()">
+    <button class="btn-icon" title="Settings" onclick="openSettings()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
         <circle cx="12" cy="12" r="3"/>
@@ -245,14 +246,14 @@
     </button>
     <button class="btn-new" id="btn-new" onclick="openFormModal(null)" disabled>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Nuevo proyecto
+      New project
     </button>
     <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
       <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
         <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
       </svg>
-      Actualizar
+      Refresh
     </button>
   </div>
 </header>
@@ -261,19 +262,19 @@
 <div class="modal-overlay hidden" id="overlay-settings">
   <div class="modal small">
     <div class="modal-header">
-      <span class="modal-title">Configuración</span>
+      <span class="modal-title">Settings</span>
       <button class="modal-close" onclick="closeSettings()">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">URL del Web App (Google Apps Script)</label>
+      <label class="form-label">Apps Script Web App URL</label>
       <input class="form-input" id="input-api-url" type="url" placeholder="https://script.google.com/macros/s/..." />
       <span style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block">
-        Instalá el código de <code style="color:var(--blue)">apps-script.js</code> en tu Sheet y pegá la URL del Web App aquí. Solo se guarda en este navegador.
+        Install <code style="color:var(--blue)">apps-script.js</code> in your Sheet and paste the Web App URL here. Saved only in this browser.
       </span>
     </div>
     <div class="form-actions">
-      <button class="btn-secondary" onclick="closeSettings()">Cancelar</button>
-      <button class="btn-primary"   onclick="saveSettings()">Guardar</button>
+      <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
+      <button class="btn-primary"   onclick="saveSettings()">Save</button>
     </div>
   </div>
 </div>
@@ -282,17 +283,17 @@
 <div class="modal-overlay hidden" id="overlay-form">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title" id="form-modal-title">Nuevo proyecto</span>
+      <span class="modal-title" id="form-modal-title">New project</span>
       <button class="modal-close" onclick="closeFormModal()">✕</button>
     </div>
     <form id="project-form" onsubmit="handleFormSubmit(event)" autocomplete="off">
       <div class="form-grid">
         <div class="form-group full">
-          <label class="form-label">Título *</label>
-          <input class="form-input" name="Titulo" required placeholder="Nombre del proyecto" />
+          <label class="form-label">Title *</label>
+          <input class="form-input" name="Titulo" required placeholder="Project name" />
         </div>
         <div class="form-group">
-          <label class="form-label">Formato</label>
+          <label class="form-label">Format</label>
           <select class="form-select" name="Formato">
             <option value="">—</option>
             <option>Vertical</option>
@@ -301,7 +302,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Estado *</label>
+          <label class="form-label">Status *</label>
           <select class="form-select" name="Estado" required>
             <option value="">—</option>
             <option>Guionado</option>
@@ -310,7 +311,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Cliente</label>
+          <label class="form-label">Client</label>
           <select class="form-select" name="Cliente">
             <option value="">—</option>
             <option>Samsung</option>
@@ -319,7 +320,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">División</label>
+          <label class="form-label">Division</label>
           <select class="form-select" name="División">
             <option value="">—</option>
             <option>IM</option>
@@ -330,33 +331,33 @@
         </div>
         <div class="form-group">
           <label class="form-label">Host</label>
-          <input class="form-input" name="Host" placeholder="Nombre del host" />
+          <input class="form-input" name="Host" placeholder="Host name" />
         </div>
         <div class="form-group">
-          <label class="form-label">Solicitante</label>
-          <input class="form-input" name="Solicitante" placeholder="Quién lo solicita" />
+          <label class="form-label">Requested by</label>
+          <input class="form-input" name="Solicitante" placeholder="Who requested it" />
         </div>
         <div class="form-group">
-          <label class="form-label">Fecha de inicio</label>
+          <label class="form-label">Start date</label>
           <input class="form-input" name="Fecha de inicio" type="date" />
         </div>
         <div class="form-group">
-          <label class="form-label">Fecha límite</label>
+          <label class="form-label">Deadline</label>
           <input class="form-input" name="Fecha Limite" type="date" />
         </div>
         <div class="form-group full">
-          <label class="form-label">Materiales</label>
-          <input class="form-input" name="Materiales" placeholder="Número / nombre de los materiales" />
+          <label class="form-label">Materials</label>
+          <input class="form-input" name="Materiales" placeholder="Materials number / name" />
         </div>
         <div class="form-group full">
-          <label class="form-label">Resultado</label>
-          <input class="form-input" name="Resultado" placeholder="Nombre del archivo entregado" />
+          <label class="form-label">Result</label>
+          <input class="form-input" name="Resultado" placeholder="Delivered file name" />
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" class="btn-danger" id="btn-form-delete" style="display:none;margin-right:auto" onclick="confirmDeleteCurrent()">Eliminar</button>
-        <button type="button" class="btn-secondary" onclick="closeFormModal()">Cancelar</button>
-        <button type="submit" class="btn-primary" id="btn-form-submit">Guardar</button>
+        <button type="button" class="btn-danger" id="btn-form-delete" style="display:none;margin-right:auto" onclick="confirmDeleteCurrent()">Delete</button>
+        <button type="button" class="btn-secondary" onclick="closeFormModal()">Cancel</button>
+        <button type="submit" class="btn-primary" id="btn-form-submit">Save</button>
       </div>
     </form>
   </div>
@@ -366,16 +367,16 @@
 <div class="modal-overlay hidden" id="overlay-confirm">
   <div class="modal small">
     <div class="modal-header">
-      <span class="modal-title">Eliminar proyecto</span>
+      <span class="modal-title">Delete project</span>
       <button class="modal-close" onclick="closeConfirm()">✕</button>
     </div>
     <p style="color:var(--muted);font-size:.875rem;line-height:1.5;margin-bottom:1.5rem">
-      ¿Seguro que querés eliminar <strong id="confirm-title" style="color:var(--text)"></strong>?<br>
-      <span style="font-size:.8rem">Esta acción elimina la fila del Google Sheet y no se puede deshacer.</span>
+      Are you sure you want to delete <strong id="confirm-title" style="color:var(--text)"></strong>?<br>
+      <span style="font-size:.8rem">This will remove the row from Google Sheets and cannot be undone.</span>
     </p>
     <div class="form-actions">
-      <button class="btn-secondary" onclick="closeConfirm()">Cancelar</button>
-      <button class="btn-danger" id="btn-confirm-delete" onclick="executeDelete()">Eliminar</button>
+      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
+      <button class="btn-danger" id="btn-confirm-delete" onclick="executeDelete()">Delete</button>
     </div>
   </div>
 </div>
@@ -387,18 +388,18 @@
 <main class="main" id="main">
   <div class="loading">
     <div class="spinner"></div>
-    Cargando datos desde Google Sheets...
+    Loading data from Google Sheets...
   </div>
 </main>
 
 <script>
 // ─────────────────────────────────────────────────────────────
-//  Constantes
+//  Constants
 // ─────────────────────────────────────────────────────────────
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnydry1o935VKl9WTgIcI_yDevOmb_RohtZ1PIBjYHF6ycfGX646zIbI2mSkQ5T4pUkzUofbuFGiLF/pub?output=csv';
 
 // ─────────────────────────────────────────────────────────────
-//  Estado global
+//  Global state
 // ─────────────────────────────────────────────────────────────
 let allData      = [];
 let filteredData = [];
@@ -406,11 +407,13 @@ let currentPage  = 1;
 const PAGE_SIZE  = 20;
 let chartEstado  = null;
 let chartCliente = null;
-let editingRow   = null; // null = modo agregar, objeto = modo editar
-const rowMap     = {};   // globalIndex -> row (para edición desde tabla)
+let editingRow   = null;
+let sortKey      = '';
+let sortDir      = 1; // 1 = asc, -1 = desc
+const rowMap     = {};
 
 // ─────────────────────────────────────────────────────────────
-//  Settings (Apps Script URL en localStorage)
+//  Settings
 // ─────────────────────────────────────────────────────────────
 function getApiUrl()    { return (localStorage.getItem('appsScriptUrl') || '').trim(); }
 function setApiUrl(url) { localStorage.setItem('appsScriptUrl', url.trim()); }
@@ -435,7 +438,7 @@ function updateApiMode() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Utilidades de fecha
+//  Date utilities
 // ─────────────────────────────────────────────────────────────
 function parseDate(str) {
   if (!str || !str.trim()) return null;
@@ -450,7 +453,6 @@ function fmtDate(str) {
   if (!d) return '—';
   return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
 }
-// "9/6/2026" → "2026-06-09"  (para input[type=date])
 function toISO(str) {
   if (!str || !str.trim()) return '';
   const p = str.trim().split('/');
@@ -458,7 +460,6 @@ function toISO(str) {
   const [d, m, y] = p.map(Number);
   return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
-// "2026-06-09" → "9/6/2026"
 function fromISO(iso) {
   if (!iso) return '';
   const [y,m,d] = iso.split('-').map(Number);
@@ -508,7 +509,7 @@ function uniqueSorted(data, key) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Render principal
+//  Main render
 // ─────────────────────────────────────────────────────────────
 function render(data) {
   allData = data.map((r, i) => {
@@ -523,8 +524,8 @@ function render(data) {
   document.getElementById('main').innerHTML = `
     ${!hasApi ? `<div class="banner">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Modo solo lectura — para agregar y editar proyectos,
-      <a onclick="openSettings()">configurá el Apps Script</a> (es gratis, tarda 5 minutos).
+      Read-only mode — to add and edit projects,
+      <a onclick="openSettings()">configure Apps Script</a> (free, takes 5 minutes).
     </div>` : ''}
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="row2">
@@ -533,30 +534,30 @@ function render(data) {
     </div>
     <div class="row2">
       <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Estado de proyectos</div>
+        <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Project status</div>
         <div class="chart-wrap"><canvas id="chart-estado"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--green)"></div>Proyectos por cliente</div>
+        <div class="card-title"><div class="dot" style="background:var(--green)"></div>Projects by client</div>
         <div class="chart-wrap"><canvas id="chart-cliente"></canvas></div>
       </div>
     </div>
     <div class="card">
-      <div class="card-title"><div class="dot" style="background:var(--muted)"></div>Todos los proyectos</div>
+      <div class="card-title"><div class="dot" style="background:var(--muted)"></div>All projects</div>
       <div class="filters">
         <select class="filter-sel" id="f-estado"  onchange="applyFilters()">
-          <option value="">Todos los estados</option>
+          <option value="">All statuses</option>
           ${uniqueSorted(allData,'Estado').map(v=>`<option>${v}</option>`).join('')}
         </select>
         <select class="filter-sel" id="f-cliente" onchange="applyFilters()">
-          <option value="">Todos los clientes</option>
+          <option value="">All clients</option>
           ${uniqueSorted(allData,'Cliente').map(v=>`<option>${v}</option>`).join('')}
         </select>
         <select class="filter-sel" id="f-host"    onchange="applyFilters()">
-          <option value="">Todos los hosts</option>
+          <option value="">All hosts</option>
           ${uniqueSorted(allData,'Host').map(v=>`<option>${v}</option>`).join('')}
         </select>
-        <input class="search-inp" id="search" type="text" placeholder="Buscar proyecto..." oninput="applyFilters()" />
+        <input class="search-inp" id="search" type="text" placeholder="Search project..." oninput="applyFilters()" />
       </div>
       <div id="tbl-wrap"></div>
       <div class="pagination" id="pagination"></div>
@@ -583,15 +584,15 @@ function renderKPIs() {
 
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi-card neutral"><div class="lbl">Total</div><div class="val">${total}</div></div>
-    <div class="kpi-card green"><div class="lbl">Entregados</div><div class="val">${entregado}</div><div class="sub">${Math.round(entregado/total*100)}% del total</div></div>
-    <div class="kpi-card yellow"><div class="lbl">Guionados</div><div class="val">${guionado}</div><div class="sub">Pendientes de filmar</div></div>
-    <div class="kpi-card blue"><div class="lbl">En edición</div><div class="val">${edicion}</div></div>
-    <div class="kpi-card purple"><div class="lbl">Esta semana</div><div class="val">${semana}</div><div class="sub">Con fechas en la semana</div></div>
+    <div class="kpi-card green"><div class="lbl">Delivered</div><div class="val">${entregado}</div><div class="sub">${Math.round(entregado/total*100)}% of total</div></div>
+    <div class="kpi-card yellow"><div class="lbl">Scripted</div><div class="val">${guionado}</div><div class="sub">Pending filming</div></div>
+    <div class="kpi-card blue"><div class="lbl">In editing</div><div class="val">${edicion}</div></div>
+    <div class="kpi-card purple"><div class="lbl">This week</div><div class="val">${semana}</div><div class="sub">With dates this week</div></div>
   `;
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Esta semana
+//  This week
 // ─────────────────────────────────────────────────────────────
 function renderSemana() {
   const wk = getWeek();
@@ -601,12 +602,12 @@ function renderSemana() {
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--purple)"></div>Esta semana
+      <div class="dot" style="background:var(--purple)"></div>This week
       <span style="margin-left:auto;font-weight:400;font-size:.7rem">${weekLabel}</span>
     </div>
     ${items.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem">Sin proyectos con fechas en esta semana.</p>`
-      : `<table class="tbl"><thead><tr><th>Proyecto</th><th>Inicio</th><th>Límite</th><th>Estado</th></tr></thead><tbody>
+      ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
@@ -618,7 +619,7 @@ function renderSemana() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Pendientes
+//  Pending
 // ─────────────────────────────────────────────────────────────
 function renderPendientes() {
   const items = allData
@@ -632,12 +633,12 @@ function renderPendientes() {
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--yellow)"></div>Pendientes
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${items.length} proyecto${items.length!==1?'s':''}</span>
+      <div class="dot" style="background:var(--yellow)"></div>Pending
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${items.length} project${items.length!==1?'s':''}</span>
     </div>
     ${items.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem">Todo entregado.</p>`
-      : `<table class="tbl"><thead><tr><th>Proyecto</th><th>Cliente</th><th>Inicio</th><th>Estado</th></tr></thead><tbody>
+      ? `<p style="color:var(--muted);font-size:.85rem">All delivered.</p>`
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Start</th><th>Status</th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td style="color:var(--muted);font-size:.8rem">${r['Cliente']||'—'}</td>
@@ -649,11 +650,11 @@ function renderPendientes() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Gráficos
+//  Charts
 // ─────────────────────────────────────────────────────────────
 function renderCharts() {
   const estadoCounts = {};
-  allData.forEach(r => { const e = r['Estado']||'Sin estado'; estadoCounts[e]=(estadoCounts[e]||0)+1; });
+  allData.forEach(r => { const e = r['Estado']||'No status'; estadoCounts[e]=(estadoCounts[e]||0)+1; });
   const estadoColors = Object.keys(estadoCounts).map(k => {
     const kl = k.toLowerCase();
     if (kl.includes('entregado')) return '#10b981';
@@ -670,19 +671,19 @@ function renderCharts() {
   });
 
   const clienteCounts = {};
-  allData.forEach(r => { const c = r['Cliente']||'Otro'; clienteCounts[c]=(clienteCounts[c]||0)+1; });
+  allData.forEach(r => { const c = r['Cliente']||'Other'; clienteCounts[c]=(clienteCounts[c]||0)+1; });
   const clienteColors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
 
   if (chartCliente) chartCliente.destroy();
   chartCliente = new Chart(document.getElementById('chart-cliente'), {
     type: 'bar',
-    data: { labels: Object.keys(clienteCounts), datasets: [{ label: 'Proyectos', data: Object.values(clienteCounts), backgroundColor: Object.keys(clienteCounts).map((_,i)=>clienteColors[i%clienteColors.length]), borderRadius: 6, borderWidth: 0 }] },
+    data: { labels: Object.keys(clienteCounts), datasets: [{ label: 'Projects', data: Object.values(clienteCounts), backgroundColor: Object.keys(clienteCounts).map((_,i)=>clienteColors[i%clienteColors.length]), borderRadius: 6, borderWidth: 0 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true } } }
   });
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Tabla completa
+//  All projects table — filters + sort
 // ─────────────────────────────────────────────────────────────
 function applyFilters() {
   const estado  = document.getElementById('f-estado')?.value  || '';
@@ -700,10 +701,42 @@ function applyFilters() {
   renderTable();
 }
 
+function setSort(key) {
+  if (sortKey === key) {
+    sortDir *= -1;
+  } else {
+    sortKey = key;
+    sortDir = 1;
+  }
+  currentPage = 1;
+  renderTable();
+}
+
+function getSorted() {
+  if (!sortKey) return filteredData;
+  const isDate = sortKey === 'Fecha de inicio' || sortKey === 'Fecha Limite';
+  return [...filteredData].sort((a, b) => {
+    if (isDate) {
+      const da = parseDate(a[sortKey]) || new Date(sortDir > 0 ? 9999 : -1, 0, 1);
+      const db = parseDate(b[sortKey]) || new Date(sortDir > 0 ? 9999 : -1, 0, 1);
+      return (da - db) * sortDir;
+    }
+    const va = (a[sortKey] || '').toLowerCase();
+    const vb = (b[sortKey] || '').toLowerCase();
+    return va.localeCompare(vb, 'es') * sortDir;
+  });
+}
+
+function thClass(key) {
+  if (sortKey !== key) return 'sortable';
+  return sortDir > 0 ? 'sortable sort-asc' : 'sortable sort-desc';
+}
+
 function renderTable() {
+  const sorted   = getSorted();
   const start    = (currentPage - 1) * PAGE_SIZE;
-  const pageData = filteredData.slice(start, start + PAGE_SIZE);
-  const totalPg  = Math.ceil(filteredData.length / PAGE_SIZE);
+  const pageData = sorted.slice(start, start + PAGE_SIZE);
+  const totalPg  = Math.ceil(sorted.length / PAGE_SIZE);
   const hasApi   = !!getApiUrl();
 
   pageData.forEach((r, i) => { rowMap[start + i] = r; });
@@ -711,13 +744,18 @@ function renderTable() {
   document.getElementById('tbl-wrap').innerHTML = `
     <table class="tbl">
       <thead><tr>
-        <th>#</th><th>Proyecto</th><th>Cliente</th><th>Host</th>
-        <th>Inicio</th><th>Límite</th><th>Estado</th>
+        <th>#</th>
+        <th class="${thClass('Titulo')}"         onclick="setSort('Titulo')">Project</th>
+        <th class="${thClass('Cliente')}"         onclick="setSort('Cliente')">Client</th>
+        <th class="${thClass('Host')}"            onclick="setSort('Host')">Host</th>
+        <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">Start</th>
+        <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">Deadline</th>
+        <th class="${thClass('Estado')}"          onclick="setSort('Estado')">Status</th>
         ${hasApi ? '<th></th>' : ''}
       </tr></thead>
       <tbody>
         ${pageData.length === 0
-          ? `<tr class="empty-row"><td colspan="${hasApi?8:7}">Sin resultados para los filtros aplicados.</td></tr>`
+          ? `<tr class="empty-row"><td colspan="${hasApi?8:7}">No results for the applied filters.</td></tr>`
           : pageData.map((r,i)=>`<tr>
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}</td>
@@ -727,10 +765,10 @@ function renderTable() {
               <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
               <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
               ${hasApi ? `<td style="white-space:nowrap">
-                <button class="btn-row-edit" title="Editar" onclick="openFormModal(rowMap[${start+i}])">
+                <button class="btn-row-edit" title="Edit" onclick="openFormModal(rowMap[${start+i}])">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <button class="btn-row-delete" title="Eliminar" onclick="confirmDelete(rowMap[${start+i}])">
+                <button class="btn-row-delete" title="Delete" onclick="confirmDelete(rowMap[${start+i}])">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
                 </button>
               </td>` : ''}
@@ -741,24 +779,24 @@ function renderTable() {
   `;
 
   const pg = document.getElementById('pagination');
-  if (totalPg <= 1) { pg.innerHTML = `<span>${filteredData.length} proyectos</span>`; return; }
+  if (totalPg <= 1) { pg.innerHTML = `<span>${sorted.length} project${sorted.length!==1?'s':''}</span>`; return; }
   let btns = '';
   for (let i=1; i<=totalPg; i++) btns += `<button class="pg-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
-  pg.innerHTML = `<span>${filteredData.length} proyectos · Página ${currentPage} de ${totalPg}</span>
+  pg.innerHTML = `<span>${sorted.length} projects · Page ${currentPage} of ${totalPg}</span>
     <button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>
     ${btns}
     <button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPg?'disabled':''}>›</button>`;
 }
 
 function goPage(n) {
-  const totalPg = Math.ceil(filteredData.length / PAGE_SIZE);
+  const totalPg = Math.ceil(getSorted().length / PAGE_SIZE);
   if (n < 1 || n > totalPg) return;
   currentPage = n;
   renderTable();
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Modal formulario (add / edit)
+//  Add / Edit modal
 // ─────────────────────────────────────────────────────────────
 function openFormModal(row) {
   if (!getApiUrl()) { openSettings(); return; }
@@ -766,20 +804,15 @@ function openFormModal(row) {
   const form = document.getElementById('project-form');
   form.reset();
 
-  document.getElementById('form-modal-title').textContent    = row ? 'Editar proyecto' : 'Nuevo proyecto';
-  document.getElementById('btn-form-submit').textContent      = row ? 'Guardar cambios' : 'Agregar proyecto';
-  document.getElementById('btn-form-delete').style.display    = row ? '' : 'none';
+  document.getElementById('form-modal-title').textContent  = row ? 'Edit project'   : 'New project';
+  document.getElementById('btn-form-submit').textContent   = row ? 'Save changes'   : 'Add project';
+  document.getElementById('btn-form-delete').style.display = row ? ''               : 'none';
 
   if (row) {
-    // Rellenar campos del formulario con los datos del row
     for (const el of form.elements) {
       if (!el.name) continue;
       const val = row[el.name] || '';
-      if (el.type === 'date') {
-        el.value = toISO(val);
-      } else {
-        el.value = val;
-      }
+      el.value = el.type === 'date' ? toISO(val) : val;
     }
   }
 
@@ -792,23 +825,19 @@ function closeFormModal() {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Submit del formulario
+//  Form submit
 // ─────────────────────────────────────────────────────────────
 async function handleFormSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-form-submit');
   btn.disabled = true;
-  btn.textContent = 'Guardando...';
+  btn.textContent = 'Saving...';
 
   const form = document.getElementById('project-form');
   const data = {};
   for (const el of form.elements) {
     if (!el.name) continue;
-    if (el.type === 'date') {
-      data[el.name] = fromISO(el.value);
-    } else {
-      data[el.name] = el.value;
-    }
+    data[el.name] = el.type === 'date' ? fromISO(el.value) : el.value;
   }
 
   try {
@@ -816,7 +845,7 @@ async function handleFormSubmit(e) {
       ? { action: 'update', row: editingRow._row, data }
       : { action: 'add', data };
 
-    const res = await fetch(getApiUrl(), {
+    const res  = await fetch(getApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
@@ -825,28 +854,27 @@ async function handleFormSubmit(e) {
 
     if (json.success) {
       closeFormModal();
-      showToast(editingRow ? 'Proyecto actualizado' : 'Proyecto agregado', 'success');
-      // Esperar 1.5s para que el Sheet se actualice antes de releer
+      showToast(editingRow ? 'Project updated' : 'Project added', 'success');
       setTimeout(() => loadData(), 1500);
     } else {
-      throw new Error(json.error || 'Error desconocido');
+      throw new Error(json.error || 'Unknown error');
     }
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = editingRow ? 'Guardar cambios' : 'Agregar proyecto';
+    btn.textContent = editingRow ? 'Save changes' : 'Add project';
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Eliminar proyecto
+//  Delete project
 // ─────────────────────────────────────────────────────────────
 let rowToDelete = null;
 
 function confirmDelete(row) {
   rowToDelete = row;
-  document.getElementById('confirm-title').textContent = row['Titulo'] || 'este proyecto';
+  document.getElementById('confirm-title').textContent = row['Titulo'] || 'this project';
   document.getElementById('overlay-confirm').classList.remove('hidden');
 }
 
@@ -863,10 +891,10 @@ function closeConfirm() {
 async function executeDelete() {
   const btn = document.getElementById('btn-confirm-delete');
   btn.disabled = true;
-  btn.textContent = 'Eliminando...';
+  btn.textContent = 'Deleting...';
 
   try {
-    const res = await fetch(getApiUrl(), {
+    const res  = await fetch(getApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify({ action: 'delete', row: rowToDelete._row })
@@ -875,16 +903,16 @@ async function executeDelete() {
 
     if (json.success) {
       closeConfirm();
-      showToast('Proyecto eliminado', 'success');
+      showToast('Project deleted', 'success');
       setTimeout(() => loadData(), 1500);
     } else {
-      throw new Error(json.error || 'Error desconocido');
+      throw new Error(json.error || 'Unknown error');
     }
   } catch (err) {
     showToast('Error: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Eliminar';
+    btn.textContent = 'Delete';
   }
 }
 
@@ -900,7 +928,7 @@ function showToast(msg, type = 'success') {
   toastTimer = setTimeout(() => el.classList.add('hidden'), 3500);
 }
 
-// Cerrar modales con Escape
+// Close modals with Escape
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
   if (!document.getElementById('overlay-form').classList.contains('hidden'))     closeFormModal();
@@ -908,18 +936,18 @@ document.addEventListener('keydown', e => {
   if (!document.getElementById('overlay-confirm').classList.contains('hidden'))  closeConfirm();
 });
 
-// Cerrar modales al hacer clic en el overlay
+// Close modals on overlay click
 ['overlay-form','overlay-settings','overlay-confirm'].forEach(id => {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target !== this) return;
-    if (id === 'overlay-form')     closeFormModal();
+    if (id === 'overlay-form')          closeFormModal();
     else if (id === 'overlay-settings') closeSettings();
     else if (id === 'overlay-confirm')  closeConfirm();
   });
 });
 
 // ─────────────────────────────────────────────────────────────
-//  Carga de datos
+//  Data loading
 // ─────────────────────────────────────────────────────────────
 async function loadData() {
   const btn  = document.getElementById('btn-refresh');
@@ -931,26 +959,24 @@ async function loadData() {
 
   try {
     if (apiUrl) {
-      // Leer desde Apps Script (incluye campo _row para edición)
       const res  = await fetch(apiUrl + '?cb=' + Date.now());
       const json = await res.json();
       render(json.data || []);
     } else {
-      // Fallback: leer desde CSV publicado (solo lectura)
       const res  = await fetch(CSV_URL + '&cb=' + Date.now());
       const text = await res.text();
       Papa.parse(text, {
         header: true, skipEmptyLines: true,
         complete: r => render(r.data),
-        error:    e => showError('Error al parsear CSV: ' + e.message)
+        error:    e => showError('CSV parse error: ' + e.message)
       });
     }
 
     document.getElementById('last-update').textContent =
-      'Actualizado ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      'Updated ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
   } catch (err) {
-    showError('No se pudo conectar: ' + err.message);
+    showError('Could not connect: ' + err.message);
   } finally {
     if (btn)  btn.disabled = false;
     if (icon) icon.parentElement.classList.remove('spinning');
@@ -960,11 +986,11 @@ async function loadData() {
 function showError(msg) {
   document.getElementById('main').innerHTML =
     `<div class="loading" style="color:var(--red)">${msg}<br><br>
-     <button class="btn-refresh" style="margin:0 auto" onclick="loadData()">Reintentar</button></div>`;
+     <button class="btn-refresh" style="margin:0 auto" onclick="loadData()">Retry</button></div>`;
 }
 
 // ─────────────────────────────────────────────────────────────
-//  Inicio
+//  Init
 // ─────────────────────────────────────────────────────────────
 updateApiMode();
 loadData();
