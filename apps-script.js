@@ -98,9 +98,12 @@ function doPost(e) {
 // Convierte string a Date si el campo es de fecha
 function toCellValue(key, val) {
   if (!val) return '';
-  if (key.toLowerCase().includes('fecha') && /\d{1,2}\/\d{1,2}\/\d{4}/.test(val)) {
-    const [d, m, y] = val.split('/').map(Number);
-    return new Date(y, m - 1, d);
+  if (key.toLowerCase().indexOf('fecha') !== -1) {
+    var parts = val.split('/');
+    if (parts.length === 3 && parts[2].length === 4) {
+      var d = Number(parts[0]), m = Number(parts[1]), y = Number(parts[2]);
+      if (d && m && y) return new Date(y, m - 1, d);
+    }
   }
   return val;
 }
