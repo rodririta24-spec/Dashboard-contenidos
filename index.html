@@ -10,271 +10,222 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:         #0f172a;
-      --surface:    #1e293b;
-      --surface2:   #263548;
-      --border:     #334155;
-      --text:       #e2e8f0;
-      --muted:      #94a3b8;
-      --green:      #10b981;
-      --green-bg:   rgba(16,185,129,.15);
-      --yellow:     #f59e0b;
-      --yellow-bg:  rgba(245,158,11,.15);
-      --blue:       #3b82f6;
-      --blue-bg:    rgba(59,130,246,.15);
-      --red:        #ef4444;
-      --red-bg:     rgba(239,68,68,.15);
+      --bg:       #0f172a;
+      --surface:  #1e293b;
+      --surface2: #263548;
+      --border:   #334155;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
+      --green:    #10b981; --green-bg:  rgba(16,185,129,.15);
+      --yellow:   #f59e0b; --yellow-bg: rgba(245,158,11,.15);
+      --blue:     #3b82f6; --blue-bg:   rgba(59,130,246,.15);
+      --purple:   #a78bfa; --purple-bg: rgba(167,139,250,.15);
+      --red:      #ef4444; --red-bg:    rgba(239,68,68,.15);
     }
 
-    body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── Header ──────────────────────────────────────── */
+    /* ── Header ─────────────────────────────────────── */
     .header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 0.9rem 2rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 1rem;
-      position: sticky;
-      top: 0;
-      z-index: 10;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: .85rem 2rem; display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem;
+      position: sticky; top: 0; z-index: 10;
     }
-    .header-left { display: flex; align-items: center; gap: 1rem; }
-    .header h1 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      letter-spacing: -0.02em;
-    }
+    .header-left  { display: flex; align-items: center; gap: .9rem; }
+    .header-right { display: flex; align-items: center; gap: .6rem; }
+    .header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
     .header h1 span { color: var(--blue); }
-    .header-meta { font-size: 0.75rem; color: var(--muted); }
+    .header-meta { font-size: .73rem; color: var(--muted); }
+
+    .btn-icon {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--muted); border-radius: 8px; padding: .4rem .5rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s;
+    }
+    .btn-icon:hover { border-color: var(--blue); color: var(--text); }
+
+    .btn-new {
+      background: var(--blue); border: none; color: #fff;
+      border-radius: 8px; padding: .4rem .9rem;
+      font-size: .82rem; font-weight: 600; cursor: pointer;
+      display: flex; align-items: center; gap: .35rem;
+      transition: background .15s;
+    }
+    .btn-new:hover { background: #2563eb; }
+    .btn-new:disabled { background: var(--surface2); color: var(--muted); cursor: default; border: 1px solid var(--border); }
+
     .btn-refresh {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 8px;
-      padding: 0.4rem 0.9rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      transition: border-color .15s;
+      background: var(--surface2); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: .4rem .85rem; font-size: .8rem; cursor: pointer;
+      display: flex; align-items: center; gap: .35rem; transition: border-color .15s;
     }
     .btn-refresh:hover { border-color: var(--blue); }
-    .btn-refresh.spinning svg { animation: spin .7s linear infinite; }
+    .spinning svg { animation: spin .7s linear infinite; }
 
-    /* ── Layout ──────────────────────────────────────── */
-    .main {
-      max-width: 1440px;
-      margin: 0 auto;
-      padding: 1.5rem 2rem;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
+    /* ── Layout ─────────────────────────────────────── */
+    .main { max-width: 1440px; margin: 0 auto; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
-    /* ── KPI Cards ───────────────────────────────────── */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-      gap: 1rem;
-    }
-    .kpi-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.1rem 1.25rem;
-      border-left-width: 3px;
-    }
-    .kpi-card .lbl {
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: .45rem;
-    }
-    .kpi-card .val {
-      font-size: 2rem;
-      font-weight: 700;
-      line-height: 1;
-    }
-    .kpi-card .sub {
-      font-size: 0.7rem;
-      color: var(--muted);
-      margin-top: .3rem;
-    }
+    /* ── KPIs ───────────────────────────────────────── */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 1rem; }
+    .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; border-left-width: 3px; }
+    .kpi-card .lbl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .4rem; }
+    .kpi-card .val { font-size: 2rem; font-weight: 700; line-height: 1; }
+    .kpi-card .sub { font-size: .7rem; color: var(--muted); margin-top: .3rem; }
     .kpi-card.neutral { border-left-color: var(--border); }
     .kpi-card.green   { border-left-color: var(--green);  } .kpi-card.green  .val { color: var(--green);  }
     .kpi-card.yellow  { border-left-color: var(--yellow); } .kpi-card.yellow .val { color: var(--yellow); }
     .kpi-card.blue    { border-left-color: var(--blue);   } .kpi-card.blue   .val { color: var(--blue);   }
+    .kpi-card.purple  { border-left-color: var(--purple); } .kpi-card.purple .val { color: var(--purple); }
 
-    /* ── Two-col row ─────────────────────────────────── */
-    .row2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-    }
+    /* ── Two-col row ────────────────────────────────── */
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    /* ── Card shell ──────────────────────────────────── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem;
-      overflow: hidden;
-    }
+    /* ── Card ───────────────────────────────────────── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.25rem; overflow: hidden; }
     .card-title {
-      font-size: 0.72rem;
-      font-weight: 600;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      margin-bottom: .9rem;
-      display: flex;
-      align-items: center;
-      gap: .5rem;
+      font-size: .72rem; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: .9rem; display: flex; align-items: center; gap: .5rem;
     }
-    .card-title .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
+    .card-title .dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
 
-    /* ── Badges ──────────────────────────────────────── */
+    /* ── Badges ─────────────────────────────────────── */
     .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: .2rem .6rem;
-      border-radius: 999px;
-      font-size: .72rem;
-      font-weight: 600;
-      white-space: nowrap;
+      display: inline-flex; align-items: center; padding: .2rem .6rem;
+      border-radius: 999px; font-size: .72rem; font-weight: 600; white-space: nowrap;
     }
     .badge.entregado { background: var(--green-bg);  color: var(--green);  }
     .badge.guionado  { background: var(--yellow-bg); color: var(--yellow); }
     .badge.edicion   { background: var(--blue-bg);   color: var(--blue);   }
     .badge.default   { background: var(--surface2);  color: var(--muted);  }
 
-    /* ── Date spans ──────────────────────────────────── */
+    /* ── Date spans ─────────────────────────────────── */
     .dt { font-size: .8rem; color: var(--muted); white-space: nowrap; }
-    .dt.overdue { color: var(--red); font-weight: 600; }
+    .dt.overdue { color: var(--red);    font-weight: 600; }
     .dt.today   { color: var(--yellow); font-weight: 600; }
     .dt.soon    { color: #fb923c; }
 
-    /* ── Tables ──────────────────────────────────────── */
-    .tbl {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: .85rem;
-    }
-    .tbl th {
-      text-align: left;
-      padding: .5rem .75rem;
-      color: var(--muted);
-      font-weight: 500;
-      font-size: .7rem;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-    .tbl td {
-      padding: .7rem .75rem;
-      border-bottom: 1px solid var(--border);
-      vertical-align: middle;
-    }
+    /* ── Tables ─────────────────────────────────────── */
+    .tbl { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .tbl th { text-align: left; padding: .5rem .75rem; color: var(--muted); font-weight: 500; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .tbl td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
     .tbl tr:last-child td { border-bottom: none; }
     .tbl tbody tr:hover td { background: var(--surface2); }
     .titulo-cell { font-weight: 500; max-width: 260px; }
-    .empty-row td {
-      text-align: center;
-      color: var(--muted);
-      padding: 2rem;
-      font-size: .85rem;
-    }
+    .empty-row td { text-align: center; color: var(--muted); padding: 2rem; font-size: .85rem; }
 
-    /* ── Charts ──────────────────────────────────────── */
+    /* ── Edit row button ────────────────────────────── */
+    .btn-row-edit {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      padding: .25rem; border-radius: 5px; opacity: 0; transition: opacity .15s, color .15s;
+      display: inline-flex; align-items: center;
+    }
+    .tbl tbody tr:hover .btn-row-edit { opacity: 1; }
+    .btn-row-edit:hover { color: var(--blue); }
+
+    /* ── Charts ─────────────────────────────────────── */
     .chart-wrap { position: relative; height: 230px; }
 
-    /* ── Filters ─────────────────────────────────────── */
-    .filters {
-      display: flex;
-      gap: .65rem;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-    .filter-sel, .search-inp {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      padding: .45rem .75rem;
-      font-size: .82rem;
-      outline: none;
-      cursor: pointer;
-    }
+    /* ── Filters ────────────────────────────────────── */
+    .filters { display: flex; gap: .65rem; margin-bottom: 1rem; flex-wrap: wrap; }
+    .filter-sel, .search-inp { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); padding: .45rem .75rem; font-size: .82rem; outline: none; cursor: pointer; }
     .filter-sel:focus, .search-inp:focus { border-color: var(--blue); }
-    .search-inp { flex: 1; min-width: 200px; }
+    .search-inp { flex: 1; min-width: 200px; cursor: text; }
     .search-inp::placeholder { color: var(--muted); }
 
-    /* ── Pagination ──────────────────────────────────── */
-    .pagination {
-      display: flex;
-      justify-content: flex-end;
-      align-items: center;
-      gap: .4rem;
-      margin-top: .9rem;
-      font-size: .78rem;
-      color: var(--muted);
-      flex-wrap: wrap;
-    }
-    .pg-btn {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      color: var(--text);
-      border-radius: 6px;
-      padding: .28rem .65rem;
-      cursor: pointer;
-      font-size: .78rem;
-      line-height: 1.4;
-    }
+    /* ── Pagination ─────────────────────────────────── */
+    .pagination { display: flex; justify-content: flex-end; align-items: center; gap: .4rem; margin-top: .9rem; font-size: .78rem; color: var(--muted); flex-wrap: wrap; }
+    .pg-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: .28rem .65rem; cursor: pointer; font-size: .78rem; line-height: 1.4; }
     .pg-btn:hover { border-color: var(--blue); }
     .pg-btn.active { background: var(--blue); border-color: var(--blue); color: #fff; }
     .pg-btn:disabled { opacity: .35; cursor: default; pointer-events: none; }
 
-    /* ── Loading ─────────────────────────────────────── */
-    .loading {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--muted);
-    }
-    .spinner {
-      width: 32px; height: 32px;
-      border: 3px solid var(--border);
-      border-top-color: var(--blue);
-      border-radius: 50%;
-      animation: spin .8s linear infinite;
-      margin: 0 auto 1rem;
-    }
+    /* ── Loading ────────────────────────────────────── */
+    .loading { text-align: center; padding: 4rem 2rem; color: var(--muted); }
+    .spinner { width: 32px; height: 32px; border: 3px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 1rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Responsive ──────────────────────────────────── */
-    @media (max-width: 900px) {
-      .row2 { grid-template-columns: 1fr; }
-      .main { padding: 1rem; }
-      .header { padding: .8rem 1rem; }
+    /* ── Mode banner ────────────────────────────────── */
+    .banner {
+      background: var(--purple-bg); border: 1px solid var(--purple);
+      border-radius: 10px; padding: .7rem 1rem;
+      font-size: .82rem; color: var(--purple);
+      display: flex; align-items: center; gap: .6rem;
     }
-    @media (max-width: 640px) {
-      .tbl th:nth-child(n+5),
-      .tbl td:nth-child(n+5) { display: none; }
+    .banner a { color: var(--purple); font-weight: 600; cursor: pointer; text-decoration: underline; }
+
+    /* ── Modal overlay ──────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      backdrop-filter: blur(4px); z-index: 50;
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
     }
+    .modal-overlay.hidden { display: none; }
+
+    /* ── Modal box ──────────────────────────────────── */
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 16px; width: 100%; max-width: 580px;
+      max-height: 92vh; overflow-y: auto; padding: 1.5rem;
+      animation: modal-in .18s ease;
+    }
+    .modal.small { max-width: 420px; }
+    @keyframes modal-in { from { opacity:0; transform: scale(.97) translateY(8px); } to { opacity:1; transform: none; } }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.3rem; }
+    .modal-title { font-size: 1rem; font-weight: 700; }
+    .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; line-height: 1; padding: .2rem; }
+    .modal-close:hover { color: var(--text); }
+
+    /* ── Form ───────────────────────────────────────── */
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .85rem; }
+    .form-group { display: flex; flex-direction: column; gap: .3rem; }
+    .form-group.full { grid-column: 1 / -1; }
+    .form-label { font-size: .7rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+    .form-input, .form-select {
+      background: var(--bg); border: 1px solid var(--border); border-radius: 8px;
+      color: var(--text); padding: .5rem .75rem; font-size: .875rem; outline: none; width: 100%;
+    }
+    .form-input:focus, .form-select:focus { border-color: var(--blue); }
+    .form-input::placeholder { color: var(--muted); }
+    .form-input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.5); cursor: pointer; }
+
+    .form-actions { display: flex; gap: .65rem; justify-content: flex-end; margin-top: 1.3rem; border-top: 1px solid var(--border); padding-top: 1.3rem; }
+    .btn-primary { background: var(--blue); border: none; color: #fff; border-radius: 8px; padding: .5rem 1.1rem; font-size: .875rem; font-weight: 600; cursor: pointer; }
+    .btn-primary:hover { background: #2563eb; }
+    .btn-primary:disabled { opacity: .5; cursor: default; }
+    .btn-secondary { background: var(--surface2); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: .5rem 1.1rem; font-size: .875rem; cursor: pointer; }
+    .btn-secondary:hover { border-color: var(--blue); }
+    .btn-danger { background: var(--red); border: none; color: #fff; border-radius: 8px; padding: .5rem 1.1rem; font-size: .875rem; font-weight: 600; cursor: pointer; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-danger:disabled { opacity: .5; cursor: default; }
+
+    /* ── Row delete button ──────────────────────────────── */
+    .btn-row-delete {
+      background: none; border: none; color: var(--muted); cursor: pointer;
+      padding: .25rem; border-radius: 5px; opacity: 0; transition: opacity .15s, color .15s;
+      display: inline-flex; align-items: center;
+    }
+    .tbl tbody tr:hover .btn-row-delete { opacity: 1; }
+    .btn-row-delete:hover { color: var(--red); }
+
+    /* ── Toast ──────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 100;
+      background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+      padding: .75rem 1.1rem; font-size: .85rem;
+      display: flex; align-items: center; gap: .5rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,.4);
+      transition: opacity .25s, transform .25s;
+    }
+    #toast.success { border-left: 3px solid var(--green); }
+    #toast.error   { border-left: 3px solid var(--red);   }
+    #toast.hidden  { opacity: 0; transform: translateY(.8rem); pointer-events: none; }
+
+    /* ── Responsive ─────────────────────────────────── */
+    @media (max-width: 900px) { .row2 { grid-template-columns: 1fr; } .main { padding: 1rem; } .header { padding: .8rem 1rem; } }
+    @media (max-width: 640px) { .tbl th:nth-child(n+5), .tbl td:nth-child(n+5) { display: none; } .form-grid { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -285,13 +236,152 @@
     <h1>Dashboard · <span>Contenidos</span></h1>
     <span class="header-meta" id="last-update">Cargando...</span>
   </div>
-  <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
-    <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
-    </svg>
-    Actualizar
-  </button>
+  <div class="header-right">
+    <button class="btn-icon" title="Configuración" onclick="openSettings()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </button>
+    <button class="btn-new" id="btn-new" onclick="openFormModal(null)" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nuevo proyecto
+    </button>
+    <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
+      <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
+        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
+      </svg>
+      Actualizar
+    </button>
+  </div>
 </header>
+
+<!-- ── Settings Modal ───────────────────────────────────── -->
+<div class="modal-overlay hidden" id="overlay-settings">
+  <div class="modal small">
+    <div class="modal-header">
+      <span class="modal-title">Configuración</span>
+      <button class="modal-close" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">URL del Web App (Google Apps Script)</label>
+      <input class="form-input" id="input-api-url" type="url" placeholder="https://script.google.com/macros/s/..." />
+      <span style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block">
+        Instalá el código de <code style="color:var(--blue)">apps-script.js</code> en tu Sheet y pegá la URL del Web App aquí. Solo se guarda en este navegador.
+      </span>
+    </div>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeSettings()">Cancelar</button>
+      <button class="btn-primary"   onclick="saveSettings()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Add / Edit Project Modal ─────────────────────────── -->
+<div class="modal-overlay hidden" id="overlay-form">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="form-modal-title">Nuevo proyecto</span>
+      <button class="modal-close" onclick="closeFormModal()">✕</button>
+    </div>
+    <form id="project-form" onsubmit="handleFormSubmit(event)" autocomplete="off">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">Título *</label>
+          <input class="form-input" name="Titulo" required placeholder="Nombre del proyecto" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Formato</label>
+          <select class="form-select" name="Formato">
+            <option value="">—</option>
+            <option>Vertical</option>
+            <option>Horizontal</option>
+            <option>Ambos</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado *</label>
+          <select class="form-select" name="Estado" required>
+            <option value="">—</option>
+            <option>Guionado</option>
+            <option>En edición</option>
+            <option>Entregado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Cliente</label>
+          <select class="form-select" name="Cliente">
+            <option value="">—</option>
+            <option>Samsung</option>
+            <option>Cheil</option>
+            <option>Mercadolibre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">División</label>
+          <select class="form-select" name="División">
+            <option value="">—</option>
+            <option>IM</option>
+            <option>CE</option>
+            <option>Cross</option>
+            <option>Lifestyle</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Host</label>
+          <input class="form-input" name="Host" placeholder="Nombre del host" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Solicitante</label>
+          <input class="form-input" name="Solicitante" placeholder="Quién lo solicita" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de inicio</label>
+          <input class="form-input" name="Fecha de inicio" type="date" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha límite</label>
+          <input class="form-input" name="Fecha Limite" type="date" />
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Materiales</label>
+          <input class="form-input" name="Materiales" placeholder="Número / nombre de los materiales" />
+        </div>
+        <div class="form-group full">
+          <label class="form-label">Resultado</label>
+          <input class="form-input" name="Resultado" placeholder="Nombre del archivo entregado" />
+        </div>
+      </div>
+      <div class="form-actions">
+        <button type="button" class="btn-danger" id="btn-form-delete" style="display:none;margin-right:auto" onclick="confirmDeleteCurrent()">Eliminar</button>
+        <button type="button" class="btn-secondary" onclick="closeFormModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btn-form-submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Confirm delete Modal ──────────────────────────────── -->
+<div class="modal-overlay hidden" id="overlay-confirm">
+  <div class="modal small">
+    <div class="modal-header">
+      <span class="modal-title">Eliminar proyecto</span>
+      <button class="modal-close" onclick="closeConfirm()">✕</button>
+    </div>
+    <p style="color:var(--muted);font-size:.875rem;line-height:1.5;margin-bottom:1.5rem">
+      ¿Seguro que querés eliminar <strong id="confirm-title" style="color:var(--text)"></strong>?<br>
+      <span style="font-size:.8rem">Esta acción elimina la fila del Google Sheet y no se puede deshacer.</span>
+    </p>
+    <div class="form-actions">
+      <button class="btn-secondary" onclick="closeConfirm()">Cancelar</button>
+      <button class="btn-danger" id="btn-confirm-delete" onclick="executeDelete()">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Toast ─────────────────────────────────────────────── -->
+<div id="toast" class="hidden"></div>
 
 <!-- ── Main ─────────────────────────────────────────────── -->
 <main class="main" id="main">
@@ -302,10 +392,51 @@
 </main>
 
 <script>
+// ─────────────────────────────────────────────────────────────
+//  Constantes
+// ─────────────────────────────────────────────────────────────
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnydry1o935VKl9WTgIcI_yDevOmb_RohtZ1PIBjYHF6ycfGX646zIbI2mSkQ5T4pUkzUofbuFGiLF/pub?output=csv';
 
-// ── Utilidades ───────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  Estado global
+// ─────────────────────────────────────────────────────────────
+let allData      = [];
+let filteredData = [];
+let currentPage  = 1;
+const PAGE_SIZE  = 20;
+let chartEstado  = null;
+let chartCliente = null;
+let editingRow   = null; // null = modo agregar, objeto = modo editar
+const rowMap     = {};   // globalIndex -> row (para edición desde tabla)
 
+// ─────────────────────────────────────────────────────────────
+//  Settings (Apps Script URL en localStorage)
+// ─────────────────────────────────────────────────────────────
+function getApiUrl()    { return (localStorage.getItem('appsScriptUrl') || '').trim(); }
+function setApiUrl(url) { localStorage.setItem('appsScriptUrl', url.trim()); }
+
+function openSettings() {
+  document.getElementById('input-api-url').value = getApiUrl();
+  document.getElementById('overlay-settings').classList.remove('hidden');
+}
+function closeSettings() {
+  document.getElementById('overlay-settings').classList.add('hidden');
+}
+function saveSettings() {
+  const url = document.getElementById('input-api-url').value.trim();
+  setApiUrl(url);
+  closeSettings();
+  updateApiMode();
+  loadData();
+}
+function updateApiMode() {
+  const hasApi = !!getApiUrl();
+  document.getElementById('btn-new').disabled = !hasApi;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Utilidades de fecha
+// ─────────────────────────────────────────────────────────────
 function parseDate(str) {
   if (!str || !str.trim()) return null;
   const p = str.trim().split('/');
@@ -314,27 +445,24 @@ function parseDate(str) {
   if (!d || !m || !y) return null;
   return new Date(y, m - 1, d);
 }
-
 function fmtDate(str) {
   const d = parseDate(str);
   if (!d) return '—';
   return d.toLocaleDateString('es-AR', { day: 'numeric', month: 'short' });
 }
-
-function getWeek() {
-  const now = new Date(); now.setHours(0,0,0,0);
-  const day = now.getDay();
-  const mon = new Date(now);
-  mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
-  const sun = new Date(mon);
-  sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
-  return { mon, sun };
+// "9/6/2026" → "2026-06-09"  (para input[type=date])
+function toISO(str) {
+  if (!str || !str.trim()) return '';
+  const p = str.trim().split('/');
+  if (p.length !== 3) return '';
+  const [d, m, y] = p.map(Number);
+  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
-
-function inWeek(row, wk) {
-  const i = parseDate(row['Fecha de inicio']);
-  const l = parseDate(row['Fecha Limite']);
-  return (i && i >= wk.mon && i <= wk.sun) || (l && l >= wk.mon && l <= wk.sun);
+// "2026-06-09" → "9/6/2026"
+function fromISO(iso) {
+  if (!iso) return '';
+  const [y,m,d] = iso.split('-').map(Number);
+  return `${d}/${m}/${y}`;
 }
 
 function dtClass(str) {
@@ -347,7 +475,6 @@ function dtClass(str) {
   if (diff <= 3) return 'soon';
   return '';
 }
-
 function badgeClass(estado) {
   if (!estado) return 'default';
   const e = estado.toLowerCase();
@@ -357,39 +484,53 @@ function badgeClass(estado) {
   return 'default';
 }
 
+function getWeek() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const day = now.getDay();
+  const mon = new Date(now); mon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  return { mon, sun };
+}
+function inWeek(row, wk) {
+  const i = parseDate(row['Fecha de inicio']);
+  const l = parseDate(row['Fecha Limite']);
+  return (i && i >= wk.mon && i <= wk.sun) || (l && l >= wk.mon && l <= wk.sun);
+}
+
 function cleanRow(row) {
   const out = {};
-  for (const k of Object.keys(row)) out[k.trim()] = (row[k] || '').trim();
+  for (const k of Object.keys(row)) out[k.trim()] = (row[k] || '').toString().trim();
   return out;
 }
 
-// ── Estado global ────────────────────────────────────────────
+function uniqueSorted(data, key) {
+  return [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+}
 
-let allData      = [];
-let filteredData = [];
-let currentPage  = 1;
-const PAGE_SIZE  = 20;
-let chartEstado  = null;
-let chartCliente = null;
-
-// ── Render principal ─────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────
+//  Render principal
+// ─────────────────────────────────────────────────────────────
 function render(data) {
-  allData = data.map(cleanRow).filter(r => r['Titulo']);
+  allData = data.map((r, i) => {
+    const cleaned = cleanRow(r);
+    if (!cleaned._row) cleaned._row = String(i + 2);
+    return cleaned;
+  }).filter(r => r['Titulo']);
   filteredData = [...allData];
 
+  const hasApi = !!getApiUrl();
+
   document.getElementById('main').innerHTML = `
-
-    <!-- KPIs -->
+    ${!hasApi ? `<div class="banner">
+      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Modo solo lectura — para agregar y editar proyectos,
+      <a onclick="openSettings()">configurá el Apps Script</a> (es gratis, tarda 5 minutos).
+    </div>` : ''}
     <div class="kpi-grid" id="kpi-grid"></div>
-
-    <!-- Esta semana + Pendientes -->
     <div class="row2">
       <div class="card" id="card-semana"></div>
       <div class="card" id="card-pendientes"></div>
     </div>
-
-    <!-- Charts -->
     <div class="row2">
       <div class="card">
         <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Estado de proyectos</div>
@@ -400,8 +541,6 @@ function render(data) {
         <div class="chart-wrap"><canvas id="chart-cliente"></canvas></div>
       </div>
     </div>
-
-    <!-- Tabla completa -->
     <div class="card">
       <div class="card-title"><div class="dot" style="background:var(--muted)"></div>Todos los proyectos</div>
       <div class="filters">
@@ -431,125 +570,90 @@ function render(data) {
   renderTable();
 }
 
-// ── KPIs ─────────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────
+//  KPIs
+// ─────────────────────────────────────────────────────────────
 function renderKPIs() {
-  const total      = allData.length;
-  const entregados = allData.filter(r => r['Estado'].toLowerCase().includes('entregado')).length;
-  const guionados  = allData.filter(r => r['Estado'].toLowerCase().includes('guionado')).length;
-  const edicion    = allData.filter(r => r['Estado'].toLowerCase().includes('edici')).length;
-  const wk = getWeek();
-  const semana = allData.filter(r => inWeek(r, wk)).length;
+  const total     = allData.length;
+  const entregado = allData.filter(r => r['Estado'].toLowerCase().includes('entregado')).length;
+  const guionado  = allData.filter(r => r['Estado'].toLowerCase().includes('guionado')).length;
+  const edicion   = allData.filter(r => r['Estado'].toLowerCase().includes('edici')).length;
+  const wk        = getWeek();
+  const semana    = allData.filter(r => inWeek(r, wk)).length;
 
   document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi-card neutral">
-      <div class="lbl">Total proyectos</div>
-      <div class="val">${total}</div>
-    </div>
-    <div class="kpi-card green">
-      <div class="lbl">Entregados</div>
-      <div class="val">${entregados}</div>
-      <div class="sub">${Math.round(entregados/total*100)}% del total</div>
-    </div>
-    <div class="kpi-card yellow">
-      <div class="lbl">Guionados</div>
-      <div class="val">${guionados}</div>
-      <div class="sub">Pendientes de filmar/editar</div>
-    </div>
-    <div class="kpi-card blue">
-      <div class="lbl">En edición</div>
-      <div class="val">${edicion}</div>
-    </div>
-    <div class="kpi-card" style="border-left-color:#a78bfa">
-      <div class="lbl">Esta semana</div>
-      <div class="val" style="color:#a78bfa">${semana}</div>
-      <div class="sub">Con fechas en la semana actual</div>
-    </div>
+    <div class="kpi-card neutral"><div class="lbl">Total</div><div class="val">${total}</div></div>
+    <div class="kpi-card green"><div class="lbl">Entregados</div><div class="val">${entregado}</div><div class="sub">${Math.round(entregado/total*100)}% del total</div></div>
+    <div class="kpi-card yellow"><div class="lbl">Guionados</div><div class="val">${guionado}</div><div class="sub">Pendientes de filmar</div></div>
+    <div class="kpi-card blue"><div class="lbl">En edición</div><div class="val">${edicion}</div></div>
+    <div class="kpi-card purple"><div class="lbl">Esta semana</div><div class="val">${semana}</div><div class="sub">Con fechas en la semana</div></div>
   `;
 }
 
-// ── Esta semana ──────────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────
+//  Esta semana
+// ─────────────────────────────────────────────────────────────
 function renderSemana() {
   const wk = getWeek();
-  const proyectos = allData.filter(r => inWeek(r, wk));
+  const items = allData.filter(r => inWeek(r, wk));
   const card = document.getElementById('card-semana');
-
   const weekLabel = `${wk.mon.toLocaleDateString('es-AR',{day:'numeric',month:'short'})} – ${wk.sun.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'})}`;
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:#a78bfa"></div>
-      Esta semana
+      <div class="dot" style="background:var(--purple)"></div>Esta semana
       <span style="margin-left:auto;font-weight:400;font-size:.7rem">${weekLabel}</span>
     </div>
-    ${proyectos.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem;padding:.5rem 0">Sin proyectos con fechas en esta semana.</p>`
-      : `<table class="tbl">
-          <thead><tr>
-            <th>Proyecto</th><th>Inicio</th><th>Límite</th><th>Estado</th>
-          </tr></thead>
-          <tbody>
-            ${proyectos.map(r=>`
-              <tr>
-                <td class="titulo-cell">${r['Titulo']}</td>
-                <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
-                <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
-                <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`
-    }
+    ${items.length === 0
+      ? `<p style="color:var(--muted);font-size:.85rem">Sin proyectos con fechas en esta semana.</p>`
+      : `<table class="tbl"><thead><tr><th>Proyecto</th><th>Inicio</th><th>Límite</th><th>Estado</th></tr></thead><tbody>
+          ${items.map(r=>`<tr>
+            <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
+            <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+          </tr>`).join('')}
+        </tbody></table>`}
   `;
 }
 
-// ── Pendientes ───────────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────
+//  Pendientes
+// ─────────────────────────────────────────────────────────────
 function renderPendientes() {
-  const pendientes = allData
+  const items = allData
     .filter(r => !r['Estado'].toLowerCase().includes('entregado'))
     .sort((a,b) => {
       const da = parseDate(a['Fecha de inicio']) || new Date(9999,0,1);
       const db = parseDate(b['Fecha de inicio']) || new Date(9999,0,1);
       return da - db;
     });
-
   const card = document.getElementById('card-pendientes');
+
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--yellow)"></div>
-      Pendientes
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${pendientes.length} proyecto${pendientes.length!==1?'s':''}</span>
+      <div class="dot" style="background:var(--yellow)"></div>Pendientes
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${items.length} proyecto${items.length!==1?'s':''}</span>
     </div>
-    ${pendientes.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem;padding:.5rem 0">Todo entregado.</p>`
-      : `<table class="tbl">
-          <thead><tr>
-            <th>Proyecto</th><th>Cliente</th><th>Inicio</th><th>Estado</th>
-          </tr></thead>
-          <tbody>
-            ${pendientes.map(r=>`
-              <tr>
-                <td class="titulo-cell">${r['Titulo']}</td>
-                <td style="color:var(--muted);font-size:.8rem">${r['Cliente']}</td>
-                <td><span class="dt ${dtClass(r['Fecha de inicio'])}">${fmtDate(r['Fecha de inicio'])}</span></td>
-                <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
-              </tr>`).join('')}
-          </tbody>
-        </table>`
-    }
+    ${items.length === 0
+      ? `<p style="color:var(--muted);font-size:.85rem">Todo entregado.</p>`
+      : `<table class="tbl"><thead><tr><th>Proyecto</th><th>Cliente</th><th>Inicio</th><th>Estado</th></tr></thead><tbody>
+          ${items.map(r=>`<tr>
+            <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
+            <td style="color:var(--muted);font-size:.8rem">${r['Cliente']||'—'}</td>
+            <td><span class="dt ${dtClass(r['Fecha de inicio'])}">${fmtDate(r['Fecha de inicio'])}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+          </tr>`).join('')}
+        </tbody></table>`}
   `;
 }
 
-// ── Gráficos ─────────────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────
+//  Gráficos
+// ─────────────────────────────────────────────────────────────
 function renderCharts() {
-  // Estado
   const estadoCounts = {};
-  allData.forEach(r => {
-    const e = r['Estado'] || 'Sin estado';
-    estadoCounts[e] = (estadoCounts[e] || 0) + 1;
-  });
+  allData.forEach(r => { const e = r['Estado']||'Sin estado'; estadoCounts[e]=(estadoCounts[e]||0)+1; });
   const estadoColors = Object.keys(estadoCounts).map(k => {
     const kl = k.toLowerCase();
     if (kl.includes('entregado')) return '#10b981';
@@ -561,57 +665,30 @@ function renderCharts() {
   if (chartEstado) chartEstado.destroy();
   chartEstado = new Chart(document.getElementById('chart-estado'), {
     type: 'doughnut',
-    data: {
-      labels: Object.keys(estadoCounts),
-      datasets: [{ data: Object.values(estadoCounts), backgroundColor: estadoColors, borderWidth: 2, borderColor: '#1e293b' }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 12 } } }
-      }
-    }
+    data: { labels: Object.keys(estadoCounts), datasets: [{ data: Object.values(estadoCounts), backgroundColor: estadoColors, borderWidth: 2, borderColor: '#1e293b' }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', padding: 14, font: { size: 12 } } } } }
   });
 
-  // Cliente
   const clienteCounts = {};
-  allData.forEach(r => {
-    const c = r['Cliente'] || 'Otro';
-    clienteCounts[c] = (clienteCounts[c] || 0) + 1;
-  });
+  allData.forEach(r => { const c = r['Cliente']||'Otro'; clienteCounts[c]=(clienteCounts[c]||0)+1; });
   const clienteColors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444'];
 
   if (chartCliente) chartCliente.destroy();
   chartCliente = new Chart(document.getElementById('chart-cliente'), {
     type: 'bar',
-    data: {
-      labels: Object.keys(clienteCounts),
-      datasets: [{
-        label: 'Proyectos',
-        data: Object.values(clienteCounts),
-        backgroundColor: Object.keys(clienteCounts).map((_,i) => clienteColors[i % clienteColors.length]),
-        borderRadius: 6, borderWidth: 0,
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } },
-        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
-      }
-    }
+    data: { labels: Object.keys(clienteCounts), datasets: [{ label: 'Proyectos', data: Object.values(clienteCounts), backgroundColor: Object.keys(clienteCounts).map((_,i)=>clienteColors[i%clienteColors.length]), borderRadius: 6, borderWidth: 0 }] },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true } } }
   });
 }
 
-// ── Tabla completa ───────────────────────────────────────────
-
+// ─────────────────────────────────────────────────────────────
+//  Tabla completa
+// ─────────────────────────────────────────────────────────────
 function applyFilters() {
   const estado  = document.getElementById('f-estado')?.value  || '';
   const cliente = document.getElementById('f-cliente')?.value || '';
   const host    = document.getElementById('f-host')?.value    || '';
   const search  = (document.getElementById('search')?.value   || '').toLowerCase();
-
   filteredData = allData.filter(r => {
     if (estado  && r['Estado']  !== estado)  return false;
     if (cliente && r['Cliente'] !== cliente) return false;
@@ -624,30 +701,40 @@ function applyFilters() {
 }
 
 function renderTable() {
-  const start     = (currentPage - 1) * PAGE_SIZE;
-  const pageData  = filteredData.slice(start, start + PAGE_SIZE);
-  const totalPg   = Math.ceil(filteredData.length / PAGE_SIZE);
+  const start    = (currentPage - 1) * PAGE_SIZE;
+  const pageData = filteredData.slice(start, start + PAGE_SIZE);
+  const totalPg  = Math.ceil(filteredData.length / PAGE_SIZE);
+  const hasApi   = !!getApiUrl();
+
+  pageData.forEach((r, i) => { rowMap[start + i] = r; });
 
   document.getElementById('tbl-wrap').innerHTML = `
     <table class="tbl">
       <thead><tr>
-        <th>#</th><th>Proyecto</th><th>Cliente</th><th>División</th>
-        <th>Host</th><th>Inicio</th><th>Límite</th><th>Estado</th>
+        <th>#</th><th>Proyecto</th><th>Cliente</th><th>Host</th>
+        <th>Inicio</th><th>Límite</th><th>Estado</th>
+        ${hasApi ? '<th></th>' : ''}
       </tr></thead>
       <tbody>
         ${pageData.length === 0
-          ? `<tr class="empty-row"><td colspan="8">Sin resultados para los filtros aplicados.</td></tr>`
-          : pageData.map((r, i) => `
-              <tr>
-                <td style="color:var(--muted);font-size:.75rem">${start + i + 1}</td>
-                <td class="titulo-cell">${r['Titulo']}</td>
-                <td style="color:var(--muted)">${r['Cliente'] || '—'}</td>
-                <td style="color:var(--muted);font-size:.8rem">${r['División'] || r['División'] || '—'}</td>
-                <td>${r['Host'] || '—'}</td>
-                <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
-                <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
-                <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado'] || '—'}</span></td>
-              </tr>`).join('')
+          ? `<tr class="empty-row"><td colspan="${hasApi?8:7}">Sin resultados para los filtros aplicados.</td></tr>`
+          : pageData.map((r,i)=>`<tr>
+              <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
+              <td class="titulo-cell">${r['Titulo']}</td>
+              <td style="color:var(--muted)">${r['Cliente']||'—'}</td>
+              <td>${r['Host']||'—'}</td>
+              <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
+              <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+              <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+              ${hasApi ? `<td style="white-space:nowrap">
+                <button class="btn-row-edit" title="Editar" onclick="openFormModal(rowMap[${start+i}])">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <button class="btn-row-delete" title="Eliminar" onclick="confirmDelete(rowMap[${start+i}])">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                </button>
+              </td>` : ''}
+            </tr>`).join('')
         }
       </tbody>
     </table>
@@ -655,17 +742,12 @@ function renderTable() {
 
   const pg = document.getElementById('pagination');
   if (totalPg <= 1) { pg.innerHTML = `<span>${filteredData.length} proyectos</span>`; return; }
-
   let btns = '';
-  for (let i = 1; i <= totalPg; i++) {
-    btns += `<button class="pg-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
-  }
-  pg.innerHTML = `
-    <span>${filteredData.length} proyectos · Página ${currentPage} de ${totalPg}</span>
+  for (let i=1; i<=totalPg; i++) btns += `<button class="pg-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
+  pg.innerHTML = `<span>${filteredData.length} proyectos · Página ${currentPage} de ${totalPg}</span>
     <button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>
     ${btns}
-    <button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPg?'disabled':''}>›</button>
-  `;
+    <button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPg?'disabled':''}>›</button>`;
 }
 
 function goPage(n) {
@@ -673,41 +755,202 @@ function goPage(n) {
   if (n < 1 || n > totalPg) return;
   currentPage = n;
   renderTable();
-  document.getElementById('tbl-wrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-// ── Helpers ──────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  Modal formulario (add / edit)
+// ─────────────────────────────────────────────────────────────
+function openFormModal(row) {
+  if (!getApiUrl()) { openSettings(); return; }
+  editingRow = row || null;
+  const form = document.getElementById('project-form');
+  form.reset();
 
-function uniqueSorted(data, key) {
-  return [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
+  document.getElementById('form-modal-title').textContent    = row ? 'Editar proyecto' : 'Nuevo proyecto';
+  document.getElementById('btn-form-submit').textContent      = row ? 'Guardar cambios' : 'Agregar proyecto';
+  document.getElementById('btn-form-delete').style.display    = row ? '' : 'none';
+
+  if (row) {
+    // Rellenar campos del formulario con los datos del row
+    for (const el of form.elements) {
+      if (!el.name) continue;
+      const val = row[el.name] || '';
+      if (el.type === 'date') {
+        el.value = toISO(val);
+      } else {
+        el.value = val;
+      }
+    }
+  }
+
+  document.getElementById('overlay-form').classList.remove('hidden');
 }
 
-// ── Carga de datos ───────────────────────────────────────────
+function closeFormModal() {
+  document.getElementById('overlay-form').classList.add('hidden');
+  editingRow = null;
+}
 
+// ─────────────────────────────────────────────────────────────
+//  Submit del formulario
+// ─────────────────────────────────────────────────────────────
+async function handleFormSubmit(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btn-form-submit');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const form = document.getElementById('project-form');
+  const data = {};
+  for (const el of form.elements) {
+    if (!el.name) continue;
+    if (el.type === 'date') {
+      data[el.name] = fromISO(el.value);
+    } else {
+      data[el.name] = el.value;
+    }
+  }
+
+  try {
+    const payload = editingRow
+      ? { action: 'update', row: editingRow._row, data }
+      : { action: 'add', data };
+
+    const res = await fetch(getApiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      closeFormModal();
+      showToast(editingRow ? 'Proyecto actualizado' : 'Proyecto agregado', 'success');
+      // Esperar 1.5s para que el Sheet se actualice antes de releer
+      setTimeout(() => loadData(), 1500);
+    } else {
+      throw new Error(json.error || 'Error desconocido');
+    }
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = editingRow ? 'Guardar cambios' : 'Agregar proyecto';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Eliminar proyecto
+// ─────────────────────────────────────────────────────────────
+let rowToDelete = null;
+
+function confirmDelete(row) {
+  rowToDelete = row;
+  document.getElementById('confirm-title').textContent = row['Titulo'] || 'este proyecto';
+  document.getElementById('overlay-confirm').classList.remove('hidden');
+}
+
+function confirmDeleteCurrent() {
+  closeFormModal();
+  confirmDelete(editingRow);
+}
+
+function closeConfirm() {
+  document.getElementById('overlay-confirm').classList.add('hidden');
+  rowToDelete = null;
+}
+
+async function executeDelete() {
+  const btn = document.getElementById('btn-confirm-delete');
+  btn.disabled = true;
+  btn.textContent = 'Eliminando...';
+
+  try {
+    const res = await fetch(getApiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'delete', row: rowToDelete._row })
+    });
+    const json = await res.json();
+
+    if (json.success) {
+      closeConfirm();
+      showToast('Proyecto eliminado', 'success');
+      setTimeout(() => loadData(), 1500);
+    } else {
+      throw new Error(json.error || 'Error desconocido');
+    }
+  } catch (err) {
+    showToast('Error: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Eliminar';
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Toast
+// ─────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = type;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 3500);
+}
+
+// Cerrar modales con Escape
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!document.getElementById('overlay-form').classList.contains('hidden'))     closeFormModal();
+  if (!document.getElementById('overlay-settings').classList.contains('hidden')) closeSettings();
+  if (!document.getElementById('overlay-confirm').classList.contains('hidden'))  closeConfirm();
+});
+
+// Cerrar modales al hacer clic en el overlay
+['overlay-form','overlay-settings','overlay-confirm'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target !== this) return;
+    if (id === 'overlay-form')     closeFormModal();
+    else if (id === 'overlay-settings') closeSettings();
+    else if (id === 'overlay-confirm')  closeConfirm();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+//  Carga de datos
+// ─────────────────────────────────────────────────────────────
 async function loadData() {
   const btn  = document.getElementById('btn-refresh');
   const icon = document.getElementById('refresh-icon');
   if (btn)  btn.disabled = true;
   if (icon) icon.parentElement.classList.add('spinning');
 
-  try {
-    const res  = await fetch(CSV_URL + '&cb=' + Date.now());
-    const text = await res.text();
+  const apiUrl = getApiUrl();
 
-    Papa.parse(text, {
-      header: true,
-      skipEmptyLines: true,
-      complete(results) {
-        render(results.data);
-        document.getElementById('last-update').textContent =
-          'Actualizado ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
-      },
-      error(err) {
-        showError('Error al parsear CSV: ' + err.message);
-      }
-    });
+  try {
+    if (apiUrl) {
+      // Leer desde Apps Script (incluye campo _row para edición)
+      const res  = await fetch(apiUrl + '?cb=' + Date.now());
+      const json = await res.json();
+      render(json.data || []);
+    } else {
+      // Fallback: leer desde CSV publicado (solo lectura)
+      const res  = await fetch(CSV_URL + '&cb=' + Date.now());
+      const text = await res.text();
+      Papa.parse(text, {
+        header: true, skipEmptyLines: true,
+        complete: r => render(r.data),
+        error:    e => showError('Error al parsear CSV: ' + e.message)
+      });
+    }
+
+    document.getElementById('last-update').textContent =
+      'Actualizado ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
   } catch (err) {
-    showError('No se pudo conectar con Google Sheets: ' + err.message);
+    showError('No se pudo conectar: ' + err.message);
   } finally {
     if (btn)  btn.disabled = false;
     if (icon) icon.parentElement.classList.remove('spinning');
@@ -717,10 +960,13 @@ async function loadData() {
 function showError(msg) {
   document.getElementById('main').innerHTML =
     `<div class="loading" style="color:var(--red)">${msg}<br><br>
-     <button class="btn-refresh" onclick="loadData()" style="margin:0 auto">Reintentar</button></div>`;
+     <button class="btn-refresh" style="margin:0 auto" onclick="loadData()">Reintentar</button></div>`;
 }
 
-// ── Inicio ───────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────
+//  Inicio
+// ─────────────────────────────────────────────────────────────
+updateApiMode();
 loadData();
 </script>
 </body>
