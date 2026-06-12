@@ -24,18 +24,35 @@ const SHEET_NAME = 'Reporte';
 
 // ── GET: devuelve todos los datos como JSON ─────────────────
 function doGet(e) {
-  const sheet   = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  const all     = sheet.getDataRange().getValues();
-  const rawHdrs = all[0];
-  const headers = rawHdrs.map(h => String(h).trim());
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet     = spreadsheet.getSheetByName(SHEET_NAME);
+  const all       = sheet.getDataRange().getValues();
+  const rawHdrs   = all[0];
+  const headers   = rawHdrs.map(h => String(h).trim());
 
-  var richText = [];
-  var formulas = [];
-  var dataRows = all.length - 1;
-  if (dataRows > 0) {
-    var range = sheet.getRange(2, 1, dataRows, headers.length);
-    richText = range.getRichTextValues();
-    formulas = range.getFormulas();
+  // ── Hyperlink map via Sheets API v4 (reads Smart Chip URLs too) ──
+  // Requires: Services → Google Sheets API (enabled in Apps Script)
+  var hyperlinkMap = {}; // hyperlinkMap[sheetRowIndex0][colIndex] = url
+  try {
+    var lastRow = sheet.getLastRow();
+    var lastCol = sheet.getLastColumn();
+    var range   = SHEET_NAME + '!A1:' + colLetter(lastCol) + lastRow;
+    var resp    = Sheets.Spreadsheets.get(spreadsheet.getId(), {
+      ranges: [range],
+      fields: 'sheets.data.rowData.values.hyperlink'
+    });
+    var rowData = resp.sheets[0].data[0].rowData || [];
+    rowData.forEach(function(row, ri) {
+      if (!row || !row.values) return;
+      row.values.forEach(function(cell, ci) {
+        if (cell && cell.hyperlink) {
+          if (!hyperlinkMap[ri]) hyperlinkMap[ri] = {};
+          hyperlinkMap[ri][ci] = cell.hyperlink;
+        }
+      });
+    });
+  } catch (ex) {
+    Logger.log('Sheets API error (enable Google Sheets API in Services): ' + ex);
   }
 
   const rows = all.slice(1)
@@ -50,29 +67,9 @@ function doGet(e) {
           v = (v !== null && v !== undefined) ? String(v) : '';
         }
         obj[h] = v;
-
-        var url = null;
-
-        // 1. Rich text cell-level link (Insert > Link on whole cell)
-        if (richText[idx] && richText[idx][i]) {
-          url = richText[idx][i].getLinkUrl();
-          // 2. Link applied to a text run (part of the cell text)
-          if (!url) {
-            var runs = richText[idx][i].getRuns();
-            for (var ri = 0; ri < runs.length; ri++) {
-              url = runs[ri].getLinkUrl();
-              if (url) break;
-            }
-          }
-        }
-
-        // 3. =HYPERLINK("url","text") formula
-        if (!url && formulas[idx] && formulas[idx][i]) {
-          var m = formulas[idx][i].match(/=HYPERLINK\s*\(\s*"([^"]+)"/i);
-          if (m) url = m[1];
-        }
-
-        if (url) obj[h + '_url'] = url;
+        // Sheets API row index: idx+1 because rowData[0] = header row
+        var apiRow = hyperlinkMap[idx + 1];
+        if (apiRow && apiRow[i]) obj[h + '_url'] = apiRow[i];
       });
       return obj;
     })
@@ -81,6 +78,12 @@ function doGet(e) {
   return ContentService
     .createTextOutput(JSON.stringify({ data: rows, headers: headers }))
     .setMimeType(ContentService.MimeType.JSON);
+}
+
+function colLetter(n) {
+  var s = '';
+  while (n > 0) { s = String.fromCharCode(64 + (n - 1) % 26 + 1) + s; n = Math.floor((n - 1) / 26); }
+  return s;
 }
 
 // ── POST: agrega o edita una fila ───────────────────────────
