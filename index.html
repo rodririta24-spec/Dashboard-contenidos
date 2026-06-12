@@ -323,7 +323,9 @@
           <label class="form-label">Status *</label>
           <select class="form-select" name="Estado" required>
             <option value="">—</option>
+            <option>Solicitado</option>
             <option>Guionado</option>
+            <option>Grabación</option>
             <option>En edición</option>
             <option>Entregado</option>
           </select>
@@ -1231,7 +1233,7 @@ function showError(msg) {
 // ─────────────────────────────────────────────────────────────
 //  Inline status picker
 // ─────────────────────────────────────────────────────────────
-const STATUS_OPTIONS = ['Guionado', 'En edición', 'Entregado'];
+const STATUS_OPTIONS = ['Solicitado', 'Guionado', 'Grabación', 'En edición', 'Entregado'];
 
 function showStatusPicker(e, rowNum, current) {
   e.stopPropagation();
