@@ -321,13 +321,8 @@
         </div>
         <div class="form-group">
           <label class="form-label">Status *</label>
-          <select class="form-select" name="Estado" required>
+          <select class="form-select" name="Estado" id="select-estado" required>
             <option value="">—</option>
-            <option>Solicitado</option>
-            <option>Guionado</option>
-            <option>Grabación</option>
-            <option>En edición</option>
-            <option>Entregado</option>
           </select>
         </div>
         <div class="form-group">
@@ -1014,6 +1009,10 @@ function openFormModal(row) {
   const form = document.getElementById('project-form');
   form.reset();
 
+  const sel = document.getElementById('select-estado');
+  sel.innerHTML = '<option value="">—</option>' +
+    uniqueSorted(allData, 'Estado').map(s => `<option>${s}</option>`).join('');
+
   document.getElementById('form-modal-title').textContent  = row ? 'Edit project'   : 'New project';
   document.getElementById('btn-form-submit').textContent   = row ? 'Save changes'   : 'Add project';
   document.getElementById('btn-form-delete').style.display = row ? ''               : 'none';
@@ -1233,16 +1232,16 @@ function showError(msg) {
 // ─────────────────────────────────────────────────────────────
 //  Inline status picker
 // ─────────────────────────────────────────────────────────────
-const STATUS_OPTIONS = ['Solicitado', 'Guionado', 'Grabación', 'En edición', 'Entregado'];
-
 function showStatusPicker(e, rowNum, current) {
   e.stopPropagation();
   document.querySelectorAll('.status-picker').forEach(p => p.remove());
   if (!getApiUrl()) { openSettings(); return; }
 
+  const options = uniqueSorted(allData, 'Estado');
+
   const picker = document.createElement('div');
   picker.className = 'status-picker';
-  STATUS_OPTIONS.forEach(s => {
+  options.forEach(s => {
     const btn = document.createElement('button');
     btn.textContent = s;
     if (s === current) btn.classList.add('active');
