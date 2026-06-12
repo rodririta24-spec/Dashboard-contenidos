@@ -497,6 +497,13 @@ function badgeClass(estado) {
   return 'default';
 }
 
+function getISOWeek(date) {
+  const d = new Date(date); d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 3 - (d.getDay() + 6) % 7);
+  const w1 = new Date(d.getFullYear(), 0, 4);
+  return 1 + Math.round(((d - w1) / 864e5 - 3 + (w1.getDay() + 6) % 7) / 7);
+}
+
 function getWeek() {
   const now = new Date(); now.setHours(0,0,0,0);
   const day = now.getDay();
@@ -615,7 +622,7 @@ function renderSemana() {
   card.innerHTML = `
     <div class="card-title">
       <div class="dot" style="background:var(--purple)"></div>This week
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
