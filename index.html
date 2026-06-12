@@ -436,6 +436,8 @@ let chartCliente    = null;
 let chartHost       = null;
 let chartSolicitante = null;
 let editingRow   = null;
+let colGuion      = 'Guión';
+let colMateriales = 'Materiales';
 let sortKey      = '';
 let sortDir      = 1; // 1 = asc, -1 = desc
 const rowMap     = {};
@@ -557,6 +559,20 @@ function cleanRow(row) {
   return out;
 }
 
+function detectLinkColumns(data) {
+  if (!data.length) return;
+  const keys = Object.keys(data[0]);
+  const norm = s => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const find = target => keys.find(k => norm(k) === norm(target)) || target;
+  colGuion      = find('Guión');
+  colMateriales = find('Materiales');
+  // keep form input names in sync so saves go to the right column
+  const gi = document.getElementById('field-guion');
+  const mi = document.getElementById('field-materiales');
+  if (gi) gi.name = colGuion;
+  if (mi) mi.name = colMateriales;
+}
+
 function uniqueSorted(data, key) {
   return [...new Set(data.map(r => r[key]).filter(Boolean))].sort();
 }
@@ -571,6 +587,7 @@ function render(data) {
     return cleaned;
   }).filter(r => r['Titulo']);
   filteredData = [...allData];
+  detectLinkColumns(allData);
 
   const hasApi = !!getApiUrl();
 
@@ -922,8 +939,8 @@ function renderTable() {
               <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
               <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
               <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
-              ${driveLink(r['Guión'])}
-              ${driveLink(r['Materiales'])}
+              ${driveLink(r[colGuion])}
+              ${driveLink(r[colMateriales])}
               ${hasApi ? `<td style="white-space:nowrap">
                 <button class="btn-row-edit" title="Edit" onclick="openFormModal(rowMap[${start+i}])">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
