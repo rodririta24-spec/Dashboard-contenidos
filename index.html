@@ -1186,6 +1186,7 @@ async function loadData() {
     if (apiUrl) {
       const res  = await fetch(apiUrl + '?cb=' + Date.now());
       const json = await res.json();
+      if (json._debug) console.log('[Dashboard] AS debug:', JSON.stringify(json._debug));
       render(json.data || []);
     } else {
       const res  = await fetch(CSV_URL + '&cb=' + Date.now());
