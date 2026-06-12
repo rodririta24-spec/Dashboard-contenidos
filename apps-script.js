@@ -29,11 +29,13 @@ function doGet(e) {
   const rawHdrs = all[0];
   const headers = rawHdrs.map(h => String(h).trim());
 
-  // Rich text lets us extract hyperlink URLs from cells
   var richText = [];
+  var formulas = [];
   var dataRows = all.length - 1;
   if (dataRows > 0) {
-    richText = sheet.getRange(2, 1, dataRows, headers.length).getRichTextValues();
+    var range = sheet.getRange(2, 1, dataRows, headers.length);
+    richText = range.getRichTextValues();
+    formulas = range.getFormulas();
   }
 
   const rows = all.slice(1)
@@ -48,11 +50,29 @@ function doGet(e) {
           v = (v !== null && v !== undefined) ? String(v) : '';
         }
         obj[h] = v;
-        // If the cell has a hyperlink, expose its URL as fieldName_url
+
+        var url = null;
+
+        // 1. Rich text cell-level link (Insert > Link on whole cell)
         if (richText[idx] && richText[idx][i]) {
-          var url = richText[idx][i].getLinkUrl();
-          if (url) obj[h + '_url'] = url;
+          url = richText[idx][i].getLinkUrl();
+          // 2. Link applied to a text run (part of the cell text)
+          if (!url) {
+            var runs = richText[idx][i].getRuns();
+            for (var ri = 0; ri < runs.length; ri++) {
+              url = runs[ri].getLinkUrl();
+              if (url) break;
+            }
+          }
         }
+
+        // 3. =HYPERLINK("url","text") formula
+        if (!url && formulas[idx] && formulas[idx][i]) {
+          var m = formulas[idx][i].match(/=HYPERLINK\s*\(\s*"([^"]+)"/i);
+          if (m) url = m[1];
+        }
+
+        if (url) obj[h + '_url'] = url;
       });
       return obj;
     })
