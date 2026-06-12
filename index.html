@@ -362,6 +362,20 @@
           </div>
         </div>
         <div class="form-group full">
+          <label class="form-label">Script (Guión)</label>
+          <div style="display:flex;gap:.5rem;align-items:stretch">
+            <input class="form-input" name="Guión" id="field-guion"
+                   placeholder="Paste Google Drive script link"
+                   oninput="updateGuionLink()" style="flex:1;min-width:0" />
+            <a id="btn-guion-open" href="#" target="_blank" rel="noopener" title="Open script in Drive"
+               class="btn-mat-action"
+               style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);text-decoration:none;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Open
+            </a>
+          </div>
+        </div>
+        <div class="form-group full">
           <label class="form-label">Result</label>
           <input class="form-input" name="Resultado" placeholder="Delivered file name" />
         </div>
@@ -519,6 +533,24 @@ function inWeek(row, wk) {
   return (i && i >= wk.mon && i <= wk.sun) || (l && l >= wk.mon && l <= wk.sun);
 }
 
+function getNextWeek() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const day = now.getDay();
+  const thisMon = new Date(now); thisMon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  const mon = new Date(thisMon); mon.setDate(thisMon.getDate() + 7);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  return { mon, sun };
+}
+
+function getPrevWeek() {
+  const now = new Date(); now.setHours(0,0,0,0);
+  const day = now.getDay();
+  const thisMon = new Date(now); thisMon.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  const mon = new Date(thisMon); mon.setDate(thisMon.getDate() - 7);
+  const sun = new Date(mon); sun.setDate(mon.getDate() + 6); sun.setHours(23,59,59,999);
+  return { mon, sun };
+}
+
 function cleanRow(row) {
   const out = {};
   for (const k of Object.keys(row)) out[k.trim()] = (row[k] || '').toString().trim();
@@ -551,7 +583,11 @@ function render(data) {
     <div class="kpi-grid" id="kpi-grid"></div>
     <div class="row2">
       <div class="card" id="card-semana"></div>
+      <div class="card" id="card-next-week"></div>
+    </div>
+    <div class="row2">
       <div class="card" id="card-pendientes"></div>
+      <div class="card" id="card-prev-week"></div>
     </div>
     <div class="row2">
       <div class="card">
@@ -597,7 +633,9 @@ function render(data) {
 
   renderKPIs();
   renderSemana();
+  renderNextWeek();
   renderPendientes();
+  renderPrevWeek();
   renderCharts();
   renderTable();
 }
@@ -638,6 +676,60 @@ function renderSemana() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+          ${items.map(r=>`<tr>
+            <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
+            <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+          </tr>`).join('')}
+        </tbody></table>`}
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Next week
+// ─────────────────────────────────────────────────────────────
+function renderNextWeek() {
+  const wk = getNextWeek();
+  const items = allData.filter(r => inWeek(r, wk));
+  const card = document.getElementById('card-next-week');
+  const weekLabel = `${wk.mon.toLocaleDateString('es-AR',{day:'numeric',month:'short'})} – ${wk.sun.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'})}`;
+
+  card.innerHTML = `
+    <div class="card-title">
+      <div class="dot" style="background:var(--blue)"></div>Next week
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
+    </div>
+    ${items.length === 0
+      ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates next week.</p>`
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+          ${items.map(r=>`<tr>
+            <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
+            <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+          </tr>`).join('')}
+        </tbody></table>`}
+  `;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Previous week
+// ─────────────────────────────────────────────────────────────
+function renderPrevWeek() {
+  const wk = getPrevWeek();
+  const items = allData.filter(r => inWeek(r, wk));
+  const card = document.getElementById('card-prev-week');
+  const weekLabel = `${wk.mon.toLocaleDateString('es-AR',{day:'numeric',month:'short'})} – ${wk.sun.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'})}`;
+
+  card.innerHTML = `
+    <div class="card-title">
+      <div class="dot" style="background:var(--green)"></div>Previous week
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
+    </div>
+    ${items.length === 0
+      ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates last week.</p>`
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
@@ -785,6 +877,11 @@ function thClass(key) {
   return sortDir > 0 ? 'sortable sort-asc' : 'sortable sort-desc';
 }
 
+function driveLink(url) {
+  if (!url || !url.startsWith('http')) return '<td></td>';
+  return `<td><a href="${url}" target="_blank" rel="noopener" title="Open in Drive" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>`;
+}
+
 function renderTable() {
   const sorted   = getSorted();
   const start    = (currentPage - 1) * PAGE_SIZE;
@@ -805,11 +902,17 @@ function renderTable() {
         <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">Start</th>
         <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">Deadline</th>
         <th class="${thClass('Estado')}"          onclick="setSort('Estado')">Status</th>
+        <th title="Script (Guión)" style="width:32px;text-align:center">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        </th>
+        <th title="Materials" style="width:32px;text-align:center">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </th>
         ${hasApi ? '<th></th>' : ''}
       </tr></thead>
       <tbody>
         ${pageData.length === 0
-          ? `<tr class="empty-row"><td colspan="${hasApi?9:8}">No results for the applied filters.</td></tr>`
+          ? `<tr class="empty-row"><td colspan="${hasApi?11:10}">No results for the applied filters.</td></tr>`
           : pageData.map((r,i)=>`<tr>
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}</td>
@@ -819,6 +922,8 @@ function renderTable() {
               <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
               <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
               <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+              ${driveLink(r['Guión'])}
+              ${driveLink(r['Materiales'])}
               ${hasApi ? `<td style="white-space:nowrap">
                 <button class="btn-row-edit" title="Edit" onclick="openFormModal(rowMap[${start+i}])">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -872,6 +977,7 @@ function openFormModal(row) {
   }
 
   updateMatLink();
+  updateGuionLink();
   document.getElementById('overlay-form').classList.remove('hidden');
 }
 
@@ -883,6 +989,19 @@ function closeFormModal() {
 function updateMatLink() {
   const input = document.getElementById('field-materiales');
   const link  = document.getElementById('btn-mat-open');
+  if (!input || !link) return;
+  const val = input.value.trim();
+  if (val.startsWith('http')) {
+    link.href = val;
+    link.style.display = 'flex';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+function updateGuionLink() {
+  const input = document.getElementById('field-guion');
+  const link  = document.getElementById('btn-guion-open');
   if (!input || !link) return;
   const val = input.value.trim();
   if (val.startsWith('http')) {
