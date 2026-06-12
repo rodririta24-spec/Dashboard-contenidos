@@ -100,6 +100,22 @@
     .badge.guionado  { background: var(--yellow-bg); color: var(--yellow); }
     .badge.edicion   { background: var(--blue-bg);   color: var(--blue);   }
     .badge.default   { background: var(--surface2);  color: var(--muted);  }
+    .status-badge { cursor: pointer; }
+    .status-badge:hover { opacity: .82; }
+    .status-picker {
+      position: fixed; z-index: 9999;
+      background: var(--surface2); border: 1px solid var(--border);
+      border-radius: .5rem; padding: .25rem; box-shadow: 0 8px 24px #0008;
+      display: flex; flex-direction: column; min-width: 110px;
+    }
+    .status-picker button {
+      background: none; border: none; padding: .35rem .7rem;
+      text-align: left; border-radius: .3rem; cursor: pointer;
+      font-size: .78rem; font-weight: 600; color: var(--text);
+      transition: background .1s;
+    }
+    .status-picker button:hover { background: var(--border); }
+    .status-picker button.active { color: var(--blue); }
 
     /* ── Date spans ─────────────────────────────────── */
     .dt { font-size: .8rem; color: var(--muted); white-space: nowrap; }
@@ -703,7 +719,7 @@ function renderSemana() {
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
-            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
         </tbody></table>`}
@@ -731,7 +747,7 @@ function renderNextWeek() {
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
-            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
         </tbody></table>`}
@@ -759,7 +775,7 @@ function renderPrevWeek() {
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
-            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
         </tbody></table>`}
@@ -791,7 +807,7 @@ function renderPendientes() {
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td style="color:var(--muted);font-size:.8rem">${r['Cliente']||'—'}</td>
             <td><span class="dt ${dtClass(r['Fecha de inicio'])}">${fmtDate(r['Fecha de inicio'])}</span></td>
-            <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -953,7 +969,7 @@ function renderTable() {
               <td>${r['Host']||'—'}</td>
               <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
               <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
-              <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+              <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
               ${driveLink(getLink(r, colGuion))}
               ${driveLink(getLink(r, colMateriales))}
               ${hasApi ? `<td style="white-space:nowrap">
@@ -1212,6 +1228,56 @@ function showError(msg) {
 
 // ─────────────────────────────────────────────────────────────
 //  Init
+// ─────────────────────────────────────────────────────────────
+//  Inline status picker
+// ─────────────────────────────────────────────────────────────
+const STATUS_OPTIONS = ['Guionado', 'En edición', 'Entregado'];
+
+function showStatusPicker(e, rowNum, current) {
+  e.stopPropagation();
+  document.querySelectorAll('.status-picker').forEach(p => p.remove());
+  if (!getApiUrl()) { openSettings(); return; }
+
+  const picker = document.createElement('div');
+  picker.className = 'status-picker';
+  STATUS_OPTIONS.forEach(s => {
+    const btn = document.createElement('button');
+    btn.textContent = s;
+    if (s === current) btn.classList.add('active');
+    btn.onclick = ev => { ev.stopPropagation(); applyQuickStatus(rowNum, s); };
+    picker.appendChild(btn);
+  });
+
+  const rect = e.currentTarget.getBoundingClientRect();
+  picker.style.top  = (rect.bottom + 4) + 'px';
+  picker.style.left = rect.left + 'px';
+  document.body.appendChild(picker);
+
+  setTimeout(() => {
+    document.addEventListener('click', () => document.querySelectorAll('.status-picker').forEach(p => p.remove()), { once: true });
+  }, 0);
+}
+
+async function applyQuickStatus(rowNum, newStatus) {
+  document.querySelectorAll('.status-picker').forEach(p => p.remove());
+  const row = allData.find(r => String(r._row) === String(rowNum));
+  if (!row || row['Estado'] === newStatus) return;
+
+  row['Estado'] = newStatus;
+  applyFilters();
+  renderKPIs(); renderSemana(); renderNextWeek(); renderPrevWeek(); renderPendientes(); renderCharts();
+
+  try {
+    await fetch(getApiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'update', row: rowNum, data: { Estado: newStatus } })
+    });
+  } catch (_) {
+    loadData();
+  }
+}
+
 // ─────────────────────────────────────────────────────────────
 updateApiMode();
 loadData();
