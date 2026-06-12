@@ -155,47 +155,50 @@ function doPost(e) {
 
 // ── TEST: corré esta función desde el editor para diagnosticar ─
 function testLinks() {
-  var sheet   = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-  var lastRow = sheet.getLastRow();
-  var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function(h){ return String(h).trim(); });
-  Logger.log('Headers: ' + headers.join(' | '));
-  Logger.log('Last row: ' + lastRow);
+  var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+  var sheet       = spreadsheet.getSheetByName(SHEET_NAME);
+  var lastRow     = sheet.getLastRow();
+  var lastCol     = sheet.getLastColumn();
+  var headers     = sheet.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h){ return String(h).trim(); });
 
+  // Find Guion column
   var guionIdx = -1;
   headers.forEach(function(h, i) {
-    var n = h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
-    if (n === 'guion') guionIdx = i;
+    if (h.toLowerCase().replace('ó','o') === 'guion') guionIdx = i;
   });
-  Logger.log('Guion col index: ' + guionIdx + ' (' + (headers[guionIdx]||'not found') + ')');
-  if (guionIdx === -1) return;
+  Logger.log('Guion col: ' + guionIdx + ' (' + (headers[guionIdx]||'NOT FOUND') + ')');
 
-  // Find first 5 rows that have a non-empty Titulo (actual data rows)
-  var titleCol  = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
-  var dataRowNums = [];
-  for (var i = 0; i < titleCol.length && dataRowNums.length < 5; i++) {
-    if (titleCol[i][0]) dataRowNums.push(i + 2); // sheet row number
+  // Find first 3 data rows
+  var titleVals = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var dataRows = [];
+  for (var i = 0; i < titleVals.length && dataRows.length < 3; i++) {
+    if (titleVals[i][0]) dataRows.push(i + 2);
   }
-  Logger.log('First data rows: ' + dataRowNums.join(', '));
+  Logger.log('First data rows: ' + dataRows.join(', '));
 
-  dataRowNums.forEach(function(rowNum) {
-    var cell      = sheet.getRange(rowNum, guionIdx + 1);
-    var value     = cell.getValue();
-    var formula   = cell.getFormula();
-    var rt        = cell.getRichTextValue();
-    var cellUrl   = rt ? rt.getLinkUrl() : null;
-    var runUrl    = null;
-    if (rt && !cellUrl) {
-      var runs = rt.getRuns();
-      for (var r = 0; r < runs.length; r++) {
-        runUrl = runs[r].getLinkUrl();
-        if (runUrl) break;
-      }
+  // ── Test 1: Sheets API v4 ──────────────────────────────────
+  Logger.log('--- Testing Sheets API v4 ---');
+  if (typeof Sheets === 'undefined') {
+    Logger.log('ERROR: Google Sheets API NOT enabled! Go to: Services (+) → Google Sheets API → Add');
+    Logger.log('Without it, Smart Chip URLs cannot be read.');
+  } else {
+    try {
+      var range = SHEET_NAME + '!A1:' + colLetter(lastCol) + lastRow;
+      var resp  = Sheets.Spreadsheets.get(spreadsheet.getId(), {
+        ranges: [range],
+        fields: 'sheets.data.rowData.values.hyperlink'
+      });
+      var rowData = resp.sheets[0].data[0].rowData || [];
+      Logger.log('Sheets API OK — total rowData entries: ' + rowData.length);
+      dataRows.forEach(function(rowNum) {
+        var apiRow = rowData[rowNum - 1]; // 0-indexed
+        var cell   = apiRow && apiRow.values ? apiRow.values[guionIdx] : null;
+        Logger.log('Row ' + rowNum + ' Guion hyperlink: ' + (cell ? cell.hyperlink : 'null/no cell'));
+      });
+    } catch(ex) {
+      Logger.log('Sheets API error: ' + ex.toString());
     }
-    var fmMatch = formula ? formula.match(/=HYPERLINK\s*\(\s*"([^"]+)"/i) : null;
-    // Check if it might be a smart chip (value empty but cell not blank)
-    var displayValue = cell.getDisplayValue();
-    Logger.log('Row ' + rowNum + ': value="' + value + '" display="' + displayValue + '" | cellUrl=' + cellUrl + ' | runUrl=' + runUrl + ' | formula="' + formula + '" | fmUrl=' + (fmMatch ? fmMatch[1] : null));
-  });
+  }
 }
 
 // ── Helpers ─────────────────────────────────────────────────
