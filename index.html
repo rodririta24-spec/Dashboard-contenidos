@@ -116,6 +116,15 @@
     }
     .status-picker button:hover { background: var(--border); }
     .status-picker button.active { color: var(--blue); }
+    .editable-cell { cursor: pointer; border-radius: .2rem; padding: .05rem .25rem; margin: -.05rem -.25rem; transition: background .1s; }
+    .editable-cell:hover { background: rgba(255,255,255,.07); }
+    .inline-editor {
+      position: fixed; z-index: 9999;
+      background: var(--surface2); border: 1px solid var(--blue);
+      border-radius: .35rem; padding: .25rem .5rem;
+      font-size: .82rem; color: var(--text); outline: none;
+      box-shadow: 0 4px 16px #0008; min-width: 130px;
+    }
 
     /* ── Date spans ─────────────────────────────────── */
     .dt { font-size: .8rem; color: var(--muted); white-space: nowrap; }
@@ -443,6 +452,7 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnydry1o935VKl
 let allData      = [];
 let filteredData = [];
 let allStatuses  = ['Solicitado', 'Guionado', 'Grabación', 'Edición', 'Entregado'];
+const esc = v => String(v||'').replace(/'/g,'&#39;');
 let currentPage  = 1;
 const PAGE_SIZE  = 20;
 let chartEstado     = null;
@@ -715,8 +725,8 @@ function renderSemana() {
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Script" style="width:32px;text-align:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
-            <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
-            <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+            <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
@@ -743,8 +753,8 @@ function renderNextWeek() {
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Script" style="width:32px;text-align:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
-            <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
-            <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+            <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
@@ -771,8 +781,8 @@ function renderPrevWeek() {
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Script" style="width:32px;text-align:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
-            <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
-            <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+            <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
@@ -803,8 +813,8 @@ function renderPendientes() {
       : `<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Start</th><th>Status</th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
-            <td style="color:var(--muted);font-size:.8rem">${r['Cliente']||'—'}</td>
-            <td><span class="dt ${dtClass(r['Fecha de inicio'])}">${fmtDate(r['Fecha de inicio'])}</span></td>
+            <td style="color:var(--muted);font-size:.8rem"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
+            <td><span class="dt ${dtClass(r['Fecha de inicio'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
           </tr>`).join('')}
         </tbody></table>`}
@@ -962,11 +972,11 @@ function renderTable() {
           : pageData.map((r,i)=>`<tr>
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}</td>
-              <td style="color:var(--muted)">${r['Cliente']||'—'}</td>
-              <td style="color:var(--muted)">${r['Solicitante']||'—'}</td>
-              <td>${r['Host']||'—'}</td>
-              <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
-              <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
+              <td style="color:var(--muted)"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
+              <td style="color:var(--muted)"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Solicitante','${esc(r['Solicitante'])}','select')">${r['Solicitante']||'—'}</span></td>
+              <td><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Host','${esc(r['Host'])}','select')">${r['Host']||'—'}</span></td>
+              <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
+              <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
               <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
               ${driveLink(getLink(r, colGuion))}
               ${driveLink(getLink(r, colMateriales))}
@@ -1232,6 +1242,83 @@ function showError(msg) {
 
 // ─────────────────────────────────────────────────────────────
 //  Init
+// ─────────────────────────────────────────────────────────────
+//  Inline cell editor (dates, selects, text)
+// ─────────────────────────────────────────────────────────────
+function showInlineEdit(e, rowNum, field, current, type) {
+  e.stopPropagation();
+  document.querySelectorAll('.inline-editor').forEach(el => el.remove());
+  if (!getApiUrl()) { openSettings(); return; }
+
+  let input;
+  if (type === 'select') {
+    input = document.createElement('select');
+    const opts = uniqueSorted(allData, field);
+    input.innerHTML = '<option value="">—</option>' +
+      opts.map(o => `<option${o===current?' selected':''}>${o}</option>`).join('');
+    input.onchange = () => applyInlineEdit(rowNum, field, input.value);
+  } else if (type === 'date') {
+    input = document.createElement('input');
+    input.type = 'date';
+    input.value = toISO(current);
+    input.onkeydown = ev => {
+      if (ev.key === 'Enter')  { ev.preventDefault(); commitInlineEdit(input, rowNum, field, 'date'); }
+      if (ev.key === 'Escape') input.remove();
+    };
+    input.onblur = () => setTimeout(() => { if (document.contains(input)) commitInlineEdit(input, rowNum, field, 'date'); }, 200);
+  } else {
+    input = document.createElement('input');
+    input.type = 'text';
+    input.value = current || '';
+    input.onkeydown = ev => {
+      if (ev.key === 'Enter')  { ev.preventDefault(); commitInlineEdit(input, rowNum, field, 'text'); }
+      if (ev.key === 'Escape') input.remove();
+    };
+    input.onblur = () => setTimeout(() => { if (document.contains(input)) commitInlineEdit(input, rowNum, field, 'text'); }, 200);
+  }
+
+  input.className = 'inline-editor';
+  const rect = e.currentTarget.getBoundingClientRect();
+  input.style.top  = (rect.bottom + 4) + 'px';
+  input.style.left = rect.left + 'px';
+  document.body.appendChild(input);
+  if (type !== 'select') { input.focus(); if (type === 'text') input.select(); }
+
+  setTimeout(() => {
+    document.addEventListener('click', ev => { if (!input.contains(ev.target)) input.remove(); }, { once: true });
+  }, 0);
+}
+
+function commitInlineEdit(input, rowNum, field, type) {
+  const val = type === 'date' ? isoToSheet(input.value) : input.value;
+  input.remove();
+  applyInlineEdit(rowNum, field, val);
+}
+
+function isoToSheet(iso) {
+  if (!iso) return '';
+  const [y, m, d] = iso.split('-');
+  return `${Number(d)}/${Number(m)}/${y}`;
+}
+
+async function applyInlineEdit(rowNum, field, newValue) {
+  document.querySelectorAll('.inline-editor').forEach(el => el.remove());
+  const row = allData.find(r => String(r._row) === String(rowNum));
+  if (!row || row[field] === newValue) return;
+
+  row[field] = newValue;
+  applyFilters();
+  renderKPIs(); renderSemana(); renderNextWeek(); renderPrevWeek(); renderPendientes(); renderCharts();
+
+  try {
+    await fetch(getApiUrl(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify({ action: 'update', row: rowNum, data: { [field]: newValue } })
+    });
+  } catch (_) { loadData(); }
+}
+
 // ─────────────────────────────────────────────────────────────
 //  Inline status picker
 // ─────────────────────────────────────────────────────────────
