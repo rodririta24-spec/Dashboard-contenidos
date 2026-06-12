@@ -576,10 +576,6 @@ function detectLinkColumns(data) {
   const mi = document.getElementById('field-materiales');
   if (gi) gi.name = colGuion;
   if (mi) mi.name = colMateriales;
-  console.log('[Dashboard] colGuion="' + colGuion + '" colMateriales="' + colMateriales + '"');
-  const sample = data.find(r => r[colGuion + '_url'] || r[colMateriales + '_url']);
-  if (sample) console.log('[Dashboard] Found _url fields:', colGuion + '_url=' + sample[colGuion+'_url'], colMateriales + '_url=' + sample[colMateriales+'_url']);
-  else console.log('[Dashboard] No _url fields found in any row. Keys in first row:', keys.filter(k=>k.includes('_url')).join(', ') || '(none)');
 }
 
 function uniqueSorted(data, key) {
@@ -1186,7 +1182,6 @@ async function loadData() {
     if (apiUrl) {
       const res  = await fetch(apiUrl + '?cb=' + Date.now());
       const json = await res.json();
-      if (json._debug) console.log('[Dashboard] AS debug:', JSON.stringify(json._debug));
       render(json.data || []);
     } else {
       const res  = await fetch(CSV_URL + '&cb=' + Date.now());

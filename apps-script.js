@@ -105,21 +105,8 @@ function doGet(e) {
     })
     .filter(Boolean);
 
-  // Debug: count how many _url fields were added
-  var urlCount = 0;
-  var urlSample = [];
-  rows.forEach(function(r) {
-    headers.forEach(function(h) {
-      if (r[h + '_url']) { urlCount++; if (urlSample.length < 2) urlSample.push(h + ': ' + r[h + '_url']); }
-    });
-  });
-
   return ContentService
-    .createTextOutput(JSON.stringify({
-      data: rows,
-      headers: headers,
-      _debug: { hyperlinkMapEntries: Object.keys(hyperlinkMap).length, urlFieldsFound: urlCount, samples: urlSample }
-    }))
+    .createTextOutput(JSON.stringify({ data: rows, headers: headers }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
