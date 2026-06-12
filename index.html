@@ -799,8 +799,9 @@ function renderTable() {
       <thead><tr>
         <th>#</th>
         <th class="${thClass('Titulo')}"         onclick="setSort('Titulo')">Project</th>
-        <th class="${thClass('Cliente')}"         onclick="setSort('Cliente')">Client</th>
-        <th class="${thClass('Host')}"            onclick="setSort('Host')">Host</th>
+        <th class="${thClass('Cliente')}"     onclick="setSort('Cliente')">Client</th>
+        <th class="${thClass('Solicitante')}" onclick="setSort('Solicitante')">Requester</th>
+        <th class="${thClass('Host')}"        onclick="setSort('Host')">Host</th>
         <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">Start</th>
         <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">Deadline</th>
         <th class="${thClass('Estado')}"          onclick="setSort('Estado')">Status</th>
@@ -808,11 +809,12 @@ function renderTable() {
       </tr></thead>
       <tbody>
         ${pageData.length === 0
-          ? `<tr class="empty-row"><td colspan="${hasApi?8:7}">No results for the applied filters.</td></tr>`
+          ? `<tr class="empty-row"><td colspan="${hasApi?9:8}">No results for the applied filters.</td></tr>`
           : pageData.map((r,i)=>`<tr>
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}</td>
               <td style="color:var(--muted)">${r['Cliente']||'—'}</td>
+              <td style="color:var(--muted)">${r['Solicitante']||'—'}</td>
               <td>${r['Host']||'—'}</td>
               <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
               <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
