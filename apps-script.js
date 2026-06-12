@@ -29,6 +29,13 @@ function doGet(e) {
   const rawHdrs = all[0];
   const headers = rawHdrs.map(h => String(h).trim());
 
+  // Rich text lets us extract hyperlink URLs from cells
+  var richText = [];
+  var dataRows = all.length - 1;
+  if (dataRows > 0) {
+    richText = sheet.getRange(2, 1, dataRows, headers.length).getRichTextValues();
+  }
+
   const rows = all.slice(1)
     .map((row, idx) => {
       if (!row[0]) return null;
@@ -41,6 +48,11 @@ function doGet(e) {
           v = (v !== null && v !== undefined) ? String(v) : '';
         }
         obj[h] = v;
+        // If the cell has a hyperlink, expose its URL as fieldName_url
+        if (richText[idx] && richText[idx][i]) {
+          var url = richText[idx][i].getLinkUrl();
+          if (url) obj[h + '_url'] = url;
+        }
       });
       return obj;
     })

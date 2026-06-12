@@ -566,7 +566,6 @@ function detectLinkColumns(data) {
   const find = target => keys.find(k => norm(k) === norm(target)) || target;
   colGuion      = find('Guión');
   colMateriales = find('Materiales');
-  // keep form input names in sync so saves go to the right column
   const gi = document.getElementById('field-guion');
   const mi = document.getElementById('field-materiales');
   if (gi) gi.name = colGuion;
@@ -693,12 +692,13 @@ function renderSemana() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th style="width:32px" title="Script"></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -720,12 +720,13 @@ function renderNextWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates next week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th style="width:32px" title="Script"></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -747,12 +748,13 @@ function renderPrevWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates last week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th style="width:32px" title="Script"></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
+            ${driveLink(getLink(r, colGuion))}
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -894,8 +896,15 @@ function thClass(key) {
   return sortDir > 0 ? 'sortable sort-asc' : 'sortable sort-desc';
 }
 
+function getLink(row, col) {
+  const byUrl = row[col + '_url'] || '';
+  if (byUrl) return byUrl;
+  const val = row[col] || '';
+  return val.startsWith('http') ? val : '';
+}
+
 function driveLink(url) {
-  if (!url || !url.startsWith('http')) return '<td></td>';
+  if (!url) return '<td></td>';
   return `<td><a href="${url}" target="_blank" rel="noopener" title="Open in Drive" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>`;
 }
 
@@ -939,8 +948,8 @@ function renderTable() {
               <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
               <td><span class="dt ${dtClass(r['Fecha Limite'])}">${fmtDate(r['Fecha Limite'])}</span></td>
               <td><span class="badge ${badgeClass(r['Estado'])}">${r['Estado']||'—'}</span></td>
-              ${driveLink(r[colGuion])}
-              ${driveLink(r[colMateriales])}
+              ${driveLink(getLink(r, colGuion))}
+              ${driveLink(getLink(r, colMateriales))}
               ${hasApi ? `<td style="white-space:nowrap">
                 <button class="btn-row-edit" title="Edit" onclick="openFormModal(rowMap[${start+i}])">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
