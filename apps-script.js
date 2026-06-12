@@ -153,41 +153,45 @@ function doPost(e) {
 // ── TEST: corré esta función desde el editor para diagnosticar ─
 function testLinks() {
   var sheet   = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  var lastRow = sheet.getLastRow();
   var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0].map(function(h){ return String(h).trim(); });
   Logger.log('Headers: ' + headers.join(' | '));
+  Logger.log('Last row: ' + lastRow);
 
   var guionIdx = -1;
-  var matIdx   = -1;
   headers.forEach(function(h, i) {
-    var n = h.toLowerCase().replace(/[áéíóúàèìòùäëïöü]/g,'').replace('ó','o').replace('ñ','n');
-    if (n === 'guion' || n.indexOf('guion') === 0) guionIdx = i;
-    if (n === 'materiales')                         matIdx   = i;
+    var n = h.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+    if (n === 'guion') guionIdx = i;
   });
   Logger.log('Guion col index: ' + guionIdx + ' (' + (headers[guionIdx]||'not found') + ')');
-  Logger.log('Materiales col index: ' + matIdx + ' (' + (headers[matIdx]||'not found') + ')');
+  if (guionIdx === -1) return;
 
-  [guionIdx, matIdx].forEach(function(ci) {
-    if (ci === -1) return;
-    Logger.log('--- Checking column: ' + headers[ci] + ' ---');
-    var range     = sheet.getRange(2, ci + 1, 5, 1);
-    var values    = range.getValues();
-    var richTexts = range.getRichTextValues();
-    var formulas  = range.getFormulas();
-    for (var i = 0; i < 5; i++) {
-      var rt = richTexts[i][0];
-      var cellUrl = rt ? rt.getLinkUrl() : null;
-      var runUrl  = null;
-      if (rt && !cellUrl) {
-        var runs = rt.getRuns();
-        for (var r = 0; r < runs.length; r++) {
-          runUrl = runs[r].getLinkUrl();
-          if (runUrl) break;
-        }
+  // Find first 5 rows that have a non-empty Titulo (actual data rows)
+  var titleCol  = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
+  var dataRowNums = [];
+  for (var i = 0; i < titleCol.length && dataRowNums.length < 5; i++) {
+    if (titleCol[i][0]) dataRowNums.push(i + 2); // sheet row number
+  }
+  Logger.log('First data rows: ' + dataRowNums.join(', '));
+
+  dataRowNums.forEach(function(rowNum) {
+    var cell      = sheet.getRange(rowNum, guionIdx + 1);
+    var value     = cell.getValue();
+    var formula   = cell.getFormula();
+    var rt        = cell.getRichTextValue();
+    var cellUrl   = rt ? rt.getLinkUrl() : null;
+    var runUrl    = null;
+    if (rt && !cellUrl) {
+      var runs = rt.getRuns();
+      for (var r = 0; r < runs.length; r++) {
+        runUrl = runs[r].getLinkUrl();
+        if (runUrl) break;
       }
-      var formula = formulas[i][0];
-      var fmMatch = formula ? formula.match(/=HYPERLINK\s*\(\s*"([^"]+)"/i) : null;
-      Logger.log('Row ' + (i+2) + ': value="' + values[i][0] + '" | cellUrl=' + cellUrl + ' | runUrl=' + runUrl + ' | formula=' + formula + ' | fmUrl=' + (fmMatch ? fmMatch[1] : null));
     }
+    var fmMatch = formula ? formula.match(/=HYPERLINK\s*\(\s*"([^"]+)"/i) : null;
+    // Check if it might be a smart chip (value empty but cell not blank)
+    var displayValue = cell.getDisplayValue();
+    Logger.log('Row ' + rowNum + ': value="' + value + '" display="' + displayValue + '" | cellUrl=' + cellUrl + ' | runUrl=' + runUrl + ' | formula="' + formula + '" | fmUrl=' + (fmMatch ? fmMatch[1] : null));
   });
 }
 
