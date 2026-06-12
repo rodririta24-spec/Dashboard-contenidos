@@ -692,7 +692,7 @@ function renderSemana() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th style="width:32px" title="Script"></th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Script" style="width:32px;text-align:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
@@ -720,7 +720,7 @@ function renderNextWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates next week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th style="width:32px" title="Script"></th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Script" style="width:32px;text-align:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
@@ -748,7 +748,7 @@ function renderPrevWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates last week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th style="width:32px" title="Script"></th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Script" style="width:32px;text-align:center"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt">${fmtDate(r['Fecha de inicio'])}</span></td>
