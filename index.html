@@ -442,6 +442,7 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnydry1o935VKl
 // ─────────────────────────────────────────────────────────────
 let allData      = [];
 let filteredData = [];
+let allStatuses  = [];
 let currentPage  = 1;
 const PAGE_SIZE  = 20;
 let chartEstado     = null;
@@ -1010,8 +1011,9 @@ function openFormModal(row) {
   form.reset();
 
   const sel = document.getElementById('select-estado');
+  const statusList = allStatuses.length ? allStatuses : uniqueSorted(allData, 'Estado');
   sel.innerHTML = '<option value="">—</option>' +
-    uniqueSorted(allData, 'Estado').map(s => `<option>${s}</option>`).join('');
+    statusList.map(s => `<option>${s}</option>`).join('');
 
   document.getElementById('form-modal-title').textContent  = row ? 'Edit project'   : 'New project';
   document.getElementById('btn-form-submit').textContent   = row ? 'Save changes'   : 'Add project';
@@ -1199,6 +1201,7 @@ async function loadData() {
     if (apiUrl) {
       const res  = await fetch(apiUrl + '?cb=' + Date.now());
       const json = await res.json();
+      if (json.statuses && json.statuses.length) allStatuses = json.statuses;
       render(json.data || []);
     } else {
       const res  = await fetch(CSV_URL + '&cb=' + Date.now());
@@ -1237,7 +1240,7 @@ function showStatusPicker(e, rowNum, current) {
   document.querySelectorAll('.status-picker').forEach(p => p.remove());
   if (!getApiUrl()) { openSettings(); return; }
 
-  const options = uniqueSorted(allData, 'Estado');
+  const options = allStatuses.length ? allStatuses : uniqueSorted(allData, 'Estado');
 
   const picker = document.createElement('div');
   picker.className = 'status-picker';

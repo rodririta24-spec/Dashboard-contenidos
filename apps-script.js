@@ -105,8 +105,20 @@ function doGet(e) {
     })
     .filter(Boolean);
 
+  // Read Estado dropdown options from data validation on the sheet
+  var statusOptions = [];
+  try {
+    var estadoIdx = headers.indexOf('Estado');
+    if (estadoIdx >= 0) {
+      var rule = sheet.getRange(2, estadoIdx + 1).getDataValidation();
+      if (rule && rule.getCriteriaType() === SpreadsheetApp.DataValidationCriteria.VALUE_IN_LIST) {
+        statusOptions = rule.getCriteriaValues()[0];
+      }
+    }
+  } catch(ex) { Logger.log('DataValidation error: ' + ex); }
+
   return ContentService
-    .createTextOutput(JSON.stringify({ data: rows, headers: headers }))
+    .createTextOutput(JSON.stringify({ data: rows, headers: headers, statuses: statusOptions }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
