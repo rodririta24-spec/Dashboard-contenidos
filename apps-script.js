@@ -86,6 +86,31 @@ function doPost(e) {
       return ok('delete');
     }
 
+    if (payload.action === 'upload') {
+      var fileName = payload.fileName || 'material';
+      var mimeType = payload.mimeType || 'application/octet-stream';
+      var folderId = payload.folderId || '';
+      var b64data  = payload.data    || '';
+
+      var folder;
+      if (folderId) {
+        folder = DriveApp.getFolderById(folderId);
+      } else {
+        var folderName = 'Dashboard Materials';
+        var found = DriveApp.getFoldersByName(folderName);
+        folder = found.hasNext() ? found.next() : DriveApp.createFolder(folderName);
+      }
+
+      var bytes     = Utilities.base64Decode(b64data);
+      var blob      = Utilities.newBlob(bytes, mimeType, fileName);
+      var driveFile = folder.createFile(blob);
+      driveFile.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+
+      return ContentService
+        .createTextOutput(JSON.stringify({ success: true, action: 'upload', url: driveFile.getUrl() }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
     return fail('Acción desconocida: ' + payload.action);
 
   } catch (err) {

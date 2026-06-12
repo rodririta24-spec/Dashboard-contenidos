@@ -210,6 +210,8 @@
     .btn-danger { background: var(--red); border: none; color: #fff; border-radius: 8px; padding: .5rem 1.1rem; font-size: .875rem; font-weight: 600; cursor: pointer; }
     .btn-danger:hover { background: #dc2626; }
     .btn-danger:disabled { opacity: .5; cursor: default; }
+    .btn-mat-action { transition: border-color .15s, color .15s; }
+    .btn-mat-action:hover { border-color: var(--blue); color: var(--text); }
 
     /* ── Toast ──────────────────────────────────────── */
     #toast {
@@ -270,6 +272,13 @@
       <input class="form-input" id="input-api-url" type="url" placeholder="https://script.google.com/macros/s/..." />
       <span style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block">
         Install <code style="color:var(--blue)">apps-script.js</code> in your Sheet and paste the Web App URL here. Saved only in this browser.
+      </span>
+    </div>
+    <div class="form-group" style="margin-top:.8rem">
+      <label class="form-label">Drive Folder ID <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:.85em">(optional)</span></label>
+      <input class="form-input" id="input-folder-id" placeholder="Leave empty to auto-create a folder" />
+      <span style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block">
+        Google Drive folder where uploaded materials will be saved. If empty, a "Dashboard Materials" folder is created automatically.
       </span>
     </div>
     <div class="form-actions">
@@ -347,7 +356,22 @@
         </div>
         <div class="form-group full">
           <label class="form-label">Materials</label>
-          <input class="form-input" name="Materiales" placeholder="Materials number / name" />
+          <div style="display:flex;gap:.5rem;align-items:stretch">
+            <input class="form-input" name="Materiales" id="field-materiales"
+                   placeholder="Google Drive link or description"
+                   oninput="updateMatLink()" style="flex:1;min-width:0" />
+            <a id="btn-mat-open" href="#" target="_blank" rel="noopener" title="Open link"
+               style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .65rem;color:var(--muted);text-decoration:none;align-items:center">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            </a>
+            <label id="btn-upload-mat" class="btn-mat-action" title="Upload file to Google Drive"
+                   style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;cursor:pointer;color:var(--muted);display:flex;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+              Upload
+              <input type="file" id="file-materiales" style="display:none" onchange="uploadMateriales(this)" />
+            </label>
+          </div>
+          <span id="mat-upload-status" style="display:none;font-size:.72rem;color:var(--muted);margin-top:.3rem"></span>
         </div>
         <div class="form-group full">
           <label class="form-label">Result</label>
@@ -419,15 +443,19 @@ function getApiUrl()    { return (localStorage.getItem('appsScriptUrl') || '').t
 function setApiUrl(url) { localStorage.setItem('appsScriptUrl', url.trim()); }
 
 function openSettings() {
-  document.getElementById('input-api-url').value = getApiUrl();
+  document.getElementById('input-api-url').value  = getApiUrl();
+  document.getElementById('input-folder-id').value = localStorage.getItem('driveFolderId') || '';
   document.getElementById('overlay-settings').classList.remove('hidden');
 }
 function closeSettings() {
   document.getElementById('overlay-settings').classList.add('hidden');
 }
 function saveSettings() {
-  const url = document.getElementById('input-api-url').value.trim();
+  const url      = document.getElementById('input-api-url').value.trim();
+  const folderId = document.getElementById('input-folder-id').value.trim();
   setApiUrl(url);
+  if (folderId) localStorage.setItem('driveFolderId', folderId);
+  else          localStorage.removeItem('driveFolderId');
   closeSettings();
   updateApiMode();
   loadData();
@@ -816,12 +844,73 @@ function openFormModal(row) {
     }
   }
 
+  updateMatLink();
   document.getElementById('overlay-form').classList.remove('hidden');
 }
 
 function closeFormModal() {
   document.getElementById('overlay-form').classList.add('hidden');
   editingRow = null;
+}
+
+function updateMatLink() {
+  const input = document.getElementById('field-materiales');
+  const link  = document.getElementById('btn-mat-open');
+  if (!input || !link) return;
+  const val = input.value.trim();
+  if (val.startsWith('http')) {
+    link.href = val;
+    link.style.display = 'flex';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+async function uploadMateriales(fileInput) {
+  const file = fileInput.files && fileInput.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) {
+    showToast('File too large — max 4 MB', 'error');
+    fileInput.value = '';
+    return;
+  }
+  const label  = document.getElementById('btn-upload-mat');
+  const status = document.getElementById('mat-upload-status');
+  label.style.opacity = '.5';
+  label.style.pointerEvents = 'none';
+  if (status) { status.textContent = 'Uploading ' + file.name + '…'; status.style.color = 'var(--muted)'; status.style.display = ''; }
+
+  const reader = new FileReader();
+  reader.onload = async function(ev) {
+    const base64 = ev.target.result.split(',')[1];
+    try {
+      const res = await fetch(getApiUrl(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          action:   'upload',
+          fileName: file.name,
+          mimeType: file.type || 'application/octet-stream',
+          data:     base64,
+          folderId: localStorage.getItem('driveFolderId') || ''
+        })
+      });
+      const json = await res.json();
+      if (!json.success) throw new Error(json.error || 'Upload failed');
+      document.getElementById('field-materiales').value = json.url;
+      updateMatLink();
+      showToast('File uploaded to Drive', 'success');
+      if (status) status.style.display = 'none';
+    } catch (err) {
+      showToast('Upload error: ' + err.message, 'error');
+      if (status) { status.textContent = 'Error: ' + err.message; status.style.color = 'var(--red)'; }
+    } finally {
+      label.style.opacity = '';
+      label.style.pointerEvents = '';
+      fileInput.value = '';
+    }
+  };
+  reader.readAsDataURL(file);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -879,8 +968,9 @@ function confirmDelete(row) {
 }
 
 function confirmDeleteCurrent() {
+  const row = editingRow;   // save before closeFormModal nulls it
   closeFormModal();
-  confirmDelete(editingRow);
+  confirmDelete(row);
 }
 
 function closeConfirm() {
