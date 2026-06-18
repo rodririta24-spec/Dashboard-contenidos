@@ -78,6 +78,7 @@
     .kpi-card.yellow  { border-left-color: var(--yellow); } .kpi-card.yellow .val { color: var(--yellow); }
     .kpi-card.blue    { border-left-color: var(--blue);   } .kpi-card.blue   .val { color: var(--blue);   }
     .kpi-card.purple  { border-left-color: var(--purple); } .kpi-card.purple .val { color: var(--purple); }
+    .kpi-card.orange  { border-left-color: #f97316; }      .kpi-card.orange .val { color: #f97316; }
 
     /* ── Two-col row ────────────────────────────────── */
     .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
@@ -483,7 +484,8 @@ const rowMap     = {};
 // ─────────────────────────────────────────────────────────────
 //  Settings
 // ─────────────────────────────────────────────────────────────
-function getApiUrl()    { return (localStorage.getItem('appsScriptUrl') || '').trim(); }
+const DEFAULT_API_URL = ''; // paste your Apps Script web app URL here to avoid reconfiguring on each device
+function getApiUrl()    { return (localStorage.getItem('appsScriptUrl') || DEFAULT_API_URL).trim(); }
 function setApiUrl(url) { localStorage.setItem('appsScriptUrl', url.trim()); }
 
 function openSettings() {
@@ -687,6 +689,10 @@ function render(data) {
           <option value="">All hosts</option>
           ${uniqueSorted(allData,'Host').map(v=>`<option>${v}</option>`).join('')}
         </select>
+        <select class="filter-sel" id="f-solicitante" onchange="applyFilters()">
+          <option value="">All requesters</option>
+          ${uniqueSorted(allData,'Solicitante').map(v=>`<option>${v}</option>`).join('')}
+        </select>
         <input class="search-inp" id="search" type="text" placeholder="Search project..." oninput="applyFilters()" />
       </div>
       <div id="tbl-wrap"></div>
@@ -710,6 +716,7 @@ function renderKPIs() {
   const total     = allData.length;
   const entregado = allData.filter(r => r['Estado'].toLowerCase().includes('entregado')).length;
   const guionado  = allData.filter(r => r['Estado'].toLowerCase().includes('guionado')).length;
+  const grabacion = allData.filter(r => r['Estado'].toLowerCase().includes('grabaci')).length;
   const edicion   = allData.filter(r => r['Estado'].toLowerCase().includes('edici')).length;
   const wk        = getWeek();
   const semana    = allData.filter(r => inWeek(r, wk)).length;
@@ -717,7 +724,8 @@ function renderKPIs() {
   document.getElementById('kpi-grid').innerHTML = `
     <div class="kpi-card neutral"><div class="lbl">Total</div><div class="val">${total}</div></div>
     <div class="kpi-card green"><div class="lbl">Delivered</div><div class="val">${entregado}</div><div class="sub">${Math.round(entregado/total*100)}% of total</div></div>
-    <div class="kpi-card yellow"><div class="lbl">Scripted</div><div class="val">${guionado}</div><div class="sub">Pending filming</div></div>
+    <div class="kpi-card yellow"><div class="lbl">Scripted</div><div class="val">${guionado}</div></div>
+    <div class="kpi-card orange"><div class="lbl">Filming</div><div class="val">${grabacion}</div></div>
     <div class="kpi-card blue"><div class="lbl">In editing</div><div class="val">${edicion}</div></div>
     <div class="kpi-card purple"><div class="lbl">This week</div><div class="val">${semana}</div><div class="sub">With dates this week</div></div>
   `;
@@ -898,14 +906,16 @@ function renderCharts() {
 //  All projects table — filters + sort
 // ─────────────────────────────────────────────────────────────
 function applyFilters() {
-  const estado  = document.getElementById('f-estado')?.value  || '';
-  const cliente = document.getElementById('f-cliente')?.value || '';
-  const host    = document.getElementById('f-host')?.value    || '';
+  const estado      = document.getElementById('f-estado')?.value      || '';
+  const cliente     = document.getElementById('f-cliente')?.value     || '';
+  const host        = document.getElementById('f-host')?.value        || '';
+  const solicitante = document.getElementById('f-solicitante')?.value || '';
   const search  = (document.getElementById('search')?.value   || '').toLowerCase();
   filteredData = allData.filter(r => {
-    if (estado  && r['Estado']  !== estado)  return false;
-    if (cliente && r['Cliente'] !== cliente) return false;
-    if (host    && r['Host']    !== host)    return false;
+    if (estado      && r['Estado']      !== estado)      return false;
+    if (cliente     && r['Cliente']     !== cliente)     return false;
+    if (host        && r['Host']        !== host)        return false;
+    if (solicitante && r['Solicitante'] !== solicitante) return false;
     if (search  && !r['Titulo'].toLowerCase().includes(search)) return false;
     return true;
   });
@@ -1408,6 +1418,7 @@ async function applyQuickStatus(rowNum, newStatus) {
 // ─────────────────────────────────────────────────────────────
 updateApiMode();
 loadData();
+setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
 </script>
 </body>
 </html>
