@@ -399,7 +399,17 @@
         </div>
         <div class="form-group full">
           <label class="form-label">Result</label>
-          <input class="form-input" name="Resultado" placeholder="Delivered file name" />
+          <div style="display:flex;gap:.5rem;align-items:stretch">
+            <input class="form-input" name="Resultado" id="field-resultado"
+                   placeholder="Paste YouTube or TikTok link"
+                   oninput="updateResultadoLink()" style="flex:1;min-width:0" />
+            <a id="btn-resultado-open" href="#" target="_blank" rel="noopener" title="Open result"
+               class="btn-mat-action"
+               style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);text-decoration:none;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Open
+            </a>
+          </div>
         </div>
       </div>
       <div class="form-actions">
@@ -453,6 +463,9 @@ let allData      = [];
 let filteredData = [];
 let allStatuses  = ['Solicitado', 'Guionado', 'Grabación', 'Edición', 'Entregado'];
 const esc = v => String(v||'').replace(/'/g,'&#39;');
+const ICON_GUION   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`;
+const ICON_MAT     = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+const ICON_RESULT  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>`;
 let currentPage  = 1;
 const PAGE_SIZE  = 20;
 let chartEstado     = null;
@@ -600,8 +613,10 @@ function detectLinkColumns(data) {
   colResultado  = find('Resultado');
   const gi = document.getElementById('field-guion');
   const mi = document.getElementById('field-materiales');
+  const ri = document.getElementById('field-resultado');
   if (gi) gi.name = colGuion;
   if (mi) mi.name = colMateriales;
+  if (ri) ri.name = colResultado;
 }
 
 function uniqueSorted(data, key) {
@@ -730,7 +745,7 @@ function renderSemana() {
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
-            ${driveLink(getLink(r, colGuion))}
+            ${driveLink(getLink(r, colGuion), ICON_GUION)}
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -758,7 +773,7 @@ function renderNextWeek() {
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
-            ${driveLink(getLink(r, colGuion))}
+            ${driveLink(getLink(r, colGuion), ICON_GUION)}
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -786,8 +801,8 @@ function renderPrevWeek() {
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
-            ${driveLink(getLink(r, colGuion))}
-            ${driveLink(getLink(r, colResultado))}
+            ${driveLink(getLink(r, colGuion), ICON_GUION)}
+            ${driveLink(getLink(r, colResultado), ICON_RESULT)}
           </tr>`).join('')}
         </tbody></table>`}
   `;
@@ -936,9 +951,9 @@ function getLink(row, col) {
   return val.startsWith('http') ? val : '';
 }
 
-function driveLink(url) {
+function driveLink(url, icon) {
   if (!url) return '<td></td>';
-  return `<td><a href="${url}" target="_blank" rel="noopener" title="Open in Drive" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a></td>`;
+  return `<td><a href="${url}" target="_blank" rel="noopener" title="Open" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'">${icon}</a></td>`;
 }
 
 function renderTable() {
@@ -984,9 +999,9 @@ function renderTable() {
               <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
               <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
               <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
-              ${driveLink(getLink(r, colGuion))}
-              ${driveLink(getLink(r, colMateriales))}
-              ${driveLink(getLink(r, colResultado))}
+              ${driveLink(getLink(r, colGuion), ICON_GUION)}
+              ${driveLink(getLink(r, colMateriales), ICON_MAT)}
+              ${driveLink(getLink(r, colResultado), ICON_RESULT)}
               ${hasApi ? `<td style="white-space:nowrap">
                 <button class="btn-row-edit" title="Edit" onclick="openFormModal(rowMap[${start+i}])">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
@@ -1046,6 +1061,7 @@ function openFormModal(row) {
 
   updateMatLink();
   updateGuionLink();
+  updateResultadoLink();
   document.getElementById('overlay-form').classList.remove('hidden');
 }
 
@@ -1070,6 +1086,19 @@ function updateMatLink() {
 function updateGuionLink() {
   const input = document.getElementById('field-guion');
   const link  = document.getElementById('btn-guion-open');
+  if (!input || !link) return;
+  const val = input.value.trim();
+  if (val.startsWith('http')) {
+    link.href = val;
+    link.style.display = 'flex';
+  } else {
+    link.style.display = 'none';
+  }
+}
+
+function updateResultadoLink() {
+  const input = document.getElementById('field-resultado');
+  const link  = document.getElementById('btn-resultado-open');
   if (!input || !link) return;
   const val = input.value.trim();
   if (val.startsWith('http')) {
