@@ -484,7 +484,7 @@ const rowMap     = {};
 // ─────────────────────────────────────────────────────────────
 //  Settings
 // ─────────────────────────────────────────────────────────────
-const DEFAULT_API_URL = ''; // paste your Apps Script web app URL here to avoid reconfiguring on each device
+const DEFAULT_API_URL = 'https://script.google.com/macros/s/AKfycbymZ58T9xlUVX_exo9vHDg8FkMSje8cEsyxyqE5kAL7cfNYKxW-xw7sfi2H8biaYULvXw/exec';
 function getApiUrl()    { return (localStorage.getItem('appsScriptUrl') || DEFAULT_API_URL).trim(); }
 function setApiUrl(url) { localStorage.setItem('appsScriptUrl', url.trim()); }
 
