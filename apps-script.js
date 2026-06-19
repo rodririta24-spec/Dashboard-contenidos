@@ -105,8 +105,29 @@ function doGet(e) {
     })
     .filter(Boolean);
 
+  // Build history from "Historial" sheet (if it exists)
+  var historyRows = [];
+  try {
+    var histSheet = spreadsheet.getSheetByName('Historial');
+    if (histSheet) {
+      var hAll = histSheet.getDataRange().getValues();
+      if (hAll.length > 1) {
+        var hHdrs = hAll[0].map(h => String(h).trim());
+        historyRows = hAll.slice(1).reverse().slice(0, 50).map(function(row) {
+          var obj = {};
+          hHdrs.forEach(function(h, i) {
+            obj[h] = row[i] instanceof Date ? row[i].toISOString() : String(row[i] || '');
+          });
+          return obj;
+        });
+      }
+    }
+  } catch(ex) {
+    Logger.log('History read error: ' + ex);
+  }
+
   return ContentService
-    .createTextOutput(JSON.stringify({ data: rows, headers: headers }))
+    .createTextOutput(JSON.stringify({ data: rows, headers: headers, history: historyRows }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -133,16 +154,21 @@ function doPost(e) {
         return toCellValue(headers[i], val);
       });
       sheet.appendRow(row);
+      var tituloAdd = payload.data['Titulo'] || payload.data[headers[0]] || '';
+      logChange(spreadsheet, 'added', tituloAdd, '', '', sheet.getLastRow());
       return ok('add');
     }
 
     if (payload.action === 'update') {
       const rowNum = Number(payload.row);
       if (!rowNum || rowNum < 2) return fail('Número de fila inválido: ' + payload.row);
+      var tituloCol = headers.indexOf('Titulo');
+      var tituloUpd = tituloCol >= 0 ? String(sheet.getRange(rowNum, tituloCol + 1).getValue()) : '';
       Object.entries(payload.data).forEach(([key, val]) => {
         const col = headers.indexOf(key);
         if (col === -1) return;
         sheet.getRange(rowNum, col + 1).setValue(toCellValue(key, String(val)));
+        logChange(spreadsheet, 'updated', tituloUpd, key, String(val), rowNum);
       });
       return ok('update');
     }
@@ -150,7 +176,10 @@ function doPost(e) {
     if (payload.action === 'delete') {
       const rowNum = Number(payload.row);
       if (!rowNum || rowNum < 2) return fail('Número de fila inválido: ' + payload.row);
+      var tituloDelCol = headers.indexOf('Titulo');
+      var tituloDel = tituloDelCol >= 0 ? String(sheet.getRange(rowNum, tituloDelCol + 1).getValue()) : '';
       sheet.deleteRow(rowNum);
+      logChange(spreadsheet, 'deleted', tituloDel, '', '', rowNum);
       return ok('delete');
     }
 
@@ -162,6 +191,25 @@ function doPost(e) {
 }
 
 // ── Helpers ─────────────────────────────────────────────────
+function getOrCreateHistSheet(spreadsheet) {
+  var s = spreadsheet.getSheetByName('Historial');
+  if (!s) {
+    s = spreadsheet.insertSheet('Historial');
+    s.appendRow(['Timestamp','Action','Titulo','Field','NewValue','RowNum']);
+    s.setFrozenRows(1);
+  }
+  return s;
+}
+
+function logChange(spreadsheet, action, titulo, field, newVal, rowNum) {
+  try {
+    var s = getOrCreateHistSheet(spreadsheet);
+    s.appendRow([new Date(), action, titulo || '', field || '', newVal || '', rowNum || '']);
+  } catch(ex) {
+    Logger.log('History write error: ' + ex);
+  }
+}
+
 function toCellValue(key, val) {
   if (!val) return '';
   if (key.toLowerCase().indexOf('fecha') !== -1) {
