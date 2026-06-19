@@ -113,11 +113,12 @@ function doGet(e) {
       var cAll = commSheet.getDataRange().getValues();
       if (cAll.length > 1) {
         var cHdrs = cAll[0].map(function(h){ return String(h).trim(); });
-        cAll.slice(1).forEach(function(row) {
+        cAll.slice(1).forEach(function(row, rowIdx) {
           var obj = {};
           cHdrs.forEach(function(h, i) {
             obj[h] = row[i] instanceof Date ? row[i].toISOString() : String(row[i] || '');
           });
+          obj['_commentRow'] = rowIdx + 2;
           var pRow = obj['ProjectRow'];
           if (!commentsMap[pRow]) commentsMap[pRow] = [];
           commentsMap[pRow].push(obj);
@@ -209,8 +210,35 @@ function doPost(e) {
 
     if (payload.action === 'comment') {
       var cs = getOrCreateCommentsSheet(spreadsheet);
-      cs.appendRow([new Date(), String(payload.row||''), String(payload.title||''), String(payload.author||''), String(payload.email||''), String(payload.picture||''), String(payload.comment||'')]);
+      appendCommentRow(cs, {
+        'Timestamp':    new Date(),
+        'ProjectRow':   String(payload.row   || ''),
+        'ProjectTitle': String(payload.title || ''),
+        'Author':       String(payload.author|| ''),
+        'Email':        String(payload.email || ''),
+        'Picture':      String(payload.picture||''),
+        'Comment':      String(payload.comment||'')
+      });
       return ok('comment');
+    }
+
+    if (payload.action === 'edit-comment') {
+      var commentRow = Number(payload.commentRow);
+      if (!commentRow || commentRow < 2) return fail('Fila de comentario inválida');
+      var cs2 = getOrCreateCommentsSheet(spreadsheet);
+      var cHdrs2 = cs2.getRange(1, 1, 1, cs2.getLastColumn()).getValues()[0].map(function(h){ return String(h).trim(); });
+      var commentCol = cHdrs2.indexOf('Comment') + 1;
+      if (commentCol < 1) return fail('Columna Comment no encontrada');
+      cs2.getRange(commentRow, commentCol).setValue(String(payload.comment || ''));
+      return ok('edit-comment');
+    }
+
+    if (payload.action === 'delete-comment') {
+      var commentRow = Number(payload.commentRow);
+      if (!commentRow || commentRow < 2) return fail('Fila de comentario inválida');
+      var cs3 = getOrCreateCommentsSheet(spreadsheet);
+      cs3.deleteRow(commentRow);
+      return ok('delete-comment');
     }
 
     return fail('Acción desconocida: ' + payload.action);
@@ -223,12 +251,32 @@ function doPost(e) {
 // ── Helpers ─────────────────────────────────────────────────
 function getOrCreateCommentsSheet(spreadsheet) {
   var s = spreadsheet.getSheetByName('Comentarios');
+  var requiredCols = ['Timestamp','ProjectRow','ProjectTitle','Author','Email','Picture','Comment'];
   if (!s) {
     s = spreadsheet.insertSheet('Comentarios');
-    s.appendRow(['Timestamp','ProjectRow','ProjectTitle','Author','Email','Picture','Comment']);
+    s.appendRow(requiredCols);
     s.setFrozenRows(1);
+    return s;
   }
+  var lastCol = s.getLastColumn();
+  var existingHdrs = lastCol > 0
+    ? s.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h){ return String(h).trim(); })
+    : [];
+  requiredCols.forEach(function(col) {
+    if (existingHdrs.indexOf(col) === -1) {
+      var nextCol = s.getLastColumn() + 1;
+      s.getRange(1, nextCol).setValue(col);
+      existingHdrs.push(col);
+    }
+  });
   return s;
+}
+
+function appendCommentRow(cs, dataMap) {
+  var lastCol = cs.getLastColumn();
+  var hdrs = cs.getRange(1, 1, 1, lastCol).getValues()[0].map(function(h){ return String(h).trim(); });
+  var row = hdrs.map(function(h) { return dataMap.hasOwnProperty(h) ? dataMap[h] : ''; });
+  cs.appendRow(row);
 }
 
 function getOrCreateHistSheet(spreadsheet) {

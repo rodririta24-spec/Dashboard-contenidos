@@ -329,6 +329,15 @@
     .comment-submit-row { display:flex; gap:.5rem; align-items:flex-end; }
     .comment-send-btn { white-space:nowrap; padding:.45rem .85rem; }
     .comment-hint { font-size:.67rem; color:var(--muted); margin-top:.15rem; }
+    .comment-content { position:relative; }
+    .comment-actions { position:absolute; top:.3rem; right:.3rem; display:none; gap:.2rem; }
+    .comment-item:hover .comment-actions { display:flex; }
+    .comment-action-btn { background:var(--surface); border:1px solid var(--border); color:var(--muted); cursor:pointer; padding:.18rem .38rem; border-radius:5px; font-size:.7rem; line-height:1; display:inline-flex; align-items:center; gap:.22rem; transition:color .1s, border-color .1s; }
+    .comment-action-btn:hover { border-color:var(--blue); color:var(--text); }
+    .comment-action-btn.danger:hover { border-color:var(--red); color:var(--red); }
+    .comment-edit-wrap { margin-top:.35rem; }
+    .comment-edit-wrap textarea { width:100%; resize:none; font-family:inherit; font-size:.82rem; line-height:1.45; min-height:56px; }
+    .comment-edit-actions { display:flex; gap:.3rem; justify-content:flex-end; margin-top:.3rem; }
 
     /* ── Light mode ─────────────────────────────────────────── */
     [data-theme="light"] { --bg:#f1f5f9; --surface:#ffffff; --surface2:#f8fafc; --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --green-bg:rgba(16,185,129,.12); --yellow-bg:rgba(245,158,11,.12); --blue-bg:rgba(59,130,246,.12); --purple-bg:rgba(167,139,250,.12); --red-bg:rgba(239,68,68,.12); }
@@ -1084,8 +1093,9 @@ function initGoogleAuth() {
   google.accounts.id.initialize({
     client_id: GOOGLE_CLIENT_ID,
     callback: handleCredentialResponse,
-    auto_select: true  // silently re-authenticates if already signed in to Google
+    auto_select: true
   });
+  if (currentUser && !currentUser.picture) google.accounts.id.prompt();
   // Only render the sign-in button if not already restored from localStorage
   if (!currentUser) {
     const btn = document.getElementById('gsi-btn');
@@ -1335,14 +1345,25 @@ function renderComments(rowNum) {
     const avatarHtml = pic
       ? `<img src="${pic}" referrerpolicy="no-referrer" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:.1rem" alt="${author}" />`
       : `<div class="comment-avatar" style="background:${color}">${initials}</div>`;
-    return `<div class="comment-item">
+    const cRow = c['_commentRow'] || '';
+    const emailMatch = !!(currentUser && currentUser.email && c['Email'] && currentUser.email === c['Email']);
+    const nameMatch  = !!(currentUser && !emailMatch && currentUser.name && currentUser.name === c['Author']);
+    const isOwn = emailMatch || nameMatch;
+    const actionsHtml = (isOwn && cRow)
+      ? `<div class="comment-actions">
+          <button class="comment-action-btn" onclick="editComment(${rowNum},${cRow},this)" title="Editar">✏️</button>
+          <button class="comment-action-btn danger" onclick="deleteComment(${rowNum},${cRow},this)" title="Eliminar">🗑️</button>
+        </div>`
+      : '';
+    return `<div class="comment-item" data-crow="${cRow}" data-isown="${isOwn}" data-cemail="${escAttr(c['Email']||'')}">
       ${avatarHtml}
       <div class="comment-content">
+        ${actionsHtml}
         <div class="comment-meta">
           <span class="comment-author-name">${author}</span>
           <span class="comment-time">${relTime(c['Timestamp'])}</span>
         </div>
-        <div class="comment-body">${c['Comment']||''}</div>
+        <div class="comment-body">${escAttr(c['Comment']||'').replace(/&#10;/g,'<br>')}</div>
       </div>
     </div>`;
   }).join('');
@@ -1367,13 +1388,83 @@ async function submitComment() {
     });
     const json = await res.json();
     if (json.success) {
+      textEl.value = '';
       if (!allComments[String(commentingRow)]) allComments[String(commentingRow)] = [];
       allComments[String(commentingRow)].push({ Timestamp: new Date().toISOString(), ProjectRow: String(commentingRow), ProjectTitle: title, Author: author, Email: email, Picture: currentUser.picture||'', Comment: text });
-      textEl.value = '';
       renderComments(commentingRow);
+      const savedRow = commentingRow;
+      fetch(getApiUrl() + '?cb=' + Date.now()).then(r => r.json()).then(d => {
+        if (d.comments) { allComments = d.comments; renderComments(savedRow); }
+      }).catch(() => {});
     } else { showToast(json.error || 'Error posting comment', 'error'); }
   } catch(err) { showToast('Error: '+err.message, 'error'); }
   finally { if (btn) { btn.disabled = false; btn.textContent = 'Post'; } }
+}
+
+function editComment(projectRowNum, commentRow, btn) {
+  const item = btn.closest('.comment-item');
+  const bodyEl = item.querySelector('.comment-body');
+  const orig = (bodyEl.innerText || bodyEl.textContent).trim();
+  bodyEl.style.display = 'none';
+  item.querySelector('.comment-actions').style.display = 'none';
+  const wrap = document.createElement('div');
+  wrap.className = 'comment-edit-wrap';
+  const ta = document.createElement('textarea');
+  ta.className = 'input'; ta.rows = 3; ta.textContent = orig;
+  const acts = document.createElement('div');
+  acts.className = 'comment-edit-actions';
+  acts.innerHTML = `<button class="btn-secondary" style="padding:.28rem .7rem;font-size:.75rem" onclick="cancelCommentEdit(this)">Cancelar</button>
+    <button class="btn-new" style="padding:.28rem .7rem;font-size:.75rem" onclick="saveCommentEdit(${projectRowNum},${commentRow},this)">Guardar</button>`;
+  wrap.appendChild(ta); wrap.appendChild(acts);
+  bodyEl.insertAdjacentElement('afterend', wrap);
+  ta.focus();
+}
+function cancelCommentEdit(btn) {
+  const item = btn.closest('.comment-item');
+  item.querySelector('.comment-edit-wrap').remove();
+  item.querySelector('.comment-body').style.display = '';
+  const act = item.querySelector('.comment-actions');
+  if (act) act.style.display = '';
+}
+async function saveCommentEdit(projectRowNum, commentRow, btn) {
+  const item = btn.closest('.comment-item');
+  const ta = item.querySelector('.comment-edit-wrap textarea');
+  const newText = ta.value.trim();
+  if (!newText) { ta.focus(); return; }
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const res = await fetch(getApiUrl(), {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'edit-comment', commentRow, comment: newText })
+    });
+    const json = await res.json();
+    if (json.success) {
+      const comments = allComments[String(projectRowNum)] || [];
+      const c = comments.find(x => String(x['_commentRow']) === String(commentRow));
+      if (c) c['Comment'] = newText;
+      renderComments(projectRowNum);
+      showToast('Comentario actualizado');
+    } else { showToast(json.error || 'Error al editar', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+  } catch(err) { showToast('Error: '+err.message, 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+}
+async function deleteComment(projectRowNum, commentRow, btn) {
+  if (!confirm('¿Eliminar este comentario?')) return;
+  btn.disabled = true;
+  try {
+    const res = await fetch(getApiUrl(), {
+      method:'POST', headers:{'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'delete-comment', commentRow })
+    });
+    const json = await res.json();
+    if (json.success) {
+      const comments = allComments[String(projectRowNum)] || [];
+      const idx = comments.findIndex(x => String(x['_commentRow']) === String(commentRow));
+      if (idx !== -1) comments.splice(idx, 1);
+      comments.forEach(x => { if (Number(x['_commentRow']) > commentRow) x['_commentRow']--; });
+      renderComments(projectRowNum);
+      showToast('Comentario eliminado');
+    } else { showToast(json.error || 'Error al eliminar', 'error'); btn.disabled = false; }
+  } catch(err) { showToast('Error: '+err.message, 'error'); btn.disabled = false; }
 }
 
 // ─────────────────────────────────────────────────────────────
