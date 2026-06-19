@@ -286,6 +286,9 @@
     .kanban-card-meta { font-size:.72rem; color:var(--muted); display:flex; flex-direction:column; gap:.18rem; }
     .kanban-card-links { display:flex; gap:.4rem; margin-top:.4rem; }
     .kanban-empty { font-size:.78rem; color:var(--muted); text-align:center; padding:.75rem .5rem; }
+    .kanban-card { cursor:grab; }
+    .kanban-card.dragging { opacity:.35; cursor:grabbing; }
+    .kanban-col.drag-over { outline:2px dashed var(--blue); background:rgba(59,130,246,.07); }
 
     /* ── Note tooltip ───────────────────────────────────────── */
     #floating-tip { position:fixed; z-index:9999; pointer-events:none; background:var(--surface2); border:1px solid var(--border); border-radius:7px; padding:.5rem .75rem; font-size:.78rem; color:var(--text); line-height:1.5; max-width:260px; white-space:pre-wrap; box-shadow:0 4px 20px rgba(0,0,0,.35); opacity:0; transition:opacity .12s; }
@@ -844,7 +847,7 @@ function renderSemana() {
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
-            <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
+            <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
           </tr>`).join('')}
@@ -872,7 +875,7 @@ function renderNextWeek() {
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
-            <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
+            <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
           </tr>`).join('')}
@@ -900,7 +903,7 @@ function renderPrevWeek() {
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
-            <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
+            <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
             ${driveLink(getLink(r, colResultado), ICON_RESULT)}
@@ -984,8 +987,18 @@ function daysLeftBadge(str) {
   if (d <= 3) return `<span class="days-badge soon">+${d}d</span>`;
   return `<span class="days-badge ok">+${d}d</span>`;
 }
+function isDelivered(estado) {
+  return !!estado && estado.toLowerCase().includes('entregado');
+}
+function dtClassRow(str, estado) {
+  return isDelivered(estado) ? '' : dtClass(str);
+}
+function daysLeftBadgeRow(str, estado) {
+  if (isDelivered(estado)) return '<span style="color:var(--muted)">—</span>';
+  return daysLeftBadge(str);
+}
 function rowUrgency(r) {
-  if (r['Estado'] && r['Estado'].toLowerCase().includes('entregado')) return '';
+  if (isDelivered(r['Estado'])) return '';
   const d = daysLeft(r['Fecha Limite']);
   if (d === null) return '';
   if (d < 0)  return 'row-overdue';
@@ -1030,6 +1043,40 @@ function setView(v) {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  Kanban drag & drop
+// ─────────────────────────────────────────────────────────────
+let dragRowNum = null;
+function kanbanDragStart(e, rowNum) {
+  dragRowNum = rowNum;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', String(rowNum));
+  setTimeout(() => { const el = document.querySelector(`[data-drag-row="${rowNum}"]`); if (el) el.classList.add('dragging'); }, 0);
+}
+function kanbanDragEnd(e) {
+  document.querySelectorAll('.kanban-card.dragging').forEach(el => el.classList.remove('dragging'));
+  document.querySelectorAll('.kanban-col.drag-over').forEach(el => el.classList.remove('drag-over'));
+  dragRowNum = null;
+}
+function kanbanDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const col = e.currentTarget;
+  if (!col.classList.contains('drag-over')) col.classList.add('drag-over');
+}
+function kanbanDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drag-over');
+}
+async function kanbanDrop(e, status) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  const rowNum = dragRowNum || e.dataTransfer.getData('text/plain');
+  if (!rowNum) return;
+  const row = allData.find(r => String(r._row) === String(rowNum));
+  if (!row || row['Estado'] === status) return;
+  await applyQuickStatus(rowNum, status);
+}
+
+// ─────────────────────────────────────────────────────────────
 //  Kanban
 // ─────────────────────────────────────────────────────────────
 function kanbanColColor(estado) {
@@ -1063,7 +1110,9 @@ function renderKanban() {
             dlHtml = `<span class="days-badge ${cls}" style="margin-top:.25rem">${dl < 0 ? dl+'d' : dl === 0 ? 'Hoy' : '+'+dl+'d'}</span>`;
           }
           const hasLinks = guionUrl || matUrl || resUrl;
-          return `<div class="kanban-card" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
+          return `<div class="kanban-card" draggable="true" data-drag-row="${r._row}"
+              ondragstart="kanbanDragStart(event,${r._row})" ondragend="kanbanDragEnd(event)"
+              onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>
             <div class="kanban-card-title">${r['Titulo']}</div>
             <div class="kanban-card-meta">
               ${r['Cliente'] ? `<span>${r['Cliente']}</span>` : ''}
@@ -1078,7 +1127,8 @@ function renderKanban() {
             </div>` : ''}
           </div>`;
         }).join('');
-    return `<div class="kanban-col">
+    return `<div class="kanban-col"
+      ondragover="kanbanDragOver(event)" ondragleave="kanbanDragLeave(event)" ondrop="kanbanDrop(event,'${s}')">
       <div class="kanban-col-title"><span style="color:${color}">${s}</span><span class="kanban-count">${cards.length}</span></div>
       ${cardsHtml}
     </div>`;
@@ -1272,8 +1322,8 @@ function renderTable() {
               <td style="color:var(--muted)"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Solicitante','${esc(r['Solicitante'])}','select')">${r['Solicitante']||'—'}</span></td>
               <td><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Host','${esc(r['Host'])}','select')">${r['Host']||'—'}</span></td>
               <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
-              <td><span class="dt ${dtClass(r['Fecha Limite'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
-              <td>${daysLeftBadge(r['Fecha Limite'])}</td>
+              <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
+              <td>${daysLeftBadgeRow(r['Fecha Limite'],r['Estado'])}</td>
               <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
               ${driveLink(getLink(r, colGuion), ICON_GUION)}
               ${driveLink(getLink(r, colMateriales), ICON_MAT)}
