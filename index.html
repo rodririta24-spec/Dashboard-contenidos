@@ -6,6 +6,7 @@
   <title>Dashboard · Content</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" defer></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -304,6 +305,15 @@
     .history-project { font-weight:600; }
     .history-field { color:var(--blue); }
 
+    /* ── Google auth ────────────────────────────────────────── */
+    .user-chip { display:flex; align-items:center; gap:.45rem; background:var(--surface2); border:1px solid var(--border); border-radius:20px; padding:.22rem .6rem .22rem .22rem; font-size:.78rem; max-width:200px; }
+    .user-avatar { width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+    .user-avatar-initials { width:22px; height:22px; border-radius:50%; background:var(--blue); color:#fff; font-size:.65rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .user-chip-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:110px; }
+    .btn-signout { background:none; border:none; color:var(--muted); cursor:pointer; font-size:.72rem; padding:0 0 0 .1rem; line-height:1; flex-shrink:0; }
+    .btn-signout:hover { color:var(--red); }
+    .comment-locked { display:flex; align-items:center; gap:.6rem; padding:.7rem .9rem; background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:.82rem; color:var(--muted); }
+
     /* ── Comments ───────────────────────────────────────────── */
     .comments-section { border-top:1px solid var(--border); margin-top:1.3rem; padding-top:1.1rem; }
     .comments-header { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.85rem; display:flex; align-items:center; gap:.4rem; }
@@ -345,6 +355,15 @@
         <circle cx="12" cy="12" r="3"/>
       </svg>
     </button>
+    <div id="auth-area" style="display:flex;align-items:center;gap:.4rem">
+      <div id="gsi-btn"></div>
+      <div id="user-chip" class="user-chip" style="display:none">
+        <img id="user-pic" class="user-avatar" src="" alt="" style="display:none" />
+        <div id="user-initials" class="user-avatar-initials"></div>
+        <span id="user-name" class="user-chip-name"></span>
+        <button class="btn-signout" onclick="signOut()" title="Sign out">✕</button>
+      </div>
+    </div>
     <button class="btn-icon" id="btn-theme" title="Toggle theme" onclick="toggleTheme()">
       <svg id="icon-theme-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
       <svg id="icon-theme-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -508,10 +527,16 @@
         Activity
       </div>
       <div class="comments-list" id="comments-list"></div>
-      <div class="comment-input-wrap">
-        <input class="form-input" id="comment-author" type="text" placeholder="Your name"
-               style="font-size:.8rem;padding:.38rem .65rem" autocomplete="off"
-               oninput="localStorage.setItem('commentAuthor',this.value)" />
+      <div id="comment-lock" class="comment-locked" style="display:none">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Tenés que iniciar sesión con Google para comentar</span>
+      </div>
+      <div class="comment-input-wrap" id="comment-input-wrap" style="display:none">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
+          <img id="comment-user-pic" style="width:22px;height:22px;border-radius:50%;object-fit:cover;display:none" src="" alt="" />
+          <div id="comment-user-initials" class="user-avatar-initials" style="width:22px;height:22px;font-size:.65rem"></div>
+          <span id="comment-user-name" style="font-size:.8rem;font-weight:600;color:var(--text)"></span>
+        </div>
         <div class="comment-submit-row">
           <textarea class="form-input" id="comment-text" rows="2"
                     placeholder="Write a comment… (Ctrl+Enter to send)"
@@ -576,8 +601,10 @@ let currentPage  = 1;
 const PAGE_SIZE  = 20;
 let currentView  = 'table';
 let historyData  = [];
-let allComments  = {};
+let allComments   = {};
 let commentingRow = null;
+let currentUser   = null;
+const GOOGLE_CLIENT_ID = '567960351432-kmo5rtdsapmd21ih9ac95u40i5klf9ti.apps.googleusercontent.com';
 const escAttr = v => String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'&#10;');
 let chartEstado     = null;
 let chartCliente    = null;
@@ -983,6 +1010,79 @@ function renderPendientes() {
 }
 
 // ─────────────────────────────────────────────────────────────
+//  Google Auth
+// ─────────────────────────────────────────────────────────────
+function parseJwt(token) {
+  try {
+    const b64 = token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/');
+    return JSON.parse(decodeURIComponent(atob(b64).split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join('')));
+  } catch(_) { return {}; }
+}
+
+function handleCredentialResponse(resp) {
+  const p = parseJwt(resp.credential);
+  currentUser = { name: p.name || p.email || 'User', email: p.email || '', picture: p.picture || '', token: resp.credential };
+  updateAuthUI();
+  updateCommentLock();
+}
+
+function signOut() {
+  if (typeof google !== 'undefined') google.accounts.id.disableAutoSelect();
+  currentUser = null;
+  updateAuthUI();
+  updateCommentLock();
+}
+
+function updateAuthUI() {
+  const gsiBtnEl  = document.getElementById('gsi-btn');
+  const chip      = document.getElementById('user-chip');
+  const picEl     = document.getElementById('user-pic');
+  const initEl    = document.getElementById('user-initials');
+  const nameEl    = document.getElementById('user-name');
+  if (!chip) return;
+  if (currentUser) {
+    if (gsiBtnEl) gsiBtnEl.style.display = 'none';
+    chip.style.display = '';
+    if (picEl && currentUser.picture) { picEl.src = currentUser.picture; picEl.style.display = ''; if (initEl) initEl.style.display = 'none'; }
+    else { if (picEl) picEl.style.display = 'none'; if (initEl) { initEl.style.display = ''; initEl.textContent = currentUser.name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2); } }
+    if (nameEl) nameEl.textContent = currentUser.name;
+  } else {
+    if (gsiBtnEl) gsiBtnEl.style.display = '';
+    chip.style.display = 'none';
+  }
+}
+
+function updateCommentLock() {
+  const lockEl    = document.getElementById('comment-lock');
+  const inputWrap = document.getElementById('comment-input-wrap');
+  if (!lockEl || !inputWrap) return;
+  if (currentUser) {
+    lockEl.style.display    = 'none';
+    inputWrap.style.display = '';
+    const picEl   = document.getElementById('comment-user-pic');
+    const initEl2 = document.getElementById('comment-user-initials');
+    const nameEl2 = document.getElementById('comment-user-name');
+    if (picEl && currentUser.picture) { picEl.src = currentUser.picture; picEl.style.display = ''; if (initEl2) initEl2.style.display = 'none'; }
+    else { if (picEl) picEl.style.display = 'none'; if (initEl2) { initEl2.style.display = ''; initEl2.textContent = currentUser.name.split(' ').map(w=>w[0]||'').join('').toUpperCase().slice(0,2); } }
+    if (nameEl2) nameEl2.textContent = currentUser.name;
+  } else {
+    lockEl.style.display    = '';
+    inputWrap.style.display = 'none';
+  }
+}
+
+function initGoogleAuth() {
+  if (typeof google === 'undefined' || !google.accounts) return;
+  google.accounts.id.initialize({
+    client_id: GOOGLE_CLIENT_ID,
+    callback: handleCredentialResponse,
+    auto_select: false
+  });
+  const btn = document.getElementById('gsi-btn');
+  if (btn) google.accounts.id.renderButton(btn, { type:'icon', shape:'circle', size:'medium', theme:'outline' });
+}
+
+// ─────────────────────────────────────────────────────────────
 //  Theme
 // ─────────────────────────────────────────────────────────────
 function toggleTheme() {
@@ -1202,8 +1302,7 @@ function openComments(row) {
   if (!row) { section.style.display = 'none'; return; }
   section.style.display = '';
   renderComments(row._row);
-  const authorEl = document.getElementById('comment-author');
-  if (authorEl) authorEl.value = localStorage.getItem('commentAuthor') || '';
+  updateCommentLock();
   setTimeout(() => {
     const list = document.getElementById('comments-list');
     if (list) list.scrollTop = list.scrollHeight;
@@ -1235,13 +1334,13 @@ function renderComments(rowNum) {
   list.scrollTop = list.scrollHeight;
 }
 async function submitComment() {
-  const textEl   = document.getElementById('comment-text');
-  const authorEl = document.getElementById('comment-author');
+  if (!currentUser) { showToast('Iniciá sesión con Google para comentar', 'error'); return; }
+  const textEl = document.getElementById('comment-text');
   if (!textEl || !commentingRow || !getApiUrl()) return;
-  const text   = textEl.value.trim();
+  const text = textEl.value.trim();
   if (!text) { textEl.focus(); return; }
-  const author = (authorEl?.value.trim()) || 'Anonymous';
-  localStorage.setItem('commentAuthor', author);
+  const author = currentUser.name;
+  const email  = currentUser.email;
   const row = allData.find(r => String(r._row) === String(commentingRow));
   const title = row ? row['Titulo'] : '';
   const btn = document.querySelector('.comment-send-btn');
@@ -1249,12 +1348,12 @@ async function submitComment() {
   try {
     const res  = await fetch(getApiUrl(), {
       method: 'POST', headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify({ action:'comment', row: commentingRow, title, author, comment: text })
+      body: JSON.stringify({ action:'comment', row: commentingRow, title, author, email, comment: text })
     });
     const json = await res.json();
     if (json.success) {
       if (!allComments[String(commentingRow)]) allComments[String(commentingRow)] = [];
-      allComments[String(commentingRow)].push({ Timestamp: new Date().toISOString(), ProjectRow: String(commentingRow), ProjectTitle: title, Author: author, Comment: text });
+      allComments[String(commentingRow)].push({ Timestamp: new Date().toISOString(), ProjectRow: String(commentingRow), ProjectTitle: title, Author: author, Email: email, Comment: text });
       textEl.value = '';
       renderComments(commentingRow);
     } else { showToast(json.error || 'Error posting comment', 'error'); }
@@ -1878,6 +1977,7 @@ async function applyQuickStatus(rowNum, newStatus) {
 updateApiMode();
 loadData();
 setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
+window.addEventListener('load', initGoogleAuth);
 </script>
 </body>
 </html>
