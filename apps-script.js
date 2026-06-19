@@ -105,6 +105,29 @@ function doGet(e) {
     })
     .filter(Boolean);
 
+  // Build comments map from "Comentarios" sheet (keyed by ProjectRow)
+  var commentsMap = {};
+  try {
+    var commSheet = spreadsheet.getSheetByName('Comentarios');
+    if (commSheet) {
+      var cAll = commSheet.getDataRange().getValues();
+      if (cAll.length > 1) {
+        var cHdrs = cAll[0].map(function(h){ return String(h).trim(); });
+        cAll.slice(1).forEach(function(row) {
+          var obj = {};
+          cHdrs.forEach(function(h, i) {
+            obj[h] = row[i] instanceof Date ? row[i].toISOString() : String(row[i] || '');
+          });
+          var pRow = obj['ProjectRow'];
+          if (!commentsMap[pRow]) commentsMap[pRow] = [];
+          commentsMap[pRow].push(obj);
+        });
+      }
+    }
+  } catch(ex) {
+    Logger.log('Comments read error: ' + ex);
+  }
+
   // Build history from "Historial" sheet (if it exists)
   var historyRows = [];
   try {
@@ -127,7 +150,7 @@ function doGet(e) {
   }
 
   return ContentService
-    .createTextOutput(JSON.stringify({ data: rows, headers: headers, history: historyRows }))
+    .createTextOutput(JSON.stringify({ data: rows, headers: headers, history: historyRows, comments: commentsMap }))
     .setMimeType(ContentService.MimeType.JSON);
 }
 
@@ -183,6 +206,12 @@ function doPost(e) {
       return ok('delete');
     }
 
+    if (payload.action === 'comment') {
+      var cs = getOrCreateCommentsSheet(spreadsheet);
+      cs.appendRow([new Date(), String(payload.row||''), String(payload.title||''), String(payload.author||''), String(payload.comment||'')]);
+      return ok('comment');
+    }
+
     return fail('Acción desconocida: ' + payload.action);
 
   } catch (err) {
@@ -191,6 +220,16 @@ function doPost(e) {
 }
 
 // ── Helpers ─────────────────────────────────────────────────
+function getOrCreateCommentsSheet(spreadsheet) {
+  var s = spreadsheet.getSheetByName('Comentarios');
+  if (!s) {
+    s = spreadsheet.insertSheet('Comentarios');
+    s.appendRow(['Timestamp','ProjectRow','ProjectTitle','Author','Comment']);
+    s.setFrozenRows(1);
+  }
+  return s;
+}
+
 function getOrCreateHistSheet(spreadsheet) {
   var s = spreadsheet.getSheetByName('Historial');
   if (!s) {

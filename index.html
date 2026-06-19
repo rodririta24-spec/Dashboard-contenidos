@@ -304,6 +304,22 @@
     .history-project { font-weight:600; }
     .history-field { color:var(--blue); }
 
+    /* ── Comments ───────────────────────────────────────────── */
+    .comments-section { border-top:1px solid var(--border); margin-top:1.3rem; padding-top:1.1rem; }
+    .comments-header { font-size:.72rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; margin-bottom:.85rem; display:flex; align-items:center; gap:.4rem; }
+    .comments-list { display:flex; flex-direction:column; gap:.6rem; max-height:230px; overflow-y:auto; margin-bottom:.85rem; padding-right:.2rem; }
+    .comment-item { display:flex; gap:.6rem; align-items:flex-start; }
+    .comment-avatar { width:26px; height:26px; border-radius:50%; background:var(--blue); color:#fff; font-size:.65rem; font-weight:800; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:.1rem; }
+    .comment-content { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:.5rem .7rem; }
+    .comment-meta { display:flex; align-items:center; gap:.5rem; margin-bottom:.22rem; }
+    .comment-author-name { font-size:.75rem; font-weight:700; }
+    .comment-time { font-size:.68rem; color:var(--muted); }
+    .comment-body { font-size:.82rem; line-height:1.5; white-space:pre-wrap; word-break:break-word; }
+    .comment-input-wrap { display:flex; flex-direction:column; gap:.4rem; }
+    .comment-submit-row { display:flex; gap:.5rem; align-items:flex-end; }
+    .comment-send-btn { white-space:nowrap; padding:.45rem .85rem; }
+    .comment-hint { font-size:.67rem; color:var(--muted); margin-top:.15rem; }
+
     /* ── Light mode ─────────────────────────────────────────── */
     [data-theme="light"] { --bg:#f1f5f9; --surface:#ffffff; --surface2:#f8fafc; --border:#e2e8f0; --text:#0f172a; --muted:#64748b; --green-bg:rgba(16,185,129,.12); --yellow-bg:rgba(245,158,11,.12); --blue-bg:rgba(59,130,246,.12); --purple-bg:rgba(167,139,250,.12); --red-bg:rgba(239,68,68,.12); }
     [data-theme="light"] .header { background:#fff; }
@@ -484,6 +500,27 @@
         <button type="submit" class="btn-primary" id="btn-form-submit">Save</button>
       </div>
     </form>
+
+    <!-- ── Comments / Activity ─────────────────────────── -->
+    <div class="comments-section" id="modal-comments" style="display:none">
+      <div class="comments-header">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Activity
+      </div>
+      <div class="comments-list" id="comments-list"></div>
+      <div class="comment-input-wrap">
+        <input class="form-input" id="comment-author" type="text" placeholder="Your name"
+               style="font-size:.8rem;padding:.38rem .65rem" autocomplete="off"
+               oninput="localStorage.setItem('commentAuthor',this.value)" />
+        <div class="comment-submit-row">
+          <textarea class="form-input" id="comment-text" rows="2"
+                    placeholder="Write a comment… (Ctrl+Enter to send)"
+                    style="flex:1;resize:none;font-family:inherit"
+                    onkeydown="if(event.ctrlKey&&event.key==='Enter'){event.preventDefault();submitComment();}"></textarea>
+          <button type="button" class="btn-primary comment-send-btn" onclick="submitComment()">Post</button>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -539,6 +576,8 @@ let currentPage  = 1;
 const PAGE_SIZE  = 20;
 let currentView  = 'table';
 let historyData  = [];
+let allComments  = {};
+let commentingRow = null;
 const escAttr = v => String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'&#10;');
 let chartEstado     = null;
 let chartCliente    = null;
@@ -1095,7 +1134,11 @@ function renderKanban() {
   const data = filteredData;
   const statuses = allStatuses.length ? allStatuses : ['Solicitado','Guionado','Grabación','Edición','Entregado'];
   wrap.innerHTML = '<div class="kanban-wrap">' + statuses.map(s => {
-    const cards = data.filter(r => r['Estado'] === s);
+    const cards = data.filter(r => r['Estado'] === s).sort((a,b) => {
+      const da = parseDate(a['Fecha Limite']) || new Date(9999,0,1);
+      const db = parseDate(b['Fecha Limite']) || new Date(9999,0,1);
+      return da - db;
+    });
     const color = kanbanColColor(s);
     const cardsHtml = cards.length === 0
       ? '<div class="kanban-empty">—</div>'
@@ -1133,6 +1176,90 @@ function renderKanban() {
       ${cardsHtml}
     </div>`;
   }).join('') + '</div>';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  Comments
+// ─────────────────────────────────────────────────────────────
+function relTime(isoStr) {
+  try {
+    const diff = (Date.now() - new Date(isoStr)) / 1000;
+    if (diff < 60)    return 'just now';
+    if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
+    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    return new Date(isoStr).toLocaleDateString('es-AR',{day:'numeric',month:'short'});
+  } catch(_) { return ''; }
+}
+function avatarColor(name) {
+  const colors = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ef4444','#f97316','#06b6d4'];
+  let h = 0; for (const c of name) h = (h*31 + c.charCodeAt(0)) & 0xffffffff;
+  return colors[Math.abs(h) % colors.length];
+}
+function openComments(row) {
+  commentingRow = row ? row._row : null;
+  const section = document.getElementById('modal-comments');
+  if (!section) return;
+  if (!row) { section.style.display = 'none'; return; }
+  section.style.display = '';
+  renderComments(row._row);
+  const authorEl = document.getElementById('comment-author');
+  if (authorEl) authorEl.value = localStorage.getItem('commentAuthor') || '';
+  setTimeout(() => {
+    const list = document.getElementById('comments-list');
+    if (list) list.scrollTop = list.scrollHeight;
+  }, 0);
+}
+function renderComments(rowNum) {
+  const list = document.getElementById('comments-list');
+  if (!list) return;
+  const comments = allComments[String(rowNum)] || [];
+  if (!comments.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:.8rem;padding:.35rem 0 .6rem">No comments yet. Start the conversation.</p>';
+    return;
+  }
+  list.innerHTML = comments.map(c => {
+    const author = c['Author'] || 'Anonymous';
+    const initials = author.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2) || '?';
+    const color = avatarColor(author);
+    return `<div class="comment-item">
+      <div class="comment-avatar" style="background:${color}">${initials}</div>
+      <div class="comment-content">
+        <div class="comment-meta">
+          <span class="comment-author-name">${author}</span>
+          <span class="comment-time">${relTime(c['Timestamp'])}</span>
+        </div>
+        <div class="comment-body">${c['Comment']||''}</div>
+      </div>
+    </div>`;
+  }).join('');
+  list.scrollTop = list.scrollHeight;
+}
+async function submitComment() {
+  const textEl   = document.getElementById('comment-text');
+  const authorEl = document.getElementById('comment-author');
+  if (!textEl || !commentingRow || !getApiUrl()) return;
+  const text   = textEl.value.trim();
+  if (!text) { textEl.focus(); return; }
+  const author = (authorEl?.value.trim()) || 'Anonymous';
+  localStorage.setItem('commentAuthor', author);
+  const row = allData.find(r => String(r._row) === String(commentingRow));
+  const title = row ? row['Titulo'] : '';
+  const btn = document.querySelector('.comment-send-btn');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  try {
+    const res  = await fetch(getApiUrl(), {
+      method: 'POST', headers: {'Content-Type':'text/plain'},
+      body: JSON.stringify({ action:'comment', row: commentingRow, title, author, comment: text })
+    });
+    const json = await res.json();
+    if (json.success) {
+      if (!allComments[String(commentingRow)]) allComments[String(commentingRow)] = [];
+      allComments[String(commentingRow)].push({ Timestamp: new Date().toISOString(), ProjectRow: String(commentingRow), ProjectTitle: title, Author: author, Comment: text });
+      textEl.value = '';
+      renderComments(commentingRow);
+    } else { showToast(json.error || 'Error posting comment', 'error'); }
+  } catch(err) { showToast('Error: '+err.message, 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Post'; } }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1388,12 +1515,16 @@ function openFormModal(row) {
   updateMatLink();
   updateGuionLink();
   updateResultadoLink();
+  openComments(row);
   document.getElementById('overlay-form').classList.remove('hidden');
 }
 
 function closeFormModal() {
   document.getElementById('overlay-form').classList.add('hidden');
+  const section = document.getElementById('modal-comments');
+  if (section) section.style.display = 'none';
   editingRow = null;
+  commentingRow = null;
 }
 
 function updateMatLink() {
@@ -1573,8 +1704,9 @@ async function loadData() {
     if (apiUrl) {
       const res  = await fetch(apiUrl + '?cb=' + Date.now());
       const json = await res.json();
-      if (json.statuses && json.statuses.length) allStatuses = json.statuses;
-      if (json.history)  historyData = json.history;
+      if (json.statuses  && json.statuses.length) allStatuses = json.statuses;
+      if (json.history)  historyData  = json.history;
+      if (json.comments) allComments  = json.comments;
       render(json.data || []);
     } else {
       const res  = await fetch(CSV_URL + '&cb=' + Date.now());
