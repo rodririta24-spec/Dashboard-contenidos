@@ -166,9 +166,10 @@ function colLetter(n) {
 // ── POST: agrega o edita una fila ───────────────────────────
 function doPost(e) {
   try {
-    const payload = JSON.parse(e.postData.contents);
-    const sheet   = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
-    const rawHdrs = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    const payload      = JSON.parse(e.postData.contents);
+    const spreadsheet  = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet        = spreadsheet.getSheetByName(SHEET_NAME);
+    const rawHdrs      = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
     const headers = rawHdrs.map(h => String(h).trim());
 
     if (payload.action === 'add') {
