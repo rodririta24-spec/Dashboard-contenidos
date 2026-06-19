@@ -209,7 +209,7 @@ function doPost(e) {
 
     if (payload.action === 'comment') {
       var cs = getOrCreateCommentsSheet(spreadsheet);
-      cs.appendRow([new Date(), String(payload.row||''), String(payload.title||''), String(payload.author||''), String(payload.email||''), String(payload.comment||'')]);
+      cs.appendRow([new Date(), String(payload.row||''), String(payload.title||''), String(payload.author||''), String(payload.email||''), String(payload.picture||''), String(payload.comment||'')]);
       return ok('comment');
     }
 
@@ -225,7 +225,7 @@ function getOrCreateCommentsSheet(spreadsheet) {
   var s = spreadsheet.getSheetByName('Comentarios');
   if (!s) {
     s = spreadsheet.insertSheet('Comentarios');
-    s.appendRow(['Timestamp','ProjectRow','ProjectTitle','Author','Email','Comment']);
+    s.appendRow(['Timestamp','ProjectRow','ProjectTitle','Author','Email','Picture','Comment']);
     s.setFrozenRows(1);
   }
   return s;

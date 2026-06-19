@@ -1331,8 +1331,12 @@ function renderComments(rowNum) {
     const author = c['Author'] || 'Anonymous';
     const initials = author.trim().split(/\s+/).map(w=>w[0]||'').join('').toUpperCase().slice(0,2) || '?';
     const color = avatarColor(author);
+    const pic = c['Picture'] || '';
+    const avatarHtml = pic
+      ? `<img src="${pic}" referrerpolicy="no-referrer" style="width:26px;height:26px;border-radius:50%;object-fit:cover;flex-shrink:0;margin-top:.1rem" alt="${author}" />`
+      : `<div class="comment-avatar" style="background:${color}">${initials}</div>`;
     return `<div class="comment-item">
-      <div class="comment-avatar" style="background:${color}">${initials}</div>
+      ${avatarHtml}
       <div class="comment-content">
         <div class="comment-meta">
           <span class="comment-author-name">${author}</span>
@@ -1359,12 +1363,12 @@ async function submitComment() {
   try {
     const res  = await fetch(getApiUrl(), {
       method: 'POST', headers: {'Content-Type':'text/plain'},
-      body: JSON.stringify({ action:'comment', row: commentingRow, title, author, email, comment: text })
+      body: JSON.stringify({ action:'comment', row: commentingRow, title, author, email, picture: currentUser.picture || '', comment: text })
     });
     const json = await res.json();
     if (json.success) {
       if (!allComments[String(commentingRow)]) allComments[String(commentingRow)] = [];
-      allComments[String(commentingRow)].push({ Timestamp: new Date().toISOString(), ProjectRow: String(commentingRow), ProjectTitle: title, Author: author, Email: email, Comment: text });
+      allComments[String(commentingRow)].push({ Timestamp: new Date().toISOString(), ProjectRow: String(commentingRow), ProjectTitle: title, Author: author, Email: email, Picture: currentUser.picture||'', Comment: text });
       textEl.value = '';
       renderComments(commentingRow);
     } else { showToast(json.error || 'Error posting comment', 'error'); }
