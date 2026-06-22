@@ -98,10 +98,12 @@
       display: inline-flex; align-items: center; padding: .2rem .6rem;
       border-radius: 999px; font-size: .72rem; font-weight: 600; white-space: nowrap;
     }
-    .badge.entregado { background: var(--green-bg);  color: var(--green);  }
-    .badge.guionado  { background: var(--yellow-bg); color: var(--yellow); }
-    .badge.edicion   { background: var(--blue-bg);   color: var(--blue);   }
-    .badge.default   { background: var(--surface2);  color: var(--muted);  }
+    .badge.entregado  { background: var(--green-bg);       color: var(--green);  }
+    .badge.guionado   { background: var(--yellow-bg);      color: var(--yellow); }
+    .badge.edicion    { background: var(--blue-bg);        color: var(--blue);   }
+    .badge.grabacion  { background: rgba(249,115,22,.15);  color: #f97316;       }
+    .badge.solicitado { background: var(--surface2);       color: var(--muted);  }
+    .badge.default    { background: var(--surface2);       color: var(--muted);  }
     .status-badge { cursor: pointer; }
     .status-badge:hover { opacity: .82; }
     .status-picker {
@@ -695,9 +697,11 @@ function dtClass(str) {
 function badgeClass(estado) {
   if (!estado) return 'default';
   const e = estado.toLowerCase();
-  if (e.includes('entregado')) return 'entregado';
-  if (e.includes('guionado'))  return 'guionado';
-  if (e.includes('edici'))     return 'edicion';
+  if (e.includes('entregado'))  return 'entregado';
+  if (e.includes('guionado'))   return 'guionado';
+  if (e.includes('edici'))      return 'edicion';
+  if (e.includes('grabaci'))    return 'grabacion';
+  if (e.includes('solicitado')) return 'solicitado';
   return 'default';
 }
 
