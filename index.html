@@ -1011,12 +1011,14 @@ function renderPendientes() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">All delivered.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Start</th><th>Status</th></tr></thead><tbody>
+      : `<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Start</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr>
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}</td>
             <td style="color:var(--muted);font-size:.8rem"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
             <td><span class="dt ${dtClass(r['Fecha de inicio'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
+            ${driveLink(getLink(r, colGuion), ICON_GUION)}
+            ${driveLink(getLink(r, colMateriales), ICON_MAT)}
           </tr>`).join('')}
         </tbody></table>`}
   `;
