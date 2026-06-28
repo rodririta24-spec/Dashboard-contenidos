@@ -1793,6 +1793,11 @@ async function handleFormSubmit(e) {
     data[el.name] = el.type === 'date' ? fromISO(el.value) : el.value;
   }
 
+  if ((data['Estado'] || '').toLowerCase().includes('entregado')) {
+    const t = new Date();
+    data['Fecha Limite'] = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
+  }
+
   try {
     const payload = editingRow
       ? { action: 'update', row: editingRow._row, data }
@@ -2059,6 +2064,14 @@ async function applyQuickStatus(rowNum, newStatus) {
   const row = allData.find(r => String(r._row) === String(rowNum));
   if (!row || row['Estado'] === newStatus) return;
 
+  const updateData = { Estado: newStatus };
+  if (newStatus.toLowerCase().includes('entregado')) {
+    const t = new Date();
+    const todayStr = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
+    updateData['Fecha Limite'] = todayStr;
+    row['Fecha Limite'] = todayStr;
+  }
+
   row['Estado'] = newStatus;
   applyFilters();
   renderKPIs(); renderSemana(); renderNextWeek(); renderPrevWeek(); renderPendientes(); renderCharts();
@@ -2068,7 +2081,7 @@ async function applyQuickStatus(rowNum, newStatus) {
     await fetch(getApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action: 'update', row: rowNum, data: { Estado: newStatus } })
+      body: JSON.stringify({ action: 'update', row: rowNum, data: updateData })
     });
   } catch (_) {
     loadData();
