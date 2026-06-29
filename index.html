@@ -1793,7 +1793,8 @@ async function handleFormSubmit(e) {
     data[el.name] = el.type === 'date' ? fromISO(el.value) : el.value;
   }
 
-  if ((data['Estado'] || '').toLowerCase().includes('entregado')) {
+  const wasEntregado = editingRow && (editingRow['Estado'] || '').toLowerCase().includes('entregado');
+  if (!wasEntregado && (data['Estado'] || '').toLowerCase().includes('entregado')) {
     const t = new Date();
     data['Fecha Limite'] = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
   }
