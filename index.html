@@ -34,10 +34,19 @@
       position: sticky; top: 0; z-index: 10;
     }
     .header-left  { display: flex; align-items: center; gap: .9rem; }
+    .header-center { flex: 1; display: flex; justify-content: center; max-width: 360px; margin: 0 auto; }
     .header-right { display: flex; align-items: center; gap: .6rem; }
     .header h1 { font-size: 1.05rem; font-weight: 700; letter-spacing: -.02em; }
     .header h1 span { color: var(--blue); }
     .header-meta { font-size: .73rem; color: var(--muted); }
+    .header-search { position:relative; width:100%; }
+    .header-search-icon { position:absolute; left:.6rem; top:50%; transform:translateY(-50%); color:var(--muted); pointer-events:none; }
+    .header-search input { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:.38rem .75rem .38rem 2rem; font-size:.82rem; color:var(--text); outline:none; transition:border-color .15s; }
+    .header-search input:focus { border-color:var(--blue); }
+    .header-search input::placeholder { color:var(--muted); }
+    .comment-chips { display:flex; flex-wrap:wrap; gap:.3rem; margin-bottom:.4rem; }
+    .comment-chip { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:.2rem .55rem; font-size:.72rem; cursor:pointer; transition:border-color .12s,color .12s; }
+    .comment-chip:hover { border-color:var(--blue); color:var(--text); }
 
     .btn-icon {
       background: var(--surface2); border: 1px solid var(--border);
@@ -359,6 +368,12 @@
     <h1>Dashboard · <span>Content</span></h1>
     <span class="header-meta" id="last-update">Loading...</span>
   </div>
+  <div class="header-center">
+    <div class="header-search">
+      <svg class="header-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="header-search" placeholder="Buscar proyecto…" oninput="headerSearch(this.value)" />
+    </div>
+  </div>
   <div class="header-right">
     <button class="btn-icon" title="Settings" onclick="openSettings()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -547,6 +562,12 @@
           <img id="comment-user-pic" style="width:22px;height:22px;border-radius:50%;object-fit:cover;display:none" src="" alt="" />
           <div id="comment-user-initials" class="user-avatar-initials" style="width:22px;height:22px;font-size:.65rem"></div>
           <span id="comment-user-name" style="font-size:.8rem;font-weight:600;color:var(--text)"></span>
+        </div>
+        <div class="comment-chips">
+          <button type="button" class="comment-chip" onclick="insertChip('✅ Guión aprobado')">✅ Guión aprobado</button>
+          <button type="button" class="comment-chip" onclick="insertChip('🎬 Grabación confirmada')">🎬 Grabación confirmada</button>
+          <button type="button" class="comment-chip" onclick="insertChip('📤 Entregado al cliente')">📤 Entregado al cliente</button>
+          <button type="button" class="comment-chip" onclick="insertChip('⚠️ Pendiente de revisión')">⚠️ Pendiente de revisión</button>
         </div>
         <div class="comment-submit-row">
           <textarea class="form-input" id="comment-text" rows="2"
@@ -1904,6 +1925,22 @@ function openEmailModal() {
 
 function closeEmailModal() {
   document.getElementById('overlay-email').classList.add('hidden');
+}
+
+function headerSearch(val) {
+  const searchEl = document.getElementById('search');
+  if (searchEl) { searchEl.value = val; applyFilters(); }
+  if (val.trim()) {
+    const allCard = document.querySelector('#tbl-wrap')?.closest('.card');
+    if (allCard) allCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function insertChip(text) {
+  const ta = document.getElementById('comment-text');
+  if (!ta) return;
+  ta.value = ta.value ? ta.value + '\n' + text : text;
+  ta.focus();
 }
 
 function copyField(id, btn) {
