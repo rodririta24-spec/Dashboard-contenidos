@@ -998,7 +998,7 @@ function renderSemana() {
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
-          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" oncontextmenu="showRowContextMenu(event,${r._row})">
+          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
@@ -1027,7 +1027,7 @@ function renderNextWeek() {
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates next week.</p>`
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
-          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" oncontextmenu="showRowContextMenu(event,${r._row})">
+          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
@@ -1055,7 +1055,7 @@ function renderPrevWeek() {
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates last week.</p>`
       : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
-          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" oncontextmenu="showRowContextMenu(event,${r._row})">
+          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
             <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
@@ -1088,7 +1088,7 @@ function renderPendientes() {
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">All delivered.</p>`
       : `<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Start</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
-          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" oncontextmenu="showRowContextMenu(event,${r._row})">
+          ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td style="color:var(--muted);font-size:.8rem"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
             <td><span class="dt ${dtClass(r['Fecha de inicio'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1729,7 +1729,7 @@ function renderTable() {
       <tbody>
         ${pageData.length === 0
           ? `<tr class="empty-row"><td colspan="${hasApi?13:12}">No results for the applied filters.</td></tr>`
-          : pageData.map((r,i)=>`<tr class="${rowUrgency(r)}" data-note="${escAttr(r['Notas']||'')}" oncontextmenu="showRowContextMenu(event,${r._row})">
+          : pageData.map((r,i)=>`<tr class="${rowUrgency(r)}" data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
               <td style="color:var(--muted)"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
@@ -2025,9 +2025,16 @@ function showToast(msg, type = 'success') {
 let _ctxRowNum = null;
 let _ctxField  = null;
 
-function showRowContextMenu(e, rowNum) {
+// Single document-level handler (more reliable than inline oncontextmenu)
+document.addEventListener('contextmenu', function(e) {
+  const tr = e.target.closest('tr[data-ctx-row]');
+  if (!tr) return;
   e.preventDefault();
-  e.stopPropagation();
+  const rowNum = Number(tr.dataset.ctxRow);
+  _buildContextMenu(e, rowNum);
+}, true);
+
+function _buildContextMenu(e, rowNum) {
   document.querySelectorAll('.row-ctx-menu').forEach(el => el.remove());
   if (!getApiUrl()) { openSettings(); return; }
   const row = allData.find(r => String(r._row) === String(rowNum));
@@ -2050,12 +2057,12 @@ function showRowContextMenu(e, rowNum) {
     { icon: ICON_GUION,  field: colGuion,      titleLabel: 'Link de guión'      },
     { icon: ICON_MAT,    field: colMateriales,  titleLabel: 'Link de materiales' },
     { icon: ICON_RESULT, field: colResultado,   titleLabel: 'Link de resultado'  },
-  ].forEach(({ icon, field, titleLabel }) => {
+  ].forEach(function({ icon, field, titleLabel }) {
     const hasLink = !!(row[field] || '').trim();
     const btn = document.createElement('button');
     btn.className = 'row-ctx-menu-item';
-    btn.innerHTML = `${icon}<span>${hasLink ? 'Editar' : 'Agregar'} ${titleLabel.replace('Link de ','')}</span>`;
-    btn.onclick = ev => {
+    btn.innerHTML = icon + '<span>' + (hasLink ? 'Editar' : 'Agregar') + ' ' + titleLabel.replace('Link de ','') + '</span>';
+    btn.onclick = function(ev) {
       ev.stopPropagation();
       menu.remove();
       openLinkPopup(rowNum, field, row[field] || '', titleLabel);
@@ -2063,16 +2070,14 @@ function showRowContextMenu(e, rowNum) {
     menu.appendChild(btn);
   });
 
-  const x = Math.min(e.clientX, window.innerWidth  - 210);
-  const y = Math.min(e.clientY, window.innerHeight - 160);
+  const x = Math.min(e.clientX, window.innerWidth  - 215);
+  const y = Math.min(e.clientY, window.innerHeight - 165);
   menu.style.left = x + 'px';
   menu.style.top  = y + 'px';
   document.body.appendChild(menu);
 
-  setTimeout(() => {
-    document.addEventListener('click',       () => menu.remove(), { once: true });
-    document.addEventListener('contextmenu', () => menu.remove(), { once: true });
-  }, 0);
+  function dismiss() { menu.remove(); document.removeEventListener('click', dismiss); }
+  setTimeout(function() { document.addEventListener('click', dismiss); }, 10);
 }
 
 function openLinkPopup(rowNum, field, current, title) {
