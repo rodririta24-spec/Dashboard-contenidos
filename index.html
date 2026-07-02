@@ -613,6 +613,20 @@
 </div>
 
 <!-- ── Email draft Modal ─────────────────────────────────── -->
+<!-- Note quick-edit popup -->
+<div class="modal-overlay hidden" id="overlay-note-popup" style="background:rgba(0,0,0,.5)">
+  <div class="link-popup">
+    <div class="link-popup-title" id="note-popup-title">Nota</div>
+    <textarea id="note-popup-input" class="form-input" rows="4" placeholder="Escribí una nota…"
+      style="width:100%;font-size:.83rem;resize:vertical;font-family:inherit;line-height:1.5"
+      onkeydown="if(event.key==='Escape')closeNotePopup()"></textarea>
+    <div class="link-popup-actions">
+      <button class="btn-secondary" onclick="closeNotePopup()">Cancelar</button>
+      <button class="btn-new" onclick="saveNotePopup()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <!-- Link popup -->
 <div class="modal-overlay hidden" id="overlay-link-popup" style="background:rgba(0,0,0,.5)">
   <div class="link-popup">
@@ -2053,6 +2067,35 @@ function _buildContextMenu(e, rowNum) {
   sep.className = 'row-ctx-sep';
   menu.appendChild(sep);
 
+  // Copy title
+  const copyBtn = document.createElement('button');
+  copyBtn.className = 'row-ctx-menu-item';
+  copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copiar título</span>';
+  copyBtn.onclick = function(ev) {
+    ev.stopPropagation();
+    menu.remove();
+    navigator.clipboard.writeText(row['Titulo'] || '').then(function() {
+      showToast('Título copiado');
+    });
+  };
+  menu.appendChild(copyBtn);
+
+  // Edit note
+  const noteBtn = document.createElement('button');
+  noteBtn.className = 'row-ctx-menu-item';
+  const hasNote = !!(row['Notas'] || '').trim();
+  noteBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>' + (hasNote ? 'Editar nota' : 'Agregar nota') + '</span>';
+  noteBtn.onclick = function(ev) {
+    ev.stopPropagation();
+    menu.remove();
+    openNotePopup(rowNum, row['Notas'] || '', row['Titulo'] || 'Proyecto');
+  };
+  menu.appendChild(noteBtn);
+
+  const sep2 = document.createElement('div');
+  sep2.className = 'row-ctx-sep';
+  menu.appendChild(sep2);
+
   [
     { icon: ICON_GUION,  field: colGuion,      titleLabel: 'Link de guión'      },
     { icon: ICON_MAT,    field: colMateriales,  titleLabel: 'Link de materiales' },
@@ -2080,6 +2123,28 @@ function _buildContextMenu(e, rowNum) {
   setTimeout(function() { document.addEventListener('click', dismiss); }, 10);
 }
 
+function openNotePopup(rowNum, current, projectTitle) {
+  _ctxRowNum = rowNum;
+  _ctxField  = 'Notas';
+  document.getElementById('note-popup-title').textContent = '📝 ' + projectTitle.slice(0, 40);
+  const ta = document.getElementById('note-popup-input');
+  ta.value = current;
+  document.getElementById('overlay-note-popup').classList.remove('hidden');
+  setTimeout(function() { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
+}
+
+function closeNotePopup() {
+  document.getElementById('overlay-note-popup').classList.add('hidden');
+  _ctxRowNum = null;
+  _ctxField  = null;
+}
+
+function saveNotePopup() {
+  const val = document.getElementById('note-popup-input').value.trim();
+  if (_ctxRowNum !== null) applyInlineEdit(_ctxRowNum, 'Notas', val);
+  closeNotePopup();
+}
+
 function openLinkPopup(rowNum, field, current, title) {
   _ctxRowNum = rowNum;
   _ctxField  = field;
@@ -2105,6 +2170,7 @@ function saveLinkPopup() {
 // Close modals with Escape
 document.addEventListener('keydown', e => {
   if (e.key !== 'Escape') return;
+  if (!document.getElementById('overlay-note-popup').classList.contains('hidden')) { closeNotePopup(); return; }
   if (!document.getElementById('overlay-link-popup').classList.contains('hidden')) { closeLinkPopup(); return; }
   if (!document.getElementById('overlay-form').classList.contains('hidden'))     closeFormModal();
   if (!document.getElementById('overlay-settings').classList.contains('hidden')) closeSettings();
@@ -2113,14 +2179,15 @@ document.addEventListener('keydown', e => {
 });
 
 // Close modals on overlay click
-['overlay-form','overlay-settings','overlay-confirm','overlay-email','overlay-link-popup'].forEach(id => {
+['overlay-form','overlay-settings','overlay-confirm','overlay-email','overlay-link-popup','overlay-note-popup'].forEach(id => {
   document.getElementById(id).addEventListener('click', function(e) {
     if (e.target !== this) return;
-    if (id === 'overlay-form')          closeFormModal();
-    else if (id === 'overlay-settings') closeSettings();
-    else if (id === 'overlay-confirm')  closeConfirm();
-    else if (id === 'overlay-email')    closeEmailModal();
+    if (id === 'overlay-form')            closeFormModal();
+    else if (id === 'overlay-settings')   closeSettings();
+    else if (id === 'overlay-confirm')    closeConfirm();
+    else if (id === 'overlay-email')      closeEmailModal();
     else if (id === 'overlay-link-popup') closeLinkPopup();
+    else if (id === 'overlay-note-popup') closeNotePopup();
   });
 });
 
