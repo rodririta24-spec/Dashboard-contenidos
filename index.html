@@ -710,8 +710,8 @@ let editingRow   = null;
 let colGuion      = 'Guión';
 let colMateriales = 'Materiales';
 let colResultado  = 'Resultado';
-let sortKey      = '';
-let sortDir      = 1; // 1 = asc, -1 = desc
+let sortKey      = localStorage.getItem('allProjects_sortKey')  || '';
+let sortDir      = Number(localStorage.getItem('allProjects_sortDir')) || 1;
 const rowMap     = {};
 
 // ─────────────────────────────────────────────────────────────
@@ -1672,6 +1672,8 @@ function setSort(key) {
     sortKey = key;
     sortDir = 1;
   }
+  localStorage.setItem('allProjects_sortKey', sortKey);
+  localStorage.setItem('allProjects_sortDir', sortDir);
   currentPage = 1;
   renderTable();
 }
