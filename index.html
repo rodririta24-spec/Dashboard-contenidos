@@ -1707,7 +1707,10 @@ function getLink(row, col) {
 
 function driveLink(url, icon) {
   if (!url) return '<td></td>';
-  return `<td><a href="${url}" target="_blank" rel="noopener" title="Open" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'">${icon}</a></td>`;
+  const escapedUrl = url.replace(/'/g, "\\'");
+  return `<td style="white-space:nowrap">
+    <a href="${url}" target="_blank" rel="noopener" title="Abrir" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'">${icon}</a><button onclick="navigator.clipboard.writeText('${escapedUrl}').then(()=>showToast('Link copiado'))" title="Copiar link" style="background:none;border:none;cursor:pointer;padding:0 0 0 4px;color:var(--muted);display:inline-flex;align-items:center;transition:color .15s;vertical-align:middle" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
+  </td>`;
 }
 
 function renderTable() {
