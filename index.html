@@ -1725,10 +1725,7 @@ function getLink(row, col) {
 
 function driveLink(url, icon) {
   if (!url) return '<td></td>';
-  const escapedUrl = url.replace(/'/g, "\\'");
-  return `<td style="white-space:nowrap">
-    <a href="${url}" target="_blank" rel="noopener" title="Abrir" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'">${icon}</a><button onclick="navigator.clipboard.writeText('${escapedUrl}').then(()=>showToast('Link copiado'))" title="Copiar link" style="background:none;border:none;cursor:pointer;padding:0 0 0 4px;color:var(--muted);display:inline-flex;align-items:center;transition:color .15s;vertical-align:middle" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button>
-  </td>`;
+  return `<td><a href="${url}" target="_blank" rel="noopener" data-drive-url="${url.replace(/"/g,'&quot;')}" title="Abrir (click derecho para copiar link)" style="color:var(--muted);display:inline-flex;align-items:center;transition:color .15s" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'">${icon}</a></td>`;
 }
 
 function renderTable() {
@@ -2061,6 +2058,38 @@ let _ctxField  = null;
 
 // Single document-level handler (more reliable than inline oncontextmenu)
 document.addEventListener('contextmenu', function(e) {
+  // Drive link icon: mini menu with Open + Copy
+  const driveAnchor = e.target.closest('a[data-drive-url]');
+  if (driveAnchor) {
+    e.preventDefault();
+    document.querySelectorAll('.row-ctx-menu').forEach(el => el.remove());
+    const url = driveAnchor.dataset.driveUrl;
+    const menu = document.createElement('div');
+    menu.className = 'row-ctx-menu';
+
+    const openBtn = document.createElement('button');
+    openBtn.className = 'row-ctx-menu-item';
+    openBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg><span>Abrir link</span>';
+    openBtn.onclick = function() { menu.remove(); window.open(url, '_blank', 'noopener'); };
+    menu.appendChild(openBtn);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'row-ctx-menu-item';
+    copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copiar link</span>';
+    copyBtn.onclick = function() { menu.remove(); navigator.clipboard.writeText(url).then(() => showToast('Link copiado')); };
+    menu.appendChild(copyBtn);
+
+    const x = Math.min(e.clientX, window.innerWidth  - 215);
+    const y = Math.min(e.clientY, window.innerHeight - 100);
+    menu.style.left = x + 'px';
+    menu.style.top  = y + 'px';
+    document.body.appendChild(menu);
+    function dismiss() { menu.remove(); document.removeEventListener('click', dismiss); }
+    setTimeout(function() { document.addEventListener('click', dismiss); }, 10);
+    return;
+  }
+
+  // Row context menu
   const tr = e.target.closest('tr[data-ctx-row]');
   if (!tr) return;
   e.preventDefault();
