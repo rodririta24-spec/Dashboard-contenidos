@@ -517,6 +517,12 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               Open
             </a>
+            <button type="button" id="btn-mat-copy" title="Copiar link"
+               style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);cursor:pointer;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap"
+               onclick="navigator.clipboard.writeText(document.getElementById('field-materiales').value.trim()).then(()=>showToast('Link copiado'))">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
           </div>
         </div>
         <div class="form-group full">
@@ -531,6 +537,12 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               Open
             </a>
+            <button type="button" id="btn-guion-copy" title="Copiar link"
+               style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);cursor:pointer;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap"
+               onclick="navigator.clipboard.writeText(document.getElementById('field-guion').value.trim()).then(()=>showToast('Link copiado'))">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
           </div>
         </div>
         <div class="form-group full">
@@ -545,6 +557,12 @@
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               Open
             </a>
+            <button type="button" id="btn-resultado-copy" title="Copiar link"
+               style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);cursor:pointer;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap"
+               onclick="navigator.clipboard.writeText(document.getElementById('field-resultado').value.trim()).then(()=>showToast('Link copiado'))">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+              Copy
+            </button>
           </div>
         </div>
         <div class="form-group full">
@@ -1836,40 +1854,37 @@ function closeFormModal() {
 function updateMatLink() {
   const input = document.getElementById('field-materiales');
   const link  = document.getElementById('btn-mat-open');
+  const copy  = document.getElementById('btn-mat-copy');
   if (!input || !link) return;
   const val = input.value.trim();
-  if (val.startsWith('http')) {
-    link.href = val;
-    link.style.display = 'flex';
-  } else {
-    link.style.display = 'none';
-  }
+  const show = val.startsWith('http');
+  link.href = val;
+  link.style.display = show ? 'flex' : 'none';
+  if (copy) copy.style.display = show ? 'flex' : 'none';
 }
 
 function updateGuionLink() {
   const input = document.getElementById('field-guion');
   const link  = document.getElementById('btn-guion-open');
+  const copy  = document.getElementById('btn-guion-copy');
   if (!input || !link) return;
   const val = input.value.trim();
-  if (val.startsWith('http')) {
-    link.href = val;
-    link.style.display = 'flex';
-  } else {
-    link.style.display = 'none';
-  }
+  const show = val.startsWith('http');
+  link.href = val;
+  link.style.display = show ? 'flex' : 'none';
+  if (copy) copy.style.display = show ? 'flex' : 'none';
 }
 
 function updateResultadoLink() {
   const input = document.getElementById('field-resultado');
   const link  = document.getElementById('btn-resultado-open');
+  const copy  = document.getElementById('btn-resultado-copy');
   if (!input || !link) return;
   const val = input.value.trim();
-  if (val.startsWith('http')) {
-    link.href = val;
-    link.style.display = 'flex';
-  } else {
-    link.style.display = 'none';
-  }
+  const show = val.startsWith('http');
+  link.href = val;
+  link.style.display = show ? 'flex' : 'none';
+  if (copy) copy.style.display = show ? 'flex' : 'none';
 }
 
 // ─────────────────────────────────────────────────────────────
