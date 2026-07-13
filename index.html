@@ -2764,7 +2764,7 @@ function _makeStickyResizable(el, docId) {
 }
 
 function _updateStickyFontSize(el) {
-  const size = Math.max(10, Math.min(22, Math.round(Math.sqrt(el.offsetWidth * el.offsetHeight) / 13)));
+  const size = Math.max(11, Math.min(36, Math.round(Math.sqrt(el.offsetWidth * el.offsetHeight) / 9)));
   const textEl = el.querySelector('.sticky-text');
   if (textEl) textEl.style.fontSize = size + 'px';
 }
