@@ -7,6 +7,9 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -92,6 +95,22 @@
 
     /* ── KPIs ───────────────────────────────────────── */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 1rem; }
+    /* Team board */
+    .tablero-grid { display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:.75rem; min-height:20px; }
+    .sticky { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.85rem 1rem; width:210px; min-height:110px; display:flex; flex-direction:column; gap:.45rem; position:relative; }
+    .sticky-header { display:flex; align-items:center; gap:.45rem; }
+    .sticky-avatar { width:26px; height:26px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+    .sticky-avatar-init { width:26px; height:26px; border-radius:50%; background:var(--blue); color:#fff; font-size:.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .sticky-author { font-size:.73rem; font-weight:600; }
+    .sticky-time { font-size:.62rem; color:var(--muted); }
+    .sticky-text { font-size:.81rem; line-height:1.5; color:var(--text); flex:1; white-space:pre-wrap; word-break:break-word; }
+    .sticky-del { position:absolute; top:.45rem; right:.45rem; background:none; border:none; cursor:pointer; color:var(--muted); padding:.2rem; border-radius:4px; opacity:0; transition:opacity .15s,color .15s; }
+    .sticky:hover .sticky-del { opacity:1; }
+    .sticky-del:hover { color:#e55; }
+    .tablero-add { display:flex; gap:.5rem; align-items:flex-end; }
+    .tablero-add textarea { flex:1; resize:vertical; font-size:.82rem; font-family:inherit; line-height:1.5; min-height:58px; }
+    .tablero-hint { font-size:.64rem; color:var(--muted); margin-top:.3rem; }
+    .tablero-body-collapsed { display:none; }
     .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; border-left-width: 3px; }
     .kpi-card .lbl { font-size: .7rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .4rem; }
     .kpi-card .val { font-size: 2rem; font-weight: 700; line-height: 1; }
@@ -912,6 +931,35 @@ function render(data) {
       <a onclick="openSettings()">configure Apps Script</a> (free, takes 5 minutes).
     </div>` : ''}
     <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- Team board -->
+    <div class="card" id="card-tablero">
+      <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleTablero()">
+        <div class="dot" style="background:var(--yellow)"></div>
+        Tablero del equipo
+        <span id="tablero-count" style="font-size:.7rem;font-weight:400;color:var(--muted);margin-left:.3rem"></span>
+        <button id="tablero-chevron" onclick="event.stopPropagation();toggleTablero()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem;display:flex;align-items:center;transition:transform .25s">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
+        </button>
+      </div>
+      <div id="tablero-body">
+        <div class="tablero-grid" id="tablero-grid">
+          <span style="font-size:.8rem;color:var(--muted)">Cargando notas…</span>
+        </div>
+        <div id="tablero-add-wrap" style="display:none">
+          <div class="tablero-add">
+            <textarea id="tablero-input" class="form-input" placeholder="Escribí un mensaje para el equipo…" rows="2"
+              onkeydown="if(event.ctrlKey&&event.key==='Enter')postTableroNote()"></textarea>
+            <button class="btn-new" onclick="postTableroNote()">Publicar</button>
+          </div>
+          <div class="tablero-hint">Ctrl+Enter para publicar</div>
+        </div>
+        <div id="tablero-login-msg" style="font-size:.8rem;color:var(--muted);margin-top:.4rem;display:none">
+          <span style="color:var(--blue);cursor:pointer" onclick="document.getElementById('gsi-btn').firstElementChild && document.getElementById('gsi-btn').firstElementChild.click()">Iniciá sesión con Google</span> para publicar una nota.
+        </div>
+      </div>
+    </div>
+
     <div class="row2">
       <div class="card" id="card-semana"></div>
       <div class="card" id="card-next-week"></div>
@@ -1161,6 +1209,7 @@ function handleCredentialResponse(resp) {
   localStorage.setItem('gUser', JSON.stringify(currentUser));
   updateAuthUI();
   updateCommentLock();
+  _fbSignIn(resp.credential);
 }
 
 function signOut() {
@@ -1169,6 +1218,7 @@ function signOut() {
   localStorage.removeItem('gUser');
   updateAuthUI();
   updateCommentLock();
+  _fbSignOut();
 }
 
 function updateAuthUI() {
@@ -2483,6 +2533,164 @@ updateApiMode();
 loadData();
 setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
 window.addEventListener('load', initGoogleAuth);
+
+// ─────────────────────────────────────────────────────────────
+//  Firebase / Team board
+// ─────────────────────────────────────────────────────────────
+const _fbConfig = {
+  apiKey:            "AIzaSyCpadJHqTip6G_epsfG0kSBdbTGXHRFxXQ",
+  authDomain:        "dashboard-contenidos-cb284.firebaseapp.com",
+  projectId:         "dashboard-contenidos-cb284",
+  storageBucket:     "dashboard-contenidos-cb284.firebasestorage.app",
+  messagingSenderId: "293503739926",
+  appId:             "1:293503739926:web:ad4c1ef28d6ff327386d37"
+};
+
+let _db = null;
+let _fbUser = null;
+let _tableroUnsub = null;
+let _tableroCollapsed = localStorage.getItem('tableroCollapsed') === '1';
+
+(function initFirebase() {
+  try {
+    firebase.initializeApp(_fbConfig);
+    _db = firebase.firestore();
+    firebase.auth().onAuthStateChanged(function(user) {
+      _fbUser = user;
+      _updateTableroUI();
+    });
+    _subscribeTablero();
+    _applyTableroCollapse();
+  } catch(e) {
+    console.warn('Firebase init error:', e);
+  }
+})();
+
+function _fbSignIn(idToken) {
+  if (!firebase.apps.length) return;
+  try {
+    const cred = firebase.auth.GoogleAuthProvider.credential(idToken);
+    firebase.auth().signInWithCredential(cred).catch(function(e) {
+      console.warn('Firebase signIn error:', e);
+    });
+  } catch(e) { console.warn(e); }
+}
+
+function _fbSignOut() {
+  if (!firebase.apps.length) return;
+  firebase.auth().signOut().catch(function(){});
+}
+
+function _subscribeTablero() {
+  if (!_db) return;
+  if (_tableroUnsub) _tableroUnsub();
+  _tableroUnsub = _db.collection('tablero')
+    .orderBy('createdAt', 'asc')
+    .onSnapshot(function(snap) {
+      _renderTableroNotes(snap.docs);
+    }, function(err) {
+      console.warn('Firestore error:', err);
+      document.getElementById('tablero-grid').innerHTML =
+        '<span style="font-size:.8rem;color:var(--muted)">No se pudieron cargar las notas.</span>';
+    });
+}
+
+function _renderTableroNotes(docs) {
+  const grid = document.getElementById('tablero-grid');
+  if (!grid) return;
+  const count = document.getElementById('tablero-count');
+  if (count) count.textContent = docs.length ? '(' + docs.length + ')' : '';
+
+  if (!docs.length) {
+    grid.innerHTML = '<span style="font-size:.8rem;color:var(--muted)">Todavía no hay notas. ¡Sé el primero!</span>';
+    return;
+  }
+
+  grid.innerHTML = docs.map(function(doc) {
+    const d = doc.data();
+    const ts = d.createdAt ? d.createdAt.toDate() : new Date();
+    const timeStr = ts.toLocaleDateString('es-AR', { day:'numeric', month:'short' }) + ' ' +
+                    ts.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
+    const isOwn = _fbUser && _fbUser.uid === d.uid;
+    const avatarHtml = d.authorPhoto
+      ? `<img class="sticky-avatar" src="${d.authorPhoto}" referrerpolicy="no-referrer">`
+      : `<div class="sticky-avatar-init">${(d.authorName||'?').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)}</div>`;
+    const delBtn = isOwn
+      ? `<button class="sticky-del" onclick="_deleteTableroNote('${doc.id}')" title="Eliminar nota">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+         </button>` : '';
+    const textEscaped = (d.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="sticky">
+      ${delBtn}
+      <div class="sticky-header">
+        ${avatarHtml}
+        <div>
+          <div class="sticky-author">${(d.authorName||'Usuario').split(' ')[0]}</div>
+          <div class="sticky-time">${timeStr}</div>
+        </div>
+      </div>
+      <div class="sticky-text">${textEscaped}</div>
+    </div>`;
+  }).join('');
+}
+
+function _updateTableroUI() {
+  const addWrap = document.getElementById('tablero-add-wrap');
+  const loginMsg = document.getElementById('tablero-login-msg');
+  if (!addWrap || !loginMsg) return;
+  if (_fbUser) {
+    addWrap.style.display = '';
+    loginMsg.style.display = 'none';
+  } else {
+    addWrap.style.display = 'none';
+    loginMsg.style.display = '';
+  }
+}
+
+function postTableroNote() {
+  if (!_db || !_fbUser) return;
+  const inp = document.getElementById('tablero-input');
+  const text = (inp.value || '').trim();
+  if (!text) return;
+  inp.value = '';
+  _db.collection('tablero').add({
+    uid:         _fbUser.uid,
+    authorName:  _fbUser.displayName || currentUser && currentUser.name || 'Usuario',
+    authorPhoto: _fbUser.photoURL    || currentUser && currentUser.picture || '',
+    text:        text,
+    createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+  }).catch(function(e) {
+    showToast('Error al publicar nota', 'error');
+    console.warn(e);
+  });
+}
+
+function _deleteTableroNote(id) {
+  if (!_db || !_fbUser) return;
+  _db.collection('tablero').doc(id).delete().catch(function(e) {
+    showToast('Error al eliminar nota', 'error');
+    console.warn(e);
+  });
+}
+
+function toggleTablero() {
+  _tableroCollapsed = !_tableroCollapsed;
+  localStorage.setItem('tableroCollapsed', _tableroCollapsed ? '1' : '0');
+  _applyTableroCollapse();
+}
+
+function _applyTableroCollapse() {
+  const body    = document.getElementById('tablero-body');
+  const chevron = document.getElementById('tablero-chevron');
+  if (!body) return;
+  if (_tableroCollapsed) {
+    body.classList.add('tablero-body-collapsed');
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+  } else {
+    body.classList.remove('tablero-body-collapsed');
+    if (chevron) chevron.style.transform = 'rotate(0deg)';
+  }
+}
 </script>
 </body>
 </html>
