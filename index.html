@@ -112,6 +112,8 @@
     .sticky:hover .sticky-del { opacity:1; }
     .sticky-del:hover { color:rgba(180,0,0,.8); }
     .sticky-resize { position:absolute; bottom:0; right:0; width:16px; height:16px; cursor:nwse-resize; background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.18) 50%); border-radius:0 0 1px 0; }
+    .sticky-textarea { flex:1; resize:none; border:none; outline:2px solid rgba(0,0,0,.22); background:rgba(255,255,255,.35); font-family:inherit; line-height:1.5; color:rgba(0,0,0,.82); word-break:break-word; border-radius:2px; padding:2px 4px; }
+    .sticky.is-editing { cursor:default !important; }
     .tablero-add { display:flex; gap:.5rem; align-items:flex-end; }
     .tablero-add textarea { flex:1; resize:vertical; font-size:.82rem; font-family:inherit; line-height:1.5; min-height:58px; }
     .tablero-hint { font-size:.64rem; color:var(--muted); margin-top:.3rem; }
@@ -2620,6 +2622,7 @@ function _rerenderTablero() {
 }
 
 const _STICKY_COLORS = ['#fff9c4','#c8e6c9','#bbdefb','#ffccbc','#e1bee7','#f8bbd0','#b2ebf2','#ffe0b2'];
+let _stickyZMax = 10;
 
 function _hashStr(s) {
   let h = 0;
@@ -2654,7 +2657,7 @@ function _renderTableroNotes(docs) {
 }
 
 function _createStickyEl(docId, d, index) {
-  const color = _STICKY_COLORS[Math.abs(_hashStr(docId)) % _STICKY_COLORS.length];
+  const color = _STICKY_COLORS[Math.abs(_hashStr(d.uid || docId)) % _STICKY_COLORS.length];
   const rot   = ((_hashStr(docId + 'r') % 9) - 4) * 0.55;
   const defX  = (index % 4) * 235 + 18 + (Math.abs(_hashStr(docId + 'x')) % 20);
   const defY  = Math.floor(index / 4) * 215 + 18 + (Math.abs(_hashStr(docId + 'y')) % 15);
@@ -2698,13 +2701,53 @@ function _createStickyEl(docId, d, index) {
       e.stopPropagation();
       _deleteTableroNote(docId);
     });
+    function attachEdit(div, currentText) {
+      div.title = 'Doble clic para editar';
+      div.addEventListener('dblclick', function(e) {
+        e.stopPropagation();
+        if (el.classList.contains('is-editing')) return;
+        el.classList.add('is-editing');
+        const ta = document.createElement('textarea');
+        ta.className = 'sticky-text sticky-textarea';
+        ta.value = currentText;
+        ta.style.fontSize = div.style.fontSize;
+        div.replaceWith(ta);
+        ta.focus();
+        ta.selectionStart = ta.selectionEnd = ta.value.length;
+        let done = false;
+        function finish(save) {
+          if (done) return;
+          done = true;
+          el.classList.remove('is-editing');
+          const finalText = save ? ta.value : currentText;
+          const newDiv = document.createElement('div');
+          newDiv.className = 'sticky-text';
+          newDiv.textContent = finalText;
+          ta.replaceWith(newDiv);
+          if (save && _db && _fbUser && ta.value !== currentText) {
+            _db.collection('tablero').doc(docId).update({ text: ta.value }).catch(console.warn);
+          }
+          _updateStickyFontSize(el);
+          attachEdit(newDiv, finalText);
+        }
+        ta.addEventListener('keydown', function(ke) {
+          if (ke.key === 'Escape') { ke.preventDefault(); ta.removeEventListener('blur', onBlur); finish(false); }
+          else if (ke.key === 'Enter' && (ke.ctrlKey || ke.metaKey)) { ke.preventDefault(); ta.removeEventListener('blur', onBlur); finish(true); }
+        });
+        function onBlur() { finish(true); }
+        ta.addEventListener('blur', onBlur);
+      });
+    }
+    attachEdit(el.querySelector('.sticky-text'), d.text || '');
   }
   return el;
 }
 
 function _makeStickyDraggable(el, docId) {
   el.addEventListener('mousedown', function(e) {
+    el.style.zIndex = ++_stickyZMax;
     if (e.target.closest('.sticky-del') || e.target.closest('.sticky-resize') || e.target.closest('.sticky-text')) return;
+    if (el.classList.contains('is-editing')) return;
     e.preventDefault();
     const board = document.getElementById('tablero-board');
     const boardRect = board.getBoundingClientRect();
