@@ -1053,7 +1053,7 @@ function render(data) {
   renderHistory();
   if (currentView === 'board') setView('board');
   _applyTableroCollapse();
-  _subscribeTablero();
+  _rerenderTablero();
   _updateTableroUI();
 }
 
@@ -2559,6 +2559,7 @@ let _db = null;
 let _fbUser = null;
 let _tableroUnsub = null;
 let _tableroCollapsed = localStorage.getItem('tableroCollapsed') === '1';
+let _lastTableroDocs = null;
 
 (function initFirebase() {
   try {
@@ -2596,12 +2597,21 @@ function _subscribeTablero() {
   _tableroUnsub = _db.collection('tablero')
     .orderBy('createdAt', 'asc')
     .onSnapshot(function(snap) {
+      _lastTableroDocs = snap.docs;
       _renderTableroNotes(snap.docs);
     }, function(err) {
       console.warn('Firestore error:', err);
-      document.getElementById('tablero-grid').innerHTML =
-        '<span style="font-size:.8rem;color:var(--muted)">No se pudieron cargar las notas.</span>';
+      _lastTableroDocs = [];
+      const grid = document.getElementById('tablero-grid');
+      if (grid) grid.innerHTML = '<span style="font-size:.8rem;color:var(--muted)">No se pudieron cargar las notas.</span>';
     });
+}
+
+function _rerenderTablero() {
+  if (_lastTableroDocs !== null) {
+    _renderTableroNotes(_lastTableroDocs);
+  }
+  // If null, the persistent subscription from initFirebase will fire and update
 }
 
 function _renderTableroNotes(docs) {
