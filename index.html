@@ -2646,6 +2646,7 @@ function _renderTableroNotes(docs) {
   docs.forEach(function(doc, i) {
     const el = _createStickyEl(doc.id, doc.data(), i);
     board.appendChild(el);
+    _updateStickyFontSize(el);
     _makeStickyDraggable(el, doc.id);
     _makeStickyResizable(el, doc.id);
   });
@@ -2747,6 +2748,7 @@ function _makeStickyResizable(el, docId) {
     function onMove(e) {
       el.style.width  = Math.max(150, startW + e.clientX - startMX) + 'px';
       el.style.height = Math.max(110, startH + e.clientY - startMY) + 'px';
+      _updateStickyFontSize(el);
     }
     function onUp() {
       document.removeEventListener('mousemove', onMove);
@@ -2759,6 +2761,12 @@ function _makeStickyResizable(el, docId) {
     document.addEventListener('mousemove', onMove);
     document.addEventListener('mouseup', onUp);
   });
+}
+
+function _updateStickyFontSize(el) {
+  const size = Math.max(10, Math.min(22, Math.round(Math.sqrt(el.offsetWidth * el.offsetHeight) / 13)));
+  const textEl = el.querySelector('.sticky-text');
+  if (textEl) textEl.style.fontSize = size + 'px';
 }
 
 function _updateBoardHeight() {
