@@ -56,6 +56,9 @@
     .row-ctx-menu-item { display:flex; align-items:center; gap:.55rem; padding:.42rem .75rem; border-radius:7px; font-size:.82rem; cursor:pointer; color:var(--text); background:none; border:none; width:100%; text-align:left; transition:background .1s; }
     .row-ctx-menu-item:hover { background:var(--surface2); }
     .row-ctx-menu-item svg { flex-shrink:0; color:var(--muted); }
+    .ctx-color-row { display:flex; gap:.4rem; padding:.35rem .75rem .55rem; flex-wrap:wrap; }
+    .ctx-color-swatch { width:22px; height:22px; border-radius:50%; cursor:pointer; border:2px solid transparent; padding:0; transition:transform .1s,outline .1s; outline:2px solid transparent; outline-offset:1px; }
+    .ctx-color-swatch:hover { transform:scale(1.2); }
     .row-ctx-sep { height:1px; background:var(--border); margin:.25rem 0; }
     .row-ctx-label { padding:.25rem .75rem .1rem; font-size:.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; }
 
@@ -2137,6 +2140,65 @@ let _ctxField  = null;
 
 // Single document-level handler (more reliable than inline oncontextmenu)
 document.addEventListener('contextmenu', function(e) {
+  // Sticky note context menu (only for own notes)
+  const stickyEl = e.target.closest('.sticky');
+  if (stickyEl) {
+    e.preventDefault();
+    if (stickyEl.dataset.own === '1') {
+      document.querySelectorAll('.row-ctx-menu').forEach(function(m) { m.remove(); });
+      const docId = stickyEl.dataset.noteId;
+      const menu = document.createElement('div');
+      menu.className = 'row-ctx-menu';
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'row-ctx-menu-item';
+      editBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>Editar nota</span>';
+      editBtn.onclick = function() {
+        menu.remove();
+        const textDiv = stickyEl.querySelector('.sticky-text');
+        if (textDiv) textDiv.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+      };
+      menu.appendChild(editBtn);
+
+      const sep = document.createElement('div');
+      sep.className = 'row-ctx-sep';
+      menu.appendChild(sep);
+
+      const colorLabel = document.createElement('div');
+      colorLabel.className = 'row-ctx-label';
+      colorLabel.textContent = 'Color de nota';
+      menu.appendChild(colorLabel);
+
+      const swatchRow = document.createElement('div');
+      swatchRow.className = 'ctx-color-row';
+      const currentColor = stickyEl.style.background;
+      _STICKY_COLORS.forEach(function(c) {
+        const s = document.createElement('button');
+        s.className = 'ctx-color-swatch';
+        s.style.background = c;
+        s.title = '';
+        if (currentColor === c) s.style.outlineColor = 'rgba(0,0,0,.5)';
+        s.onclick = function(ev) {
+          ev.stopPropagation();
+          menu.remove();
+          stickyEl.style.background = c;
+          if (_db && _fbUser) _db.collection('tablero').doc(docId).update({ color: c }).catch(console.warn);
+        };
+        swatchRow.appendChild(s);
+      });
+      menu.appendChild(swatchRow);
+
+      const x = Math.min(e.clientX, window.innerWidth  - 220);
+      const y = Math.min(e.clientY, window.innerHeight - 160);
+      menu.style.left = x + 'px';
+      menu.style.top  = y + 'px';
+      document.body.appendChild(menu);
+      function dismissS() { menu.remove(); document.removeEventListener('click', dismissS); }
+      setTimeout(function() { document.addEventListener('click', dismissS); }, 10);
+    }
+    return;
+  }
+
   // Drive link icon: mini menu with Open + Copy
   const driveAnchor = e.target.closest('a[data-drive-url]');
   if (driveAnchor) {
@@ -2657,7 +2719,7 @@ function _renderTableroNotes(docs) {
 }
 
 function _createStickyEl(docId, d, index) {
-  const color = _STICKY_COLORS[Math.abs(_hashStr(d.uid || docId)) % _STICKY_COLORS.length];
+  const color = d.color || _STICKY_COLORS[Math.abs(_hashStr(d.uid || docId)) % _STICKY_COLORS.length];
   const rot   = ((_hashStr(docId + 'r') % 9) - 4) * 0.55;
   const defX  = (index % 4) * 235 + 18 + (Math.abs(_hashStr(docId + 'x')) % 20);
   const defY  = Math.floor(index / 4) * 215 + 18 + (Math.abs(_hashStr(docId + 'y')) % 15);
@@ -2674,6 +2736,7 @@ function _createStickyEl(docId, d, index) {
   const el = document.createElement('div');
   el.className = 'sticky';
   el.dataset.noteId = docId;
+  if (isOwn) el.dataset.own = '1';
   el.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${color};transform:rotate(${rot}deg)`;
 
   const avatarHtml = d.authorPhoto
