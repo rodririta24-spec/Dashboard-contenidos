@@ -2764,9 +2764,19 @@ function _makeStickyResizable(el, docId) {
 }
 
 function _updateStickyFontSize(el) {
-  const size = Math.max(11, Math.min(36, Math.round(Math.sqrt(el.offsetWidth * el.offsetHeight) / 9)));
   const textEl = el.querySelector('.sticky-text');
-  if (textEl) textEl.style.fontSize = size + 'px';
+  if (!textEl) return;
+  let lo = 9, hi = 38;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    textEl.style.fontSize = mid + 'px';
+    if (textEl.scrollHeight <= textEl.clientHeight) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  textEl.style.fontSize = lo + 'px';
 }
 
 function _updateBoardHeight() {
