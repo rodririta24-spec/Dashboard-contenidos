@@ -96,17 +96,22 @@
     /* ── KPIs ───────────────────────────────────────── */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 1rem; }
     /* Team board */
-    .tablero-grid { display:flex; flex-wrap:wrap; gap:.75rem; margin-bottom:.75rem; min-height:20px; }
-    .sticky { background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.85rem 1rem; width:210px; min-height:110px; display:flex; flex-direction:column; gap:.45rem; position:relative; }
-    .sticky-header { display:flex; align-items:center; gap:.45rem; }
-    .sticky-avatar { width:26px; height:26px; border-radius:50%; object-fit:cover; flex-shrink:0; }
-    .sticky-avatar-init { width:26px; height:26px; border-radius:50%; background:var(--blue); color:#fff; font-size:.65rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .sticky-author { font-size:.73rem; font-weight:600; }
-    .sticky-time { font-size:.62rem; color:var(--muted); }
-    .sticky-text { font-size:.81rem; line-height:1.5; color:var(--text); flex:1; white-space:pre-wrap; word-break:break-word; }
-    .sticky-del { position:absolute; top:.45rem; right:.45rem; background:none; border:none; cursor:pointer; color:var(--muted); padding:.2rem; border-radius:4px; opacity:0; transition:opacity .15s,color .15s; }
+    .tablero-board { position:relative; min-height:460px; background:#4a3218; background-image:repeating-linear-gradient(0deg,transparent,transparent 23px,rgba(0,0,0,.07) 23px,rgba(0,0,0,.07) 24px),repeating-linear-gradient(90deg,transparent,transparent 23px,rgba(0,0,0,.07) 23px,rgba(0,0,0,.07) 24px); border-radius:10px; margin-bottom:.85rem; border:3px solid #2d1c0a; box-shadow:inset 0 2px 12px rgba(0,0,0,.5); overflow:hidden; }
+    .tablero-board-empty { padding:1rem 1.25rem; font-size:.82rem; color:rgba(255,255,255,.35); }
+    .sticky { position:absolute; display:flex; flex-direction:column; gap:.35rem; padding:.7rem .8rem .8rem; min-width:150px; min-height:110px; border-radius:1px; cursor:grab; user-select:none; box-shadow:3px 4px 14px rgba(0,0,0,.55),0 1px 2px rgba(0,0,0,.3); transition:box-shadow .15s; }
+    .sticky.is-dragging { cursor:grabbing; box-shadow:6px 10px 28px rgba(0,0,0,.7); z-index:50; }
+    .sticky:hover { box-shadow:4px 6px 20px rgba(0,0,0,.65); z-index:10; }
+    .sticky-pin { width:14px; height:14px; border-radius:50%; background:radial-gradient(circle at 35% 35%,#e55,#a00); position:absolute; top:-6px; left:50%; transform:translateX(-50%); box-shadow:0 2px 4px rgba(0,0,0,.5); z-index:1; }
+    .sticky-header { display:flex; align-items:center; gap:.4rem; pointer-events:none; }
+    .sticky-avatar { width:22px; height:22px; border-radius:50%; object-fit:cover; flex-shrink:0; }
+    .sticky-avatar-init { width:22px; height:22px; border-radius:50%; background:#888; color:#fff; font-size:.6rem; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .sticky-author { font-size:.7rem; font-weight:700; color:rgba(0,0,0,.7); }
+    .sticky-time { font-size:.58rem; color:rgba(0,0,0,.5); }
+    .sticky-text { font-size:.8rem; line-height:1.5; color:rgba(0,0,0,.82); flex:1; overflow-y:auto; word-break:break-word; white-space:pre-wrap; user-select:text; cursor:text; }
+    .sticky-del { position:absolute; top:.35rem; right:.35rem; background:none; border:none; cursor:pointer; color:rgba(0,0,0,.35); padding:.15rem; border-radius:3px; opacity:0; transition:opacity .15s,color .15s; line-height:1; }
     .sticky:hover .sticky-del { opacity:1; }
-    .sticky-del:hover { color:#e55; }
+    .sticky-del:hover { color:rgba(180,0,0,.8); }
+    .sticky-resize { position:absolute; bottom:0; right:0; width:16px; height:16px; cursor:nwse-resize; background:linear-gradient(135deg,transparent 50%,rgba(0,0,0,.18) 50%); border-radius:0 0 1px 0; }
     .tablero-add { display:flex; gap:.5rem; align-items:flex-end; }
     .tablero-add textarea { flex:1; resize:vertical; font-size:.82rem; font-family:inherit; line-height:1.5; min-height:58px; }
     .tablero-hint { font-size:.64rem; color:var(--muted); margin-top:.3rem; }
@@ -943,8 +948,8 @@ function render(data) {
         </button>
       </div>
       <div id="tablero-body">
-        <div class="tablero-grid" id="tablero-grid">
-          <span style="font-size:.8rem;color:var(--muted)">Cargando notas…</span>
+        <div class="tablero-board" id="tablero-board">
+          <div class="tablero-board-empty">Cargando notas…</div>
         </div>
         <div id="tablero-add-wrap" style="display:none">
           <div class="tablero-add">
@@ -2614,43 +2619,157 @@ function _rerenderTablero() {
   // If null, the persistent subscription from initFirebase will fire and update
 }
 
+const _STICKY_COLORS = ['#fff9c4','#c8e6c9','#bbdefb','#ffccbc','#e1bee7','#f8bbd0','#b2ebf2','#ffe0b2'];
+
+function _hashStr(s) {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = Math.imul(31, h) + s.charCodeAt(i) | 0;
+  return h;
+}
+
 function _renderTableroNotes(docs) {
-  const grid = document.getElementById('tablero-grid');
-  if (!grid) return;
-  const count = document.getElementById('tablero-count');
-  if (count) count.textContent = docs.length ? '(' + docs.length + ')' : '';
+  const board = document.getElementById('tablero-board');
+  if (!board) return;
+  const countEl = document.getElementById('tablero-count');
+  if (countEl) countEl.textContent = docs.length ? '(' + docs.length + ')' : '';
+
+  board.querySelectorAll('.sticky').forEach(el => el.remove());
+  const emptyEl = board.querySelector('.tablero-board-empty');
 
   if (!docs.length) {
-    grid.innerHTML = '<span style="font-size:.8rem;color:var(--muted)">Todavía no hay notas. ¡Sé el primero!</span>';
+    if (emptyEl) emptyEl.textContent = 'Todavía no hay notas. ¡Sé el primero!';
+    _updateBoardHeight();
     return;
   }
+  if (emptyEl) emptyEl.remove();
 
-  grid.innerHTML = docs.map(function(doc) {
-    const d = doc.data();
-    const ts = d.createdAt ? d.createdAt.toDate() : new Date();
-    const timeStr = ts.toLocaleDateString('es-AR', { day:'numeric', month:'short' }) + ' ' +
-                    ts.toLocaleTimeString('es-AR', { hour:'2-digit', minute:'2-digit' });
-    const isOwn = _fbUser && _fbUser.uid === d.uid;
-    const avatarHtml = d.authorPhoto
-      ? `<img class="sticky-avatar" src="${d.authorPhoto}" referrerpolicy="no-referrer">`
-      : `<div class="sticky-avatar-init">${(d.authorName||'?').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)}</div>`;
-    const delBtn = isOwn
-      ? `<button class="sticky-del" onclick="_deleteTableroNote('${doc.id}')" title="Eliminar nota">
-           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-         </button>` : '';
-    const textEscaped = (d.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    return `<div class="sticky">
-      ${delBtn}
-      <div class="sticky-header">
-        ${avatarHtml}
-        <div>
-          <div class="sticky-author">${(d.authorName||'Usuario').split(' ')[0]}</div>
-          <div class="sticky-time">${timeStr}</div>
-        </div>
+  docs.forEach(function(doc, i) {
+    const el = _createStickyEl(doc.id, doc.data(), i);
+    board.appendChild(el);
+    _makeStickyDraggable(el, doc.id);
+    _makeStickyResizable(el, doc.id);
+  });
+  _updateBoardHeight();
+}
+
+function _createStickyEl(docId, d, index) {
+  const color = _STICKY_COLORS[Math.abs(_hashStr(docId)) % _STICKY_COLORS.length];
+  const rot   = ((_hashStr(docId + 'r') % 9) - 4) * 0.55;
+  const defX  = (index % 4) * 235 + 18 + (Math.abs(_hashStr(docId + 'x')) % 20);
+  const defY  = Math.floor(index / 4) * 215 + 18 + (Math.abs(_hashStr(docId + 'y')) % 15);
+  const x = d.x !== undefined ? d.x : defX;
+  const y = d.y !== undefined ? d.y : defY;
+  const w = d.w || 210;
+  const h = d.h || 160;
+
+  const ts = d.createdAt ? d.createdAt.toDate() : new Date();
+  const timeStr = ts.toLocaleDateString('es-AR', {day:'numeric', month:'short'}) + ' ' +
+                  ts.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+  const isOwn = _fbUser && _fbUser.uid === d.uid;
+
+  const el = document.createElement('div');
+  el.className = 'sticky';
+  el.dataset.noteId = docId;
+  el.style.cssText = `left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${color};transform:rotate(${rot}deg)`;
+
+  const avatarHtml = d.authorPhoto
+    ? `<img class="sticky-avatar" src="${escAttr(d.authorPhoto)}" referrerpolicy="no-referrer">`
+    : `<div class="sticky-avatar-init">${(d.authorName||'?').split(' ').map(function(w){return w[0]||'';}).join('').toUpperCase().slice(0,2)}</div>`;
+
+  const textEscaped = (d.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+  el.innerHTML = `
+    <div class="sticky-pin"></div>
+    ${isOwn ? `<button class="sticky-del" title="Eliminar"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>` : ''}
+    <div class="sticky-header">
+      ${avatarHtml}
+      <div>
+        <div class="sticky-author">${escAttr((d.authorName||'Usuario').split(' ')[0])}</div>
+        <div class="sticky-time">${timeStr}</div>
       </div>
-      <div class="sticky-text">${textEscaped}</div>
-    </div>`;
-  }).join('');
+    </div>
+    <div class="sticky-text">${textEscaped}</div>
+    <div class="sticky-resize"></div>
+  `;
+
+  if (isOwn) {
+    el.querySelector('.sticky-del').addEventListener('click', function(e) {
+      e.stopPropagation();
+      _deleteTableroNote(docId);
+    });
+  }
+  return el;
+}
+
+function _makeStickyDraggable(el, docId) {
+  el.addEventListener('mousedown', function(e) {
+    if (e.target.closest('.sticky-del') || e.target.closest('.sticky-resize') || e.target.closest('.sticky-text')) return;
+    e.preventDefault();
+    const board = document.getElementById('tablero-board');
+    const boardRect = board.getBoundingClientRect();
+    const startLeft = parseFloat(el.style.left);
+    const startTop  = parseFloat(el.style.top);
+    const startMX   = e.clientX;
+    const startMY   = e.clientY;
+    el.classList.add('is-dragging');
+    el.style.transform = el.style.transform.replace(/rotate\([^)]+\)/, 'rotate(0deg)');
+
+    function onMove(e) {
+      el.style.left = Math.max(0, startLeft + e.clientX - startMX) + 'px';
+      el.style.top  = Math.max(0, startTop  + e.clientY - startMY) + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      el.classList.remove('is-dragging');
+      const rot = ((_hashStr(docId + 'r') % 9) - 4) * 0.55;
+      el.style.transform = `rotate(${rot}deg)`;
+      const x = Math.round(parseFloat(el.style.left));
+      const y = Math.round(parseFloat(el.style.top));
+      if (_db && _fbUser) _db.collection('tablero').doc(docId).update({ x, y }).catch(console.warn);
+      _updateBoardHeight();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function _makeStickyResizable(el, docId) {
+  const handle = el.querySelector('.sticky-resize');
+  if (!handle) return;
+  handle.addEventListener('mousedown', function(e) {
+    e.stopPropagation();
+    e.preventDefault();
+    const startW  = el.offsetWidth;
+    const startH  = el.offsetHeight;
+    const startMX = e.clientX;
+    const startMY = e.clientY;
+    function onMove(e) {
+      el.style.width  = Math.max(150, startW + e.clientX - startMX) + 'px';
+      el.style.height = Math.max(110, startH + e.clientY - startMY) + 'px';
+    }
+    function onUp() {
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      const w = Math.round(el.offsetWidth);
+      const h = Math.round(el.offsetHeight);
+      if (_db && _fbUser) _db.collection('tablero').doc(docId).update({ w, h }).catch(console.warn);
+      _updateBoardHeight();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  });
+}
+
+function _updateBoardHeight() {
+  const board = document.getElementById('tablero-board');
+  if (!board) return;
+  let maxBottom = 460;
+  board.querySelectorAll('.sticky').forEach(function(el) {
+    const b = parseInt(el.style.top) + el.offsetHeight + 30;
+    if (b > maxBottom) maxBottom = b;
+  });
+  board.style.minHeight = maxBottom + 'px';
 }
 
 function _updateTableroUI() {
@@ -2690,12 +2809,19 @@ function postTableroNote() {
   const text = (inp.value || '').trim();
   if (!text) return;
   inp.value = '';
+  const count = _lastTableroDocs ? _lastTableroDocs.length : 0;
+  const col = count % 4;
+  const row = Math.floor(count / 4);
   _db.collection('tablero').add({
     uid:         _fbUser.uid,
-    authorName:  _fbUser.displayName || currentUser && currentUser.name || 'Usuario',
-    authorPhoto: _fbUser.photoURL    || currentUser && currentUser.picture || '',
+    authorName:  _fbUser.displayName || (currentUser && currentUser.name) || 'Usuario',
+    authorPhoto: _fbUser.photoURL    || (currentUser && currentUser.picture) || '',
     text:        text,
-    createdAt:   firebase.firestore.FieldValue.serverTimestamp()
+    createdAt:   firebase.firestore.FieldValue.serverTimestamp(),
+    x: col * 235 + 18,
+    y: row * 215 + 18,
+    w: 210,
+    h: 160
   }).catch(function(e) {
     showToast('Error al publicar nota', 'error');
     console.warn(e);
