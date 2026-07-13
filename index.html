@@ -2399,10 +2399,14 @@ document.addEventListener('keydown', e => {
   if (!document.getElementById('overlay-email').classList.contains('hidden'))    closeEmailModal();
 });
 
-// Close modals on overlay click
+// Close modals on overlay click (only when mousedown also started on the overlay,
+// not when the user dragged out from inside an input)
 ['overlay-form','overlay-settings','overlay-confirm','overlay-email','overlay-link-popup','overlay-note-popup','overlay-title-popup'].forEach(id => {
-  document.getElementById(id).addEventListener('click', function(e) {
+  const el = document.getElementById(id);
+  el.addEventListener('mousedown', function(e) { this._mdTarget = e.target; });
+  el.addEventListener('click', function(e) {
     if (e.target !== this) return;
+    if (this._mdTarget !== this) return;
     if (id === 'overlay-form')             closeFormModal();
     else if (id === 'overlay-settings')    closeSettings();
     else if (id === 'overlay-confirm')     closeConfirm();
