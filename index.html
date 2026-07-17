@@ -6,6 +6,7 @@
   <title>Dashboard · Content</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/libs/pptxgen.bundle.js" defer></script>
   <script src="https://accounts.google.com/gsi/client" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -439,6 +440,12 @@
     <button class="btn-new" id="btn-new" onclick="openFormModal(null)" disabled>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       New project
+    </button>
+    <button class="btn-refresh" id="btn-pptx" onclick="generatePPTX()" title="Exportar reporte semanal en PowerPoint">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      Export PPT
     </button>
     <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
       <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -2237,6 +2244,129 @@ document.addEventListener('contextmenu', function(e) {
   const rowNum = Number(tr.dataset.ctxRow);
   _buildContextMenu(e, rowNum);
 }, true);
+
+// ─────────────────────────────────────────────────────────────
+//  PPTX Export
+// ─────────────────────────────────────────────────────────────
+function generatePPTX() {
+  if (!allData.length) { showToast('No hay datos para exportar'); return; }
+  if (typeof PptxGenJS === 'undefined') { showToast('Librería cargando, intentá de nuevo'); return; }
+
+  const btn = document.getElementById('btn-pptx');
+  if (btn) btn.disabled = true;
+
+  const C = {
+    bg: '0f172a', surface: '1e293b', border: '334155',
+    text: 'e2e8f0', muted: '94a3b8', dim: '475569',
+    green: '10b981', yellow: 'f59e0b', blue: '3b82f6',
+    purple: 'a78bfa', orange: 'f97316',
+  };
+
+  function statusColor(estado) {
+    const e = (estado || '').toLowerCase();
+    if (e.includes('entregado'))               return C.green;
+    if (e.includes('guionado'))                return C.yellow;
+    if (e.includes('grabaci')||e.includes('filmaci')) return C.orange;
+    if (e.includes('edici'))                   return C.blue;
+    return C.muted;
+  }
+
+  function wkRange(wk) {
+    return `${wk.mon.toLocaleDateString('es-AR',{day:'numeric',month:'short'})} – ${wk.sun.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'})}`;
+  }
+
+  const wkCur  = getWeek();
+  const wkPrev = getPrevWeek();
+  const wkNext = getNextWeek();
+  const curItems  = allData.filter(r => inWeek(r, wkCur));
+  const prevItems = allData.filter(r => inWeek(r, wkPrev));
+  const nextItems = allData.filter(r => inWeek(r, wkNext));
+  const total     = allData.length;
+  const entregado = allData.filter(r => r['Estado'].toLowerCase().includes('entregado')).length;
+
+  const pptx = new PptxGenJS();
+  pptx.layout = 'LAYOUT_WIDE';
+  pptx.title  = 'Reporte Semanal';
+
+  // ── Slide 1: Cover ────────────────────────────────────────
+  const s1 = pptx.addSlide();
+  s1.background = { color: C.bg };
+  s1.addShape(pptx.ShapeType.rect, { x:0, y:0, w:0.14, h:7.5, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
+  s1.addText('Dashboard · Content', { x:0.7, y:2.1, w:11, h:0.4, fontSize:13, color:C.muted, fontFace:'Segoe UI' });
+  s1.addText('Reporte Semanal', { x:0.7, y:2.55, w:12, h:1.1, fontSize:52, bold:true, color:C.text, fontFace:'Segoe UI' });
+  s1.addText(`W${getISOWeek(wkCur.mon)} · ${wkRange(wkCur)}`, { x:0.7, y:3.78, w:11, h:0.45, fontSize:19, color:C.blue, fontFace:'Segoe UI' });
+  s1.addText(`${total} proyectos totales · ${entregado} entregados (${Math.round(entregado/total*100)}%)`, { x:0.7, y:4.38, w:11, h:0.35, fontSize:13, color:C.dim, fontFace:'Segoe UI' });
+  s1.addText(`Generado el ${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`, { x:0.7, y:6.95, w:11, h:0.3, fontSize:10, color:C.dim, fontFace:'Segoe UI' });
+
+  // ── Slide 2: 3-column weekly view ─────────────────────────
+  const s2 = pptx.addSlide();
+  s2.background = { color: C.bg };
+  // Top accent bar
+  s2.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
+
+  const cols = [
+    { title:'Semana anterior', wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
+    { title:'Esta semana',     wk:wkCur,  items:curItems,  color:C.purple, x:4.62 },
+    { title:'Próxima semana',  wk:wkNext, items:nextItems, color:C.blue,   x:8.96 },
+  ];
+  const colW = 4.1;
+
+  cols.forEach(function(col) {
+    // Column header dot + title
+    s2.addShape(pptx.ShapeType.ellipse, { x:col.x, y:0.2, w:0.14, h:0.14, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
+    s2.addText(col.title, { x:col.x+0.22, y:0.16, w:colW-0.25, h:0.24, fontSize:11, bold:true, color:C.text, fontFace:'Segoe UI' });
+    s2.addText(`W${getISOWeek(col.wk.mon)} · ${wkRange(col.wk)}`, { x:col.x, y:0.42, w:colW, h:0.22, fontSize:8.5, color:C.muted, fontFace:'Segoe UI' });
+    // Divider below header
+    s2.addShape(pptx.ShapeType.rect, { x:col.x, y:0.68, w:colW, h:0.015, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
+
+    if (!col.items.length) {
+      s2.addText('Sin proyectos esta semana', { x:col.x, y:0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
+      return;
+    }
+
+    // Table rows
+    const hdrOpts = { bold:true, color:C.muted, fill:{ color:C.surface }, fontFace:'Segoe UI', fontSize:8, valign:'middle' };
+    const hdr = [
+      { text:'PROYECTO',  options:{ ...hdrOpts, align:'left'   } },
+      { text:'DEADLINE',  options:{ ...hdrOpts, align:'center' } },
+      { text:'ESTADO',    options:{ ...hdrOpts, align:'center' } },
+    ];
+    const rows = col.items.map(function(r, i) {
+      const fill = { color: i % 2 === 0 ? '111827' : C.bg };
+      return [
+        { text: (r['Titulo']||'—').slice(0,38), options:{ color:C.text,  fill, fontFace:'Segoe UI', fontSize:9.5, align:'left',   valign:'middle' } },
+        { text: fmtDate(r['Fecha Limite'])||'—',  options:{ color:C.muted, fill, fontFace:'Segoe UI', fontSize:8.5, align:'center', valign:'middle' } },
+        { text: r['Estado']||'—',                 options:{ color:statusColor(r['Estado']), fill, fontFace:'Segoe UI', fontSize:8.5, bold:true, align:'center', valign:'middle' } },
+      ];
+    });
+
+    s2.addTable([hdr, ...rows], {
+      x:col.x, y:0.72, w:colW,
+      colW:[2.1, 0.9, 1.1],
+      rowH:0.34,
+      border:{ type:'solid', color:C.border, pt:0.5 },
+      autoPage:true,
+      autoPageRepeatHeader:true,
+      autoPageSlideStartY:0.72,
+    });
+  });
+
+  // Vertical separators between columns
+  [4.45, 8.79].forEach(function(x) {
+    s2.addShape(pptx.ShapeType.rect, { x, y:0.15, w:0.015, h:7.2, fill:{ color:C.border }, line:{ color:C.border, pt:0 } });
+  });
+
+  pptx.writeFile({ fileName: `reporte-W${getISOWeek(wkCur.mon)}.pptx` })
+    .then(function() {
+      showToast('✓ Reporte exportado');
+      if (btn) btn.disabled = false;
+    })
+    .catch(function(err) {
+      console.error(err);
+      showToast('Error al generar el reporte');
+      if (btn) btn.disabled = false;
+    });
+}
 
 function _buildContextMenu(e, rowNum) {
   document.querySelectorAll('.row-ctx-menu').forEach(el => el.remove());
