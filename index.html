@@ -2286,28 +2286,18 @@ function generatePPTX() {
 
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
-  pptx.title  = 'Reporte Semanal';
+  pptx.title  = 'Weekly Report';
 
-  // ── Slide 1: Cover ────────────────────────────────────────
-  const s1 = pptx.addSlide();
-  s1.background = { color: C.bg };
-  s1.addShape(pptx.ShapeType.rect, { x:0, y:0, w:0.14, h:7.5, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
-  s1.addText('Dashboard · Content', { x:0.7, y:2.1, w:11, h:0.4, fontSize:13, color:C.muted, fontFace:'Segoe UI' });
-  s1.addText('Reporte Semanal', { x:0.7, y:2.55, w:12, h:1.1, fontSize:52, bold:true, color:C.text, fontFace:'Segoe UI' });
-  s1.addText(`W${getISOWeek(wkCur.mon)} · ${wkRange(wkCur)}`, { x:0.7, y:3.78, w:11, h:0.45, fontSize:19, color:C.blue, fontFace:'Segoe UI' });
-  s1.addText(`${total} proyectos totales · ${entregado} entregados (${Math.round(entregado/total*100)}%)`, { x:0.7, y:4.38, w:11, h:0.35, fontSize:13, color:C.dim, fontFace:'Segoe UI' });
-  s1.addText(`Generado el ${new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}`, { x:0.7, y:6.95, w:11, h:0.3, fontSize:10, color:C.dim, fontFace:'Segoe UI' });
-
-  // ── Slide 2: 3-column weekly view ─────────────────────────
+  // ── Slide: 3-column weekly view ───────────────────────────
   const s2 = pptx.addSlide();
   s2.background = { color: C.bg };
   // Top accent bar
   s2.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
 
   const cols = [
-    { title:'Semana anterior', wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
-    { title:'Esta semana',     wk:wkCur,  items:curItems,  color:C.purple, x:4.62 },
-    { title:'Próxima semana',  wk:wkNext, items:nextItems, color:C.blue,   x:8.96 },
+    { title:'Previous Week', wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
+    { title:'This Week',     wk:wkCur,  items:curItems,  color:C.purple, x:4.62 },
+    { title:'Next Week',     wk:wkNext, items:nextItems, color:C.blue,   x:8.96 },
   ];
   const colW = 4.1;
 
@@ -2320,23 +2310,23 @@ function generatePPTX() {
     s2.addShape(pptx.ShapeType.rect, { x:col.x, y:0.68, w:colW, h:0.015, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
 
     if (!col.items.length) {
-      s2.addText('Sin proyectos esta semana', { x:col.x, y:0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
+      s2.addText('No projects this week', { x:col.x, y:0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
       return;
     }
 
     // Table rows
     const hdrOpts = { bold:true, color:C.muted, fill:{ color:C.surface }, fontFace:'Segoe UI', fontSize:8, valign:'middle' };
     const hdr = [
-      { text:'PROYECTO',  options:{ ...hdrOpts, align:'left'   } },
-      { text:'DEADLINE',  options:{ ...hdrOpts, align:'center' } },
-      { text:'ESTADO',    options:{ ...hdrOpts, align:'center' } },
+      { text:'PROJECT',  options:{ ...hdrOpts, align:'left'   } },
+      { text:'DEADLINE', options:{ ...hdrOpts, align:'center' } },
+      { text:'STATUS',   options:{ ...hdrOpts, align:'center' } },
     ];
     const rows = col.items.map(function(r, i) {
       const fill = { color: i % 2 === 0 ? '111827' : C.bg };
       return [
-        { text: (r['Titulo']||'—').slice(0,38), options:{ color:C.text,  fill, fontFace:'Segoe UI', fontSize:9.5, align:'left',   valign:'middle' } },
-        { text: fmtDate(r['Fecha Limite'])||'—',  options:{ color:C.muted, fill, fontFace:'Segoe UI', fontSize:8.5, align:'center', valign:'middle' } },
-        { text: r['Estado']||'—',                 options:{ color:statusColor(r['Estado']), fill, fontFace:'Segoe UI', fontSize:8.5, bold:true, align:'center', valign:'middle' } },
+        { text: r['Titulo']||'—', options:{ color:C.text,  fill, fontFace:'Segoe UI', fontSize:8.5, align:'left',   valign:'middle', shrinkText:true } },
+        { text: fmtDate(r['Fecha Limite'])||'—', options:{ color:C.muted, fill, fontFace:'Segoe UI', fontSize:8.5, align:'center', valign:'middle' } },
+        { text: r['Estado']||'—',                options:{ color:statusColor(r['Estado']), fill, fontFace:'Segoe UI', fontSize:8.5, bold:true, align:'center', valign:'middle' } },
       ];
     });
 
