@@ -324,6 +324,12 @@
     .days-badge.soon    { background:rgba(251,146,60,.15); color:#fb923c; }
     .days-badge.ok      { background:rgba(100,116,139,.13); color:var(--muted); }
 
+    /* ── Lang toggle ────────────────────────────────────────── */
+    .lang-toggle { display:flex; gap:.2rem; }
+    .lang-btn { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:.28rem .5rem; cursor:pointer; font-size:.72rem; font-weight:600; letter-spacing:.02em; line-height:1.3; transition:border-color .15s, color .15s, background .15s; }
+    .lang-btn.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+    .lang-btn:not(.active):hover { border-color:var(--blue); color:var(--text); }
+
     /* ── View toggle ────────────────────────────────────────── */
     .view-toggle { display:flex; gap:.3rem; }
     .view-btn { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:.28rem .55rem; cursor:pointer; display:flex; align-items:center; transition:border-color .15s, color .15s, background .15s; }
@@ -414,10 +420,15 @@
   <div class="header-center">
     <div class="header-search">
       <svg class="header-search-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="header-search" placeholder="Buscar proyecto…" oninput="headerSearch(this.value)" />
+      <input type="text" id="header-search" data-i18n-ph="header.search" placeholder="Buscar proyecto…" oninput="headerSearch(this.value)" />
     </div>
   </div>
   <div class="header-right">
+    <div class="lang-toggle">
+      <button class="lang-btn active" data-lang="es" onclick="setLang('es')">ES</button>
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
+      <button class="lang-btn" data-lang="ko" onclick="setLang('ko')">한국어</button>
+    </div>
     <button class="btn-icon" title="Settings" onclick="openSettings()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
@@ -439,20 +450,20 @@
     </button>
     <button class="btn-new" id="btn-new" onclick="openFormModal(null)" disabled>
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      New project
+      <span data-i18n="btn.newProject">Nuevo proyecto</span>
     </button>
     <button class="btn-refresh" id="btn-pptx" onclick="generatePPTX()" title="Exportar reporte semanal en PowerPoint">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
-      Export PPT
+      <span data-i18n="btn.exportPpt">Exportar PPT</span>
     </button>
     <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
       <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
         <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
       </svg>
-      Refresh
+      <span data-i18n="btn.refresh">Actualizar</span>
     </button>
   </div>
 </header>
@@ -461,19 +472,19 @@
 <div class="modal-overlay hidden" id="overlay-settings">
   <div class="modal small">
     <div class="modal-header">
-      <span class="modal-title">Settings</span>
+      <span class="modal-title" data-i18n="modal.settings">Configuración</span>
       <button class="modal-close" onclick="closeSettings()">✕</button>
     </div>
     <div class="form-group">
-      <label class="form-label">Apps Script Web App URL</label>
+      <label class="form-label" data-i18n="settings.label">URL del Web App de Apps Script</label>
       <input class="form-input" id="input-api-url" type="url" placeholder="https://script.google.com/macros/s/..." />
-      <span style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block">
-        Install <code style="color:var(--blue)">apps-script.js</code> in your Sheet and paste the Web App URL here. Saved only in this browser.
+      <span id="settings-desc" style="font-size:.75rem;color:var(--muted);margin-top:.3rem;display:block">
+        Instalá <code style="color:var(--blue)">apps-script.js</code> en tu hoja y pegá la URL aquí. Solo se guarda en este navegador.
       </span>
     </div>
     <div class="form-actions">
-      <button class="btn-secondary" onclick="closeSettings()">Cancel</button>
-      <button class="btn-primary"   onclick="saveSettings()">Save</button>
+      <button class="btn-secondary" onclick="closeSettings()" data-i18n="btn.cancel">Cancelar</button>
+      <button class="btn-primary"   onclick="saveSettings()" data-i18n="btn.save">Guardar</button>
     </div>
   </div>
 </div>
@@ -488,11 +499,11 @@
     <form id="project-form" onsubmit="handleFormSubmit(event)" autocomplete="off">
       <div class="form-grid">
         <div class="form-group full">
-          <label class="form-label">Title *</label>
-          <input class="form-input" name="Titulo" required placeholder="Project name" />
+          <label class="form-label" data-i18n="form.title">Título *</label>
+          <input class="form-input" name="Titulo" required data-i18n-ph="form.titlePh" placeholder="Nombre del proyecto" />
         </div>
         <div class="form-group">
-          <label class="form-label">Format</label>
+          <label class="form-label" data-i18n="form.format">Formato</label>
           <select class="form-select" name="Formato">
             <option value="">—</option>
             <option>Vertical</option>
@@ -501,13 +512,13 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Status *</label>
+          <label class="form-label" data-i18n="form.status">Estado *</label>
           <select class="form-select" name="Estado" id="select-estado" required>
             <option value="">—</option>
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Client</label>
+          <label class="form-label" data-i18n="form.client">Cliente</label>
           <select class="form-select" name="Cliente">
             <option value="">—</option>
             <option>Samsung</option>
@@ -516,7 +527,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Division</label>
+          <label class="form-label" data-i18n="form.division">División</label>
           <select class="form-select" name="División">
             <option value="">—</option>
             <option>IM</option>
@@ -526,90 +537,90 @@
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Host</label>
-          <input class="form-input" name="Host" placeholder="Host name" />
+          <label class="form-label" data-i18n="form.host">Host</label>
+          <input class="form-input" name="Host" placeholder="Host" />
         </div>
         <div class="form-group">
-          <label class="form-label">Requested by</label>
-          <input class="form-input" name="Solicitante" placeholder="Who requested it" />
+          <label class="form-label" data-i18n="form.requestedBy">Solicitado por</label>
+          <input class="form-input" name="Solicitante" data-i18n-ph="form.requestedByPh" placeholder="Quién lo solicitó" />
         </div>
         <div class="form-group">
-          <label class="form-label">Start date</label>
+          <label class="form-label" data-i18n="form.startDate">Fecha de inicio</label>
           <input class="form-input" name="Fecha de inicio" type="date" />
         </div>
         <div class="form-group">
-          <label class="form-label">Deadline</label>
+          <label class="form-label" data-i18n="form.deadline">Deadline</label>
           <input class="form-input" name="Fecha Limite" type="date" />
         </div>
         <div class="form-group full">
-          <label class="form-label">Materials</label>
+          <label class="form-label" data-i18n="form.materials">Materiales</label>
           <div style="display:flex;gap:.5rem;align-items:stretch">
             <input class="form-input" name="Materiales" id="field-materiales"
-                   placeholder="Paste Google Drive folder link"
+                   data-i18n-ph="form.materialsPh" placeholder="Pegar link de carpeta en Google Drive"
                    oninput="updateMatLink()" style="flex:1;min-width:0" />
-            <a id="btn-mat-open" href="#" target="_blank" rel="noopener" title="Open in Drive"
+            <a id="btn-mat-open" href="#" target="_blank" rel="noopener"
                class="btn-mat-action"
                style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);text-decoration:none;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Open
+              <span data-i18n="form.open">Abrir</span>
             </a>
-            <button type="button" id="btn-mat-copy" title="Copiar link"
+            <button type="button" id="btn-mat-copy"
                style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);cursor:pointer;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap"
-               onclick="navigator.clipboard.writeText(document.getElementById('field-materiales').value.trim()).then(()=>showToast('Link copiado'))">
+               onclick="navigator.clipboard.writeText(document.getElementById('field-materiales').value.trim()).then(()=>showToast(t('toast.linkCopied')))">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
+              <span data-i18n="form.copy">Copiar</span>
             </button>
           </div>
         </div>
         <div class="form-group full">
-          <label class="form-label">Script (Guión)</label>
+          <label class="form-label" data-i18n="form.script">Guión</label>
           <div style="display:flex;gap:.5rem;align-items:stretch">
             <input class="form-input" name="Guión" id="field-guion"
-                   placeholder="Paste Google Drive script link"
+                   data-i18n-ph="form.scriptPh" placeholder="Pegar link de guión en Google Drive"
                    oninput="updateGuionLink()" style="flex:1;min-width:0" />
-            <a id="btn-guion-open" href="#" target="_blank" rel="noopener" title="Open script in Drive"
+            <a id="btn-guion-open" href="#" target="_blank" rel="noopener"
                class="btn-mat-action"
                style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);text-decoration:none;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Open
+              <span data-i18n="form.open">Abrir</span>
             </a>
-            <button type="button" id="btn-guion-copy" title="Copiar link"
+            <button type="button" id="btn-guion-copy"
                style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);cursor:pointer;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap"
-               onclick="navigator.clipboard.writeText(document.getElementById('field-guion').value.trim()).then(()=>showToast('Link copiado'))">
+               onclick="navigator.clipboard.writeText(document.getElementById('field-guion').value.trim()).then(()=>showToast(t('toast.linkCopied')))">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
+              <span data-i18n="form.copy">Copiar</span>
             </button>
           </div>
         </div>
         <div class="form-group full">
-          <label class="form-label">Result</label>
+          <label class="form-label" data-i18n="form.result">Resultado</label>
           <div style="display:flex;gap:.5rem;align-items:stretch">
             <input class="form-input" name="Resultado" id="field-resultado"
-                   placeholder="Paste YouTube or TikTok link"
+                   data-i18n-ph="form.resultPh" placeholder="Pegar link de YouTube o TikTok"
                    oninput="updateResultadoLink()" style="flex:1;min-width:0" />
-            <a id="btn-resultado-open" href="#" target="_blank" rel="noopener" title="Open result"
+            <a id="btn-resultado-open" href="#" target="_blank" rel="noopener"
                class="btn-mat-action"
                style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);text-decoration:none;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-              Open
+              <span data-i18n="form.open">Abrir</span>
             </a>
-            <button type="button" id="btn-resultado-copy" title="Copiar link"
+            <button type="button" id="btn-resultado-copy"
                style="display:none;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:.5rem .75rem;color:var(--muted);cursor:pointer;align-items:center;gap:.4rem;font-size:.78rem;white-space:nowrap"
-               onclick="navigator.clipboard.writeText(document.getElementById('field-resultado').value.trim()).then(()=>showToast('Link copiado'))">
+               onclick="navigator.clipboard.writeText(document.getElementById('field-resultado').value.trim()).then(()=>showToast(t('toast.linkCopied')))">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-              Copy
+              <span data-i18n="form.copy">Copiar</span>
             </button>
           </div>
         </div>
         <div class="form-group full">
-          <label class="form-label">Notes</label>
-          <textarea class="form-input" name="Notas" id="field-notas" rows="2" placeholder="Internal notes — shown as tooltip on the title in the dashboard. Add a &#39;Notas&#39; column to your sheet to persist." style="resize:vertical;font-family:inherit"></textarea>
+          <label class="form-label" data-i18n="form.notes">Notas</label>
+          <textarea class="form-input" name="Notas" id="field-notas" rows="2" data-i18n-ph="form.notesPh" placeholder="Notas internas — se muestran como tooltip en el título." style="resize:vertical;font-family:inherit"></textarea>
         </div>
       </div>
       <div class="form-actions">
-        <button type="button" class="btn-danger" id="btn-form-delete" style="display:none;margin-right:auto" onclick="confirmDeleteCurrent()">Delete</button>
-        <button type="button" class="btn-secondary" onclick="closeFormModal()">Cancel</button>
-        <button type="submit" class="btn-primary" id="btn-form-submit">Save</button>
+        <button type="button" class="btn-danger" id="btn-form-delete" style="display:none;margin-right:auto" onclick="confirmDeleteCurrent()" data-i18n="btn.delete">Eliminar</button>
+        <button type="button" class="btn-secondary" onclick="closeFormModal()" data-i18n="btn.cancel">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btn-form-submit">Guardar</button>
       </div>
     </form>
 
@@ -617,12 +628,12 @@
     <div class="comments-section" id="modal-comments" style="display:none">
       <div class="comments-header">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        Activity
+        <span data-i18n="comments.title">Actividad</span>
       </div>
       <div class="comments-list" id="comments-list"></div>
       <div id="comment-lock" class="comment-locked" style="display:none">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>Tenés que iniciar sesión con Google para comentar</span>
+        <span data-i18n="comments.login">Tenés que iniciar sesión con Google para comentar</span>
       </div>
       <div class="comment-input-wrap" id="comment-input-wrap" style="display:none">
         <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
@@ -638,10 +649,10 @@
         </div>
         <div class="comment-submit-row">
           <textarea class="form-input" id="comment-text" rows="2"
-                    placeholder="Write a comment… (Ctrl+Enter to send)"
+                    data-i18n-ph="comments.ph" placeholder="Escribí un comentario… (Ctrl+Enter para enviar)"
                     style="flex:1;resize:none;font-family:inherit"
                     onkeydown="if(event.ctrlKey&&event.key==='Enter'){event.preventDefault();submitComment();}"></textarea>
-          <button type="button" class="btn-primary comment-send-btn" onclick="submitComment()">Post</button>
+          <button type="button" class="btn-primary comment-send-btn" onclick="submitComment()" data-i18n="btn.post">Publicar</button>
         </div>
       </div>
     </div>
@@ -652,16 +663,16 @@
 <div class="modal-overlay hidden" id="overlay-confirm">
   <div class="modal small">
     <div class="modal-header">
-      <span class="modal-title">Delete project</span>
+      <span class="modal-title" data-i18n="modal.deleteProject">Eliminar proyecto</span>
       <button class="modal-close" onclick="closeConfirm()">✕</button>
     </div>
     <p style="color:var(--muted);font-size:.875rem;line-height:1.5;margin-bottom:1.5rem">
-      Are you sure you want to delete <strong id="confirm-title" style="color:var(--text)"></strong>?<br>
-      <span style="font-size:.8rem">This will remove the row from Google Sheets and cannot be undone.</span>
+      <span data-i18n="confirm.question">¿Estás seguro de que querés eliminar</span> <strong id="confirm-title" style="color:var(--text)"></strong>?<br>
+      <span style="font-size:.8rem" data-i18n="confirm.warning">Esto eliminará la fila de Google Sheets y no se puede deshacer.</span>
     </p>
     <div class="form-actions">
-      <button class="btn-secondary" onclick="closeConfirm()">Cancel</button>
-      <button class="btn-danger" id="btn-confirm-delete" onclick="executeDelete()">Delete</button>
+      <button class="btn-secondary" onclick="closeConfirm()" data-i18n="btn.cancel">Cancelar</button>
+      <button class="btn-danger" id="btn-confirm-delete" onclick="executeDelete()" data-i18n="btn.delete">Eliminar</button>
     </div>
   </div>
 </div>
@@ -670,12 +681,12 @@
 <!-- Title quick-edit popup -->
 <div class="modal-overlay hidden" id="overlay-title-popup" style="background:rgba(0,0,0,.5)">
   <div class="link-popup">
-    <div class="link-popup-title">Cambiar título</div>
-    <input type="text" id="title-popup-input" class="form-input" placeholder="Título del proyecto…" style="width:100%;font-size:.83rem"
+    <div class="link-popup-title" data-i18n="ctx.renameTitle">Cambiar título</div>
+    <input type="text" id="title-popup-input" class="form-input" data-i18n-ph="form.titlePh" placeholder="Título del proyecto…" style="width:100%;font-size:.83rem"
       onkeydown="if(event.key==='Enter')saveTitlePopup();if(event.key==='Escape')closeTitlePopup()" />
     <div class="link-popup-actions">
-      <button class="btn-secondary" onclick="closeTitlePopup()">Cancelar</button>
-      <button class="btn-new" onclick="saveTitlePopup()">Guardar</button>
+      <button class="btn-secondary" onclick="closeTitlePopup()" data-i18n="btn.cancel">Cancelar</button>
+      <button class="btn-new" onclick="saveTitlePopup()" data-i18n="btn.save">Guardar</button>
     </div>
   </div>
 </div>
@@ -684,12 +695,12 @@
 <div class="modal-overlay hidden" id="overlay-note-popup" style="background:rgba(0,0,0,.5)">
   <div class="link-popup">
     <div class="link-popup-title" id="note-popup-title">Nota</div>
-    <textarea id="note-popup-input" class="form-input" rows="4" placeholder="Escribí una nota…"
+    <textarea id="note-popup-input" class="form-input" rows="4" data-i18n-ph="form.notesPh" placeholder="Escribí una nota…"
       style="width:100%;font-size:.83rem;resize:vertical;font-family:inherit;line-height:1.5"
       onkeydown="if(event.key==='Escape')closeNotePopup()"></textarea>
     <div class="link-popup-actions">
-      <button class="btn-secondary" onclick="closeNotePopup()">Cancelar</button>
-      <button class="btn-new" onclick="saveNotePopup()">Guardar</button>
+      <button class="btn-secondary" onclick="closeNotePopup()" data-i18n="btn.cancel">Cancelar</button>
+      <button class="btn-new" onclick="saveNotePopup()" data-i18n="btn.save">Guardar</button>
     </div>
   </div>
 </div>
@@ -701,8 +712,8 @@
     <input type="url" id="link-popup-input" class="form-input" placeholder="https://drive.google.com/…" style="width:100%;font-size:.83rem"
       onkeydown="if(event.key==='Enter')saveLinkPopup();if(event.key==='Escape')closeLinkPopup()" />
     <div class="link-popup-actions">
-      <button class="btn-secondary" onclick="closeLinkPopup()">Cancelar</button>
-      <button class="btn-new" onclick="saveLinkPopup()">Guardar</button>
+      <button class="btn-secondary" onclick="closeLinkPopup()" data-i18n="btn.cancel">Cancelar</button>
+      <button class="btn-new" onclick="saveLinkPopup()" data-i18n="btn.save">Guardar</button>
     </div>
   </div>
 </div>
@@ -740,7 +751,7 @@
 <main class="main" id="main">
   <div class="loading">
     <div class="spinner"></div>
-    Loading data from Google Sheets...
+    <span data-i18n="misc.loadingMain">Cargando datos de Google Sheets...</span>
   </div>
 </main>
 
@@ -780,6 +791,251 @@ let colResultado  = 'Resultado';
 let sortKey      = localStorage.getItem('allProjects_sortKey')  || '';
 let sortDir      = Number(localStorage.getItem('allProjects_sortDir')) || 1;
 const rowMap     = {};
+
+// ─────────────────────────────────────────────────────────────
+//  i18n
+// ─────────────────────────────────────────────────────────────
+const LANGS = {
+  es: {
+    'header.title':'Panel · Contenido','header.search':'Buscar proyecto…','header.updated':'Actualizado {time}',
+    'btn.newProject':'Nuevo proyecto','btn.exportPpt':'Exportar PPT','btn.refresh':'Actualizar',
+    'kpi.total':'Total','kpi.delivered':'Entregados','kpi.deliveredSub':'{n}% del total',
+    'kpi.scripted':'Guionados','kpi.filming':'En grabación','kpi.editing':'En edición',
+    'kpi.thisWeek':'Esta semana','kpi.thisWeekSub':'Con fechas esta semana',
+    'board.title':'Tablero del equipo','board.loading':'Cargando notas…',
+    'board.placeholder':'Escribí un mensaje para el equipo…','board.publish':'Publicar',
+    'board.hint':'Ctrl+Enter para publicar',
+    'board.loginMsg':'<span style="color:var(--blue);cursor:pointer" onclick="document.getElementById(\'gsi-btn\').firstElementChild && document.getElementById(\'gsi-btn\').firstElementChild.click()">Iniciá sesión con Google</span> para publicar una nota.',
+    'board.reconnect':'Conectar tablero con tu cuenta Google',
+    'week.thisWeek':'Esta semana','week.nextWeek':'Próxima semana','week.prevWeek':'Semana anterior',
+    'week.pending':'Pendientes','week.mail':'Mail',
+    'week.noCurrent':'Sin proyectos con fechas esta semana.',
+    'week.noNext':'Sin proyectos con fechas la próxima semana.',
+    'week.noPrev':'Sin proyectos con fechas la semana anterior.',
+    'week.allDelivered':'Todo entregado.',
+    'projects.title':'Todos los proyectos',
+    'col.project':'Proyecto','col.client':'Cliente','col.requester':'Solicitante',
+    'col.host':'Host','col.start':'Inicio','col.deadline':'Deadline',
+    'col.daysLeft':'Días restantes','col.status':'Estado',
+    'filter.allStatuses':'Todos los estados','filter.allClients':'Todos los clientes',
+    'filter.allHosts':'Todos los hosts','filter.allReq':'Todos los solicitantes',
+    'filter.search':'Buscar proyecto...','table.noResults':'Sin resultados para los filtros aplicados.',
+    'chart.status':'Estado de proyectos','chart.client':'Proyectos por cliente',
+    'chart.host':'Proyectos por host','chart.requester':'Proyectos por solicitante',
+    'history.title':'Historial de cambios','history.subtitle':'Últimos 50 cambios',
+    'history.empty':'Sin cambios registrados. Aparecerán al actualizar Apps Script.',
+    'history.created':'creado','history.deleted':'eliminado',
+    'modal.settings':'Configuración','modal.newProject':'Nuevo proyecto',
+    'modal.editProject':'Editar proyecto','modal.deleteProject':'Eliminar proyecto',
+    'settings.label':'URL del Web App de Apps Script',
+    'settings.desc':'Instalá <code style="color:var(--blue)">apps-script.js</code> en tu hoja y pegá la URL aquí. Solo se guarda en este navegador.',
+    'form.title':'Título *','form.titlePh':'Nombre del proyecto','form.format':'Formato',
+    'form.status':'Estado *','form.client':'Cliente','form.division':'División',
+    'form.host':'Host','form.requestedBy':'Solicitado por','form.requestedByPh':'Quién lo solicitó',
+    'form.startDate':'Fecha de inicio','form.deadline':'Deadline','form.materials':'Materiales',
+    'form.materialsPh':'Pegar link de carpeta en Google Drive','form.script':'Guión',
+    'form.scriptPh':'Pegar link de guión en Google Drive','form.result':'Resultado',
+    'form.resultPh':'Pegar link de YouTube o TikTok','form.notes':'Notas',
+    'form.notesPh':'Notas internas — se muestran como tooltip en el título.',
+    'form.open':'Abrir','form.copy':'Copiar',
+    'btn.save':'Guardar','btn.saveChanges':'Guardar cambios','btn.addProject':'Agregar proyecto',
+    'btn.cancel':'Cancelar','btn.delete':'Eliminar','btn.post':'Publicar',
+    'confirm.question':'¿Estás seguro de que querés eliminar',
+    'confirm.warning':'Esto eliminará la fila de Google Sheets y no se puede deshacer.',
+    'comments.title':'Actividad','comments.empty':'Aún no hay comentarios. Empezá la conversación.',
+    'comments.login':'Tenés que iniciar sesión con Google para comentar',
+    'comments.ph':'Escribí un comentario… (Ctrl+Enter para enviar)',
+    'toast.projectAdded':'Proyecto agregado','toast.projectUpdated':'Proyecto actualizado',
+    'toast.projectDeleted':'Proyecto eliminado','toast.pptxOk':'✓ Reporte exportado',
+    'toast.pptxError':'Error al generar el reporte','toast.libError':'No se pudo cargar la librería',
+    'toast.csvExported':'✓ {n} proyectos exportados','toast.noData':'Sin datos para exportar',
+    'toast.linkCopied':'Link copiado','toast.titleCopied':'Título copiado',
+    'toast.copied':'✓ Copiado','toast.commentUpdated':'Comentario actualizado',
+    'toast.commentDeleted':'Comentario eliminado',
+    'ctx.copyTitle':'Copiar título','ctx.renameTitle':'Cambiar título',
+    'ctx.editNote':'Editar nota','ctx.addNote':'Agregar nota',
+    'ctx.editScript':'Editar guión','ctx.addScript':'Agregar guión',
+    'ctx.openLink':'Abrir link','ctx.copyLink':'Copiar link',
+    'ctx.noteColor':'Color de nota','ctx.editStickyNote':'Editar nota',
+    'misc.today':'Hoy','misc.justNow':'ahora mismo',
+    'misc.mAgo':'hace {n}m','misc.hAgo':'hace {n}h',
+    'misc.saving':'Guardando...','misc.deleting':'Eliminando...',
+    'misc.readOnly':'Modo solo lectura — para agregar y editar proyectos, <a onclick="openSettings()">configurá Apps Script</a> (gratis, 5 minutos).',
+    'misc.loadingMain':'Cargando datos de Google Sheets...','misc.retry':'Reintentar',
+    'misc.hasNotes':'Tiene notas','misc.noProjects':'Sin proyectos con fechas esta semana.',
+  },
+  en: {
+    'header.title':'Dashboard · Content','header.search':'Search project…','header.updated':'Updated {time}',
+    'btn.newProject':'New project','btn.exportPpt':'Export PPT','btn.refresh':'Refresh',
+    'kpi.total':'Total','kpi.delivered':'Delivered','kpi.deliveredSub':'{n}% of total',
+    'kpi.scripted':'Scripted','kpi.filming':'Filming','kpi.editing':'Editing',
+    'kpi.thisWeek':'This week','kpi.thisWeekSub':'With dates this week',
+    'board.title':'Team board','board.loading':'Loading notes…',
+    'board.placeholder':'Write a message for the team…','board.publish':'Publish',
+    'board.hint':'Ctrl+Enter to publish',
+    'board.loginMsg':'<span style="color:var(--blue);cursor:pointer" onclick="document.getElementById(\'gsi-btn\').firstElementChild && document.getElementById(\'gsi-btn\').firstElementChild.click()">Sign in with Google</span> to post a note.',
+    'board.reconnect':'Connect board with your Google account',
+    'week.thisWeek':'This week','week.nextWeek':'Next week','week.prevWeek':'Previous week',
+    'week.pending':'Pending','week.mail':'Mail',
+    'week.noCurrent':'No projects with dates this week.',
+    'week.noNext':'No projects with dates next week.',
+    'week.noPrev':'No projects with dates last week.',
+    'week.allDelivered':'All delivered.',
+    'projects.title':'All projects',
+    'col.project':'Project','col.client':'Client','col.requester':'Requester',
+    'col.host':'Host','col.start':'Start','col.deadline':'Deadline',
+    'col.daysLeft':'Days left','col.status':'Status',
+    'filter.allStatuses':'All statuses','filter.allClients':'All clients',
+    'filter.allHosts':'All hosts','filter.allReq':'All requesters',
+    'filter.search':'Search project...','table.noResults':'No results for the applied filters.',
+    'chart.status':'Project status','chart.client':'Projects by client',
+    'chart.host':'Projects by host','chart.requester':'Projects by requester',
+    'history.title':'Change history','history.subtitle':'Last 50 changes',
+    'history.empty':'No changes recorded yet. Changes will appear here after deploying the updated Apps Script.',
+    'history.created':'created','history.deleted':'deleted',
+    'modal.settings':'Settings','modal.newProject':'New project',
+    'modal.editProject':'Edit project','modal.deleteProject':'Delete project',
+    'settings.label':'Apps Script Web App URL',
+    'settings.desc':'Install <code style="color:var(--blue)">apps-script.js</code> in your Sheet and paste the Web App URL here. Saved only in this browser.',
+    'form.title':'Title *','form.titlePh':'Project name','form.format':'Format',
+    'form.status':'Status *','form.client':'Client','form.division':'Division',
+    'form.host':'Host','form.requestedBy':'Requested by','form.requestedByPh':'Who requested it',
+    'form.startDate':'Start date','form.deadline':'Deadline','form.materials':'Materials',
+    'form.materialsPh':'Paste Google Drive folder link','form.script':'Script',
+    'form.scriptPh':'Paste Google Drive script link','form.result':'Result',
+    'form.resultPh':'Paste YouTube or TikTok link','form.notes':'Notes',
+    'form.notesPh':'Internal notes — shown as tooltip on the title.',
+    'form.open':'Open','form.copy':'Copy',
+    'btn.save':'Save','btn.saveChanges':'Save changes','btn.addProject':'Add project',
+    'btn.cancel':'Cancel','btn.delete':'Delete','btn.post':'Post',
+    'confirm.question':'Are you sure you want to delete',
+    'confirm.warning':'This will remove the row from Google Sheets and cannot be undone.',
+    'comments.title':'Activity','comments.empty':'No comments yet. Start the conversation.',
+    'comments.login':'Sign in with Google to comment',
+    'comments.ph':'Write a comment… (Ctrl+Enter to send)',
+    'toast.projectAdded':'Project added','toast.projectUpdated':'Project updated',
+    'toast.projectDeleted':'Project deleted','toast.pptxOk':'✓ Report exported',
+    'toast.pptxError':'Error generating report','toast.libError':'Could not load library',
+    'toast.csvExported':'✓ Exported {n} projects','toast.noData':'No data to export',
+    'toast.linkCopied':'Link copied','toast.titleCopied':'Title copied',
+    'toast.copied':'✓ Copied','toast.commentUpdated':'Comment updated',
+    'toast.commentDeleted':'Comment deleted',
+    'ctx.copyTitle':'Copy title','ctx.renameTitle':'Rename',
+    'ctx.editNote':'Edit note','ctx.addNote':'Add note',
+    'ctx.editScript':'Edit script','ctx.addScript':'Add script',
+    'ctx.openLink':'Open link','ctx.copyLink':'Copy link',
+    'ctx.noteColor':'Note color','ctx.editStickyNote':'Edit note',
+    'misc.today':'Today','misc.justNow':'just now',
+    'misc.mAgo':'{n}m ago','misc.hAgo':'{n}h ago',
+    'misc.saving':'Saving...','misc.deleting':'Deleting...',
+    'misc.readOnly':'Read-only mode — to add and edit projects, <a onclick="openSettings()">configure Apps Script</a> (free, takes 5 minutes).',
+    'misc.loadingMain':'Loading data from Google Sheets...','misc.retry':'Retry',
+    'misc.hasNotes':'Has notes','misc.noProjects':'No projects with dates this week.',
+  },
+  ko: {
+    'header.title':'대시보드 · 콘텐츠','header.search':'프로젝트 검색…','header.updated':'업데이트 {time}',
+    'btn.newProject':'새 프로젝트','btn.exportPpt':'PPT 내보내기','btn.refresh':'새로고침',
+    'kpi.total':'전체','kpi.delivered':'납품 완료','kpi.deliveredSub':'전체의 {n}%',
+    'kpi.scripted':'대본 완성','kpi.filming':'촬영 중','kpi.editing':'편집 중',
+    'kpi.thisWeek':'이번 주','kpi.thisWeekSub':'이번 주 날짜 있음',
+    'board.title':'팀 보드','board.loading':'노트 로딩 중…',
+    'board.placeholder':'팀에게 메시지 작성…','board.publish':'게시',
+    'board.hint':'Ctrl+Enter로 게시',
+    'board.loginMsg':'<span style="color:var(--blue);cursor:pointer" onclick="document.getElementById(\'gsi-btn\').firstElementChild && document.getElementById(\'gsi-btn\').firstElementChild.click()">Google로 로그인</span>하여 노트를 게시하세요.',
+    'board.reconnect':'Google 계정으로 보드 연결',
+    'week.thisWeek':'이번 주','week.nextWeek':'다음 주','week.prevWeek':'지난 주',
+    'week.pending':'진행 중','week.mail':'메일',
+    'week.noCurrent':'이번 주 날짜가 있는 프로젝트 없음.',
+    'week.noNext':'다음 주 날짜가 있는 프로젝트 없음.',
+    'week.noPrev':'지난 주 날짜가 있는 프로젝트 없음.',
+    'week.allDelivered':'모두 납품 완료.',
+    'projects.title':'전체 프로젝트',
+    'col.project':'프로젝트','col.client':'클라이언트','col.requester':'요청자',
+    'col.host':'Host','col.start':'시작','col.deadline':'Deadline',
+    'col.daysLeft':'남은 일수','col.status':'상태',
+    'filter.allStatuses':'모든 상태','filter.allClients':'모든 클라이언트',
+    'filter.allHosts':'모든 호스트','filter.allReq':'모든 요청자',
+    'filter.search':'프로젝트 검색...','table.noResults':'적용된 필터에 결과 없음.',
+    'chart.status':'프로젝트 현황','chart.client':'클라이언트별 프로젝트',
+    'chart.host':'호스트별 프로젝트','chart.requester':'요청자별 프로젝트',
+    'history.title':'변경 이력','history.subtitle':'최근 50개 변경',
+    'history.empty':'변경 사항 없음. Apps Script 업데이트 배포 후 표시됩니다.',
+    'history.created':'생성됨','history.deleted':'삭제됨',
+    'modal.settings':'설정','modal.newProject':'새 프로젝트',
+    'modal.editProject':'프로젝트 수정','modal.deleteProject':'프로젝트 삭제',
+    'settings.label':'Apps Script 웹 앱 URL',
+    'settings.desc':'시트에 <code style="color:var(--blue)">apps-script.js</code>를 설치하고 URL을 붙여넣으세요. 이 브라우저에만 저장됩니다.',
+    'form.title':'제목 *','form.titlePh':'프로젝트 이름','form.format':'형식',
+    'form.status':'상태 *','form.client':'클라이언트','form.division':'부서',
+    'form.host':'Host','form.requestedBy':'요청자','form.requestedByPh':'누가 요청했는지',
+    'form.startDate':'시작 날짜','form.deadline':'Deadline','form.materials':'자료',
+    'form.materialsPh':'Google Drive 폴더 링크 붙여넣기','form.script':'대본',
+    'form.scriptPh':'Google Drive 대본 링크 붙여넣기','form.result':'결과물',
+    'form.resultPh':'YouTube 또는 TikTok 링크 붙여넣기','form.notes':'메모',
+    'form.notesPh':'내부 메모 — 대시보드에서 툴팁으로 표시됩니다.',
+    'form.open':'열기','form.copy':'복사',
+    'btn.save':'저장','btn.saveChanges':'변경 사항 저장','btn.addProject':'프로젝트 추가',
+    'btn.cancel':'취소','btn.delete':'삭제','btn.post':'게시',
+    'confirm.question':'정말 삭제하시겠습니까',
+    'confirm.warning':'Google Sheets에서 행이 삭제되며 되돌릴 수 없습니다.',
+    'comments.title':'활동','comments.empty':'아직 댓글 없음. 대화를 시작해보세요.',
+    'comments.login':'댓글을 달려면 Google로 로그인하세요',
+    'comments.ph':'댓글 작성… (Ctrl+Enter로 전송)',
+    'toast.projectAdded':'프로젝트 추가됨','toast.projectUpdated':'프로젝트 업데이트됨',
+    'toast.projectDeleted':'프로젝트 삭제됨','toast.pptxOk':'✓ 보고서 내보내기 완료',
+    'toast.pptxError':'보고서 생성 오류','toast.libError':'라이브러리를 불러올 수 없음',
+    'toast.csvExported':'✓ {n}개 프로젝트 내보내기 완료','toast.noData':'내보낼 데이터 없음',
+    'toast.linkCopied':'링크 복사됨','toast.titleCopied':'제목 복사됨',
+    'toast.copied':'✓ 복사됨','toast.commentUpdated':'댓글 업데이트됨',
+    'toast.commentDeleted':'댓글 삭제됨',
+    'ctx.copyTitle':'제목 복사','ctx.renameTitle':'제목 변경',
+    'ctx.editNote':'메모 수정','ctx.addNote':'메모 추가',
+    'ctx.editScript':'대본 수정','ctx.addScript':'대본 추가',
+    'ctx.openLink':'링크 열기','ctx.copyLink':'링크 복사',
+    'ctx.noteColor':'메모 색상','ctx.editStickyNote':'메모 수정',
+    'misc.today':'오늘','misc.justNow':'방금 전',
+    'misc.mAgo':'{n}분 전','misc.hAgo':'{n}시간 전',
+    'misc.saving':'저장 중...','misc.deleting':'삭제 중...',
+    'misc.readOnly':'읽기 전용 모드 — 프로젝트 추가/편집을 위해 <a onclick="openSettings()">Apps Script를 설정</a>하세요 (무료, 5분 소요).',
+    'misc.loadingMain':'Google Sheets에서 데이터 로딩 중...','misc.retry':'다시 시도',
+    'misc.hasNotes':'메모 있음','misc.noProjects':'이번 주 날짜가 있는 프로젝트 없음.',
+  }
+};
+
+let currentLang = localStorage.getItem('lang') || 'es';
+
+function t(key, vars) {
+  let str = (LANGS[currentLang] || LANGS.es)[key];
+  if (str === undefined) str = LANGS.es[key] || key;
+  if (vars) for (const [k, v] of Object.entries(vars)) str = str.replace(new RegExp('\\{'+k+'\\}','g'), String(v));
+  return str;
+}
+
+function nP(n) {
+  if (currentLang === 'ko') return n+'개 프로젝트';
+  if (currentLang === 'es') return n+' proyecto'+(n!==1?'s':'');
+  return n+' project'+(n!==1?'s':'');
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('lang', lang);
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  applyI18n();
+  if (allData.length) {
+    render(allData);
+    renderHistory();
+  }
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.dataset.i18nHtml); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.dataset.i18nPh); });
+  // Settings desc has HTML (code tag)
+  const sd = document.getElementById('settings-desc');
+  if (sd) sd.innerHTML = t('settings.desc');
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Settings
@@ -944,8 +1200,7 @@ function render(data) {
   document.getElementById('main').innerHTML = `
     ${!hasApi ? `<div class="banner">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Read-only mode — to add and edit projects,
-      <a onclick="openSettings()">configure Apps Script</a> (free, takes 5 minutes).
+      ${t('misc.readOnly')}
     </div>` : ''}
     <div class="kpi-grid" id="kpi-grid"></div>
 
@@ -953,7 +1208,7 @@ function render(data) {
     <div class="card" id="card-tablero">
       <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleTablero()">
         <div class="dot" style="background:var(--yellow)"></div>
-        Tablero del equipo
+        ${t('board.title')}
         <span id="tablero-count" style="font-size:.7rem;font-weight:400;color:var(--muted);margin-left:.3rem"></span>
         <button id="tablero-chevron" onclick="event.stopPropagation();toggleTablero()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);padding:.25rem;display:flex;align-items:center;transition:transform .25s">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
@@ -961,23 +1216,23 @@ function render(data) {
       </div>
       <div id="tablero-body">
         <div class="tablero-board" id="tablero-board">
-          <div class="tablero-board-empty">Cargando notas…</div>
+          <div class="tablero-board-empty">${t('board.loading')}</div>
         </div>
         <div id="tablero-add-wrap" style="display:none">
           <div class="tablero-add">
-            <textarea id="tablero-input" class="form-input" placeholder="Escribí un mensaje para el equipo…" rows="2"
+            <textarea id="tablero-input" class="form-input" placeholder="${t('board.placeholder')}" rows="2"
               onkeydown="if(event.ctrlKey&&event.key==='Enter')postTableroNote()"></textarea>
-            <button class="btn-new" onclick="postTableroNote()">Publicar</button>
+            <button class="btn-new" onclick="postTableroNote()">${t('board.publish')}</button>
           </div>
-          <div class="tablero-hint">Ctrl+Enter para publicar</div>
+          <div class="tablero-hint">${t('board.hint')}</div>
         </div>
         <div id="tablero-login-msg" style="font-size:.8rem;color:var(--muted);margin-top:.4rem;display:none">
-          <span style="color:var(--blue);cursor:pointer" onclick="document.getElementById('gsi-btn').firstElementChild && document.getElementById('gsi-btn').firstElementChild.click()">Iniciá sesión con Google</span> para publicar una nota.
+          ${t('board.loginMsg')}
         </div>
         <div id="tablero-reconnect-msg" style="font-size:.8rem;color:var(--muted);margin-top:.4rem;display:none">
           <button class="btn-secondary" style="font-size:.78rem;padding:.35rem .75rem" onclick="_fbReconnect()">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:.3rem"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
-            Conectar tablero con tu cuenta Google
+            ${t('board.reconnect')}
           </button>
         </div>
       </div>
@@ -993,27 +1248,27 @@ function render(data) {
     </div>
     <div class="row2">
       <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Project status</div>
+        <div class="card-title"><div class="dot" style="background:var(--blue)"></div>${t('chart.status')}</div>
         <div class="chart-wrap"><canvas id="chart-estado"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--green)"></div>Projects by client</div>
+        <div class="card-title"><div class="dot" style="background:var(--green)"></div>${t('chart.client')}</div>
         <div class="chart-wrap"><canvas id="chart-cliente"></canvas></div>
       </div>
     </div>
     <div class="row2">
       <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--yellow)"></div>Projects by host</div>
+        <div class="card-title"><div class="dot" style="background:var(--yellow)"></div>${t('chart.host')}</div>
         <div class="chart-wrap"><canvas id="chart-host"></canvas></div>
       </div>
       <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Projects by requester</div>
+        <div class="card-title"><div class="dot" style="background:var(--purple)"></div>${t('chart.requester')}</div>
         <div class="chart-wrap"><canvas id="chart-solicitante"></canvas></div>
       </div>
     </div>
     <div class="card">
       <div class="card-title">
-        <div class="dot" style="background:var(--muted)"></div>All projects
+        <div class="dot" style="background:var(--muted)"></div>${t('projects.title')}
         <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center">
           <div class="view-toggle">
             <button class="view-btn active" id="btn-view-table" title="Table view" onclick="setView('table')">
@@ -1030,22 +1285,22 @@ function render(data) {
       </div>
       <div class="filters" id="filter-bar">
         <select class="filter-sel" id="f-estado"  onchange="applyFilters()">
-          <option value="">All statuses</option>
+          <option value="">${t('filter.allStatuses')}</option>
           ${uniqueSorted(allData,'Estado').map(v=>`<option>${v}</option>`).join('')}
         </select>
         <select class="filter-sel" id="f-cliente" onchange="applyFilters()">
-          <option value="">All clients</option>
+          <option value="">${t('filter.allClients')}</option>
           ${uniqueSorted(allData,'Cliente').map(v=>`<option>${v}</option>`).join('')}
         </select>
         <select class="filter-sel" id="f-host"    onchange="applyFilters()">
-          <option value="">All hosts</option>
+          <option value="">${t('filter.allHosts')}</option>
           ${uniqueSorted(allData,'Host').map(v=>`<option>${v}</option>`).join('')}
         </select>
         <select class="filter-sel" id="f-solicitante" onchange="applyFilters()">
-          <option value="">All requesters</option>
+          <option value="">${t('filter.allReq')}</option>
           ${uniqueSorted(allData,'Solicitante').map(v=>`<option>${v}</option>`).join('')}
         </select>
-        <input class="search-inp" id="search" type="text" placeholder="Search project..." oninput="applyFilters()" />
+        <input class="search-inp" id="search" type="text" placeholder="${t('filter.search')}" oninput="applyFilters()" />
       </div>
       <div id="tbl-wrap"></div>
       <div class="pagination" id="pagination"></div>
@@ -1053,8 +1308,8 @@ function render(data) {
     </div>
     <div class="card">
       <div class="card-title">
-        <div class="dot" style="background:var(--border)"></div>Change history
-        <span style="margin-left:auto;font-size:.7rem;font-weight:400;color:var(--muted)">Last 50 changes</span>
+        <div class="dot" style="background:var(--border)"></div>${t('history.title')}
+        <span style="margin-left:auto;font-size:.7rem;font-weight:400;color:var(--muted)">${t('history.subtitle')}</span>
       </div>
       <div class="history-list" id="history-list"></div>
     </div>
@@ -1087,12 +1342,12 @@ function renderKPIs() {
   const semana    = allData.filter(r => inWeek(r, wk)).length;
 
   document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi-card neutral"><div class="lbl">Total</div><div class="val">${total}</div></div>
-    <div class="kpi-card green"><div class="lbl">Delivered</div><div class="val">${entregado}</div><div class="sub">${Math.round(entregado/total*100)}% of total</div></div>
-    <div class="kpi-card yellow"><div class="lbl">Scripted</div><div class="val">${guionado}</div></div>
-    <div class="kpi-card orange"><div class="lbl">Filming</div><div class="val">${grabacion}</div></div>
-    <div class="kpi-card blue"><div class="lbl">Editing</div><div class="val">${edicion}</div></div>
-    <div class="kpi-card purple"><div class="lbl">This week</div><div class="val">${semana}</div><div class="sub">With dates this week</div></div>
+    <div class="kpi-card neutral"><div class="lbl">${t('kpi.total')}</div><div class="val">${total}</div></div>
+    <div class="kpi-card green"><div class="lbl">${t('kpi.delivered')}</div><div class="val">${entregado}</div><div class="sub">${t('kpi.deliveredSub',{n:Math.round(entregado/total*100)})}</div></div>
+    <div class="kpi-card yellow"><div class="lbl">${t('kpi.scripted')}</div><div class="val">${guionado}</div></div>
+    <div class="kpi-card orange"><div class="lbl">${t('kpi.filming')}</div><div class="val">${grabacion}</div></div>
+    <div class="kpi-card blue"><div class="lbl">${t('kpi.editing')}</div><div class="val">${edicion}</div></div>
+    <div class="kpi-card purple"><div class="lbl">${t('kpi.thisWeek')}</div><div class="val">${semana}</div><div class="sub">${t('kpi.thisWeekSub')}</div></div>
   `;
 }
 
@@ -1107,16 +1362,16 @@ function renderSemana() {
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--purple)"></div>This week
+      <div class="dot" style="background:var(--purple)"></div>${t('week.thisWeek')}
       <button class="btn-icon" style="padding:.25rem .5rem;font-size:.72rem;gap:.3rem;display:flex;align-items:center" onclick="openEmailModal()" title="Generar mail de la semana">
         <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-        Mail
+        ${t('week.mail')}
       </button>
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${nP(items.length)} · ${weekLabel}</span>
     </div>
     ${items.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates this week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
+      ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noCurrent')}</p>`
+      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1140,12 +1395,12 @@ function renderNextWeek() {
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--blue)"></div>Next week
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
+      <div class="dot" style="background:var(--blue)"></div>${t('week.nextWeek')}
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${nP(items.length)} · ${weekLabel}</span>
     </div>
     ${items.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates next week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
+      ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noNext')}</p>`
+      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1168,12 +1423,12 @@ function renderPrevWeek() {
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--green)"></div>Previous week
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${items.length} project${items.length!==1?'s':''} · ${weekLabel}</span>
+      <div class="dot" style="background:var(--green)"></div>${t('week.prevWeek')}
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${nP(items.length)} · ${weekLabel}</span>
     </div>
     ${items.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem">No projects with dates last week.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Start</th><th>Deadline</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
+      ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noPrev')}</p>`
+      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1201,12 +1456,12 @@ function renderPendientes() {
 
   card.innerHTML = `
     <div class="card-title">
-      <div class="dot" style="background:var(--yellow)"></div>Pending
-      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${items.length} project${items.length!==1?'s':''}</span>
+      <div class="dot" style="background:var(--yellow)"></div>${t('week.pending')}
+      <span style="margin-left:auto;font-weight:400;font-size:.7rem">${nP(items.length)}</span>
     </div>
     ${items.length === 0
-      ? `<p style="color:var(--muted);font-size:.85rem">All delivered.</p>`
-      : `<table class="tbl"><thead><tr><th>Project</th><th>Client</th><th>Start</th><th>Status</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
+      ? `<p style="color:var(--muted);font-size:.85rem">${t('week.allDelivered')}</p>`
+      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.client')}</th><th>${t('col.start')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td style="color:var(--muted);font-size:.8rem"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
@@ -1346,7 +1601,7 @@ function daysLeftBadge(str) {
   const d = daysLeft(str);
   if (d === null) return '<span style="color:var(--muted)">—</span>';
   if (d < 0)  return `<span class="days-badge overdue">${d}d</span>`;
-  if (d === 0) return `<span class="days-badge today">Hoy</span>`;
+  if (d === 0) return `<span class="days-badge today">${t('misc.today')}</span>`;
   if (d <= 3) return `<span class="days-badge soon">+${d}d</span>`;
   return `<span class="days-badge ok">+${d}d</span>`;
 }
@@ -1374,7 +1629,7 @@ function rowUrgency(r) {
 // ─────────────────────────────────────────────────────────────
 function exportCSV() {
   const data = getSorted();
-  if (!data.length) { showToast('No data to export', 'error'); return; }
+  if (!data.length) { showToast(t('toast.noData'), 'error'); return; }
   const cols = ['Titulo','Cliente','Solicitante','Host','Formato','División','Estado','Fecha de inicio','Fecha Limite','Notas'];
   const esc2 = v => { const s = (v||'').replace(/"/g,'""'); return (s.includes(',')||s.includes('"')||s.includes('\n')) ? `"${s}"` : s; };
   const lines = [cols.join(','), ...data.map(r => cols.map(c => esc2(r[c]||'')).join(','))];
@@ -1384,7 +1639,7 @@ function exportCSV() {
   a.download = `contenidos_${new Date().toISOString().slice(0,10)}.csv`;
   a.click();
   URL.revokeObjectURL(a.href);
-  showToast(`Exported ${data.length} projects`, 'success');
+  showToast(t('toast.csvExported', {n: data.length}), 'success');
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1508,9 +1763,9 @@ function renderKanban() {
 function relTime(isoStr) {
   try {
     const diff = (Date.now() - new Date(isoStr)) / 1000;
-    if (diff < 60)    return 'just now';
-    if (diff < 3600)  return `${Math.floor(diff/60)}m ago`;
-    if (diff < 86400) return `${Math.floor(diff/3600)}h ago`;
+    if (diff < 60)    return t('misc.justNow');
+    if (diff < 3600)  return t('misc.mAgo', {n: Math.floor(diff/60)});
+    if (diff < 86400) return t('misc.hAgo', {n: Math.floor(diff/3600)});
     return new Date(isoStr).toLocaleDateString('es-AR',{day:'numeric',month:'short'});
   } catch(_) { return ''; }
 }
@@ -1573,7 +1828,7 @@ function renderComments(rowNum) {
   list.scrollTop = list.scrollHeight;
 }
 async function submitComment() {
-  if (!currentUser) { showToast('Iniciá sesión con Google para comentar', 'error'); return; }
+  if (!currentUser) { showToast(t('comments.login'), 'error'); return; }
   const textEl = document.getElementById('comment-text');
   if (!textEl || !commentingRow || !getApiUrl()) return;
   const text = textEl.value.trim();
@@ -1601,7 +1856,7 @@ async function submitComment() {
       }).catch(() => {});
     } else { showToast(json.error || 'Error posting comment', 'error'); }
   } catch(err) { showToast('Error: '+err.message, 'error'); }
-  finally { if (btn) { btn.disabled = false; btn.textContent = 'Post'; } }
+  finally { if (btn) { btn.disabled = false; btn.textContent = t('btn.post'); } }
 }
 
 function editComment(projectRowNum, commentRow, btn) {
@@ -1616,8 +1871,8 @@ function editComment(projectRowNum, commentRow, btn) {
   ta.className = 'input'; ta.rows = 3; ta.textContent = orig;
   const acts = document.createElement('div');
   acts.className = 'comment-edit-actions';
-  acts.innerHTML = `<button class="btn-secondary" style="padding:.28rem .7rem;font-size:.75rem" onclick="cancelCommentEdit(this)">Cancelar</button>
-    <button class="btn-new" style="padding:.28rem .7rem;font-size:.75rem" onclick="saveCommentEdit(${projectRowNum},${commentRow},this)">Guardar</button>`;
+  acts.innerHTML = `<button class="btn-secondary" style="padding:.28rem .7rem;font-size:.75rem" onclick="cancelCommentEdit(this)">${t('btn.cancel')}</button>
+    <button class="btn-new" style="padding:.28rem .7rem;font-size:.75rem" onclick="saveCommentEdit(${projectRowNum},${commentRow},this)">${t('btn.save')}</button>`;
   wrap.appendChild(ta); wrap.appendChild(acts);
   bodyEl.insertAdjacentElement('afterend', wrap);
   ta.focus();
@@ -1646,12 +1901,12 @@ async function saveCommentEdit(projectRowNum, commentRow, btn) {
       const c = comments.find(x => String(x['_commentRow']) === String(commentRow));
       if (c) c['Comment'] = newText;
       renderComments(projectRowNum);
-      showToast('Comentario actualizado');
-    } else { showToast(json.error || 'Error al editar', 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
-  } catch(err) { showToast('Error: '+err.message, 'error'); btn.disabled = false; btn.textContent = 'Guardar'; }
+      showToast(t('toast.commentUpdated'));
+    } else { showToast(json.error || 'Error al editar', 'error'); btn.disabled = false; btn.textContent = t('btn.save'); }
+  } catch(err) { showToast('Error: '+err.message, 'error'); btn.disabled = false; btn.textContent = t('btn.save'); }
 }
 async function deleteComment(projectRowNum, commentRow, btn) {
-  if (!confirm('¿Eliminar este comentario?')) return;
+  if (!confirm(t('confirm.question') + '?')) return;
   btn.disabled = true;
   try {
     const res = await fetch(getApiUrl(), {
@@ -1665,7 +1920,7 @@ async function deleteComment(projectRowNum, commentRow, btn) {
       if (idx !== -1) comments.splice(idx, 1);
       comments.forEach(x => { if (Number(x['_commentRow']) > commentRow) x['_commentRow']--; });
       renderComments(projectRowNum);
-      showToast('Comentario eliminado');
+      showToast(t('toast.commentDeleted'));
     } else { showToast(json.error || 'Error al eliminar', 'error'); btn.disabled = false; }
   } catch(err) { showToast('Error: '+err.message, 'error'); btn.disabled = false; }
 }
@@ -1677,7 +1932,7 @@ function renderHistory() {
   const el = document.getElementById('history-list');
   if (!el) return;
   if (!historyData.length) {
-    el.innerHTML = '<p style="color:var(--muted);font-size:.82rem;padding:.5rem 0">No changes recorded yet. Changes will appear here after deploying the updated Apps Script.</p>';
+    el.innerHTML = `<p style="color:var(--muted);font-size:.82rem;padding:.5rem 0">${t('history.empty')}</p>`;
     return;
   }
   el.innerHTML = historyData.map(h => {
@@ -1688,8 +1943,8 @@ function renderHistory() {
     const field = h['Field'];
     const val   = h['NewValue'];
     let body = '';
-    if (action === 'added')   body = `<span class="history-project">${proj}</span> — <span style="color:var(--green)">created</span>`;
-    else if (action === 'deleted') body = `<span class="history-project">${proj}</span> — <span style="color:var(--red)">deleted</span>`;
+    if (action === 'added')   body = `<span class="history-project">${proj}</span> — <span style="color:var(--green)">${t('history.created')}</span>`;
+    else if (action === 'deleted') body = `<span class="history-project">${proj}</span> — <span style="color:var(--red)">${t('history.deleted')}</span>`;
     else body = `<span class="history-project">${proj}</span> · <span class="history-field">${field||'?'}</span> → <em>${val||''}</em>`;
     return `<div class="history-item"><span class="history-time">${ts}</span><span class="history-body">${body}</span></div>`;
   }).join('');
@@ -1830,14 +2085,14 @@ function renderTable() {
     <table class="tbl">
       <thead><tr>
         <th>#</th>
-        <th class="${thClass('Titulo')}"         onclick="setSort('Titulo')">Project</th>
-        <th class="${thClass('Cliente')}"     onclick="setSort('Cliente')">Client</th>
-        <th class="${thClass('Solicitante')}" onclick="setSort('Solicitante')">Requester</th>
-        <th class="${thClass('Host')}"        onclick="setSort('Host')">Host</th>
-        <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">Start</th>
-        <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">Deadline</th>
-        <th style="white-space:nowrap;font-size:.68rem;color:var(--muted);font-weight:500">Days left</th>
-        <th class="${thClass('Estado')}"          onclick="setSort('Estado')">Status</th>
+        <th class="${thClass('Titulo')}"         onclick="setSort('Titulo')">${t('col.project')}</th>
+        <th class="${thClass('Cliente')}"     onclick="setSort('Cliente')">${t('col.client')}</th>
+        <th class="${thClass('Solicitante')}" onclick="setSort('Solicitante')">${t('col.requester')}</th>
+        <th class="${thClass('Host')}"        onclick="setSort('Host')">${t('col.host')}</th>
+        <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">${t('col.start')}</th>
+        <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">${t('col.deadline')}</th>
+        <th style="white-space:nowrap;font-size:.68rem;color:var(--muted);font-weight:500">${t('col.daysLeft')}</th>
+        <th class="${thClass('Estado')}"          onclick="setSort('Estado')">${t('col.status')}</th>
         <th title="Script (Guión)" style="width:32px;text-align:center">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
         </th>
@@ -1851,7 +2106,7 @@ function renderTable() {
       </tr></thead>
       <tbody>
         ${pageData.length === 0
-          ? `<tr class="empty-row"><td colspan="${hasApi?13:12}">No results for the applied filters.</td></tr>`
+          ? `<tr class="empty-row"><td colspan="${hasApi?13:12}">${t('table.noResults')}</td></tr>`
           : pageData.map((r,i)=>`<tr class="${rowUrgency(r)}" data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
@@ -1880,10 +2135,10 @@ function renderTable() {
   `;
 
   const pg = document.getElementById('pagination');
-  if (totalPg <= 1) { pg.innerHTML = `<span>${sorted.length} project${sorted.length!==1?'s':''}</span>`; return; }
+  if (totalPg <= 1) { pg.innerHTML = `<span>${nP(sorted.length)}</span>`; return; }
   let btns = '';
   for (let i=1; i<=totalPg; i++) btns += `<button class="pg-btn${i===currentPage?' active':''}" onclick="goPage(${i})">${i}</button>`;
-  pg.innerHTML = `<span>${sorted.length} projects · Page ${currentPage} of ${totalPg}</span>
+  pg.innerHTML = `<span>${nP(sorted.length)} · ${currentPage}/${totalPg}</span>
     <button class="pg-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹</button>
     ${btns}
     <button class="pg-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPg?'disabled':''}>›</button>`;
@@ -1910,8 +2165,8 @@ function openFormModal(row) {
   sel.innerHTML = '<option value="">—</option>' +
     statusList.map(s => `<option>${s}</option>`).join('');
 
-  document.getElementById('form-modal-title').textContent  = row ? 'Edit project'   : 'New project';
-  document.getElementById('btn-form-submit').textContent   = row ? 'Save changes'   : 'Add project';
+  document.getElementById('form-modal-title').textContent  = row ? t('modal.editProject') : t('modal.newProject');
+  document.getElementById('btn-form-submit').textContent   = row ? t('btn.saveChanges')   : t('btn.addProject');
   document.getElementById('btn-form-delete').style.display = row ? ''               : 'none';
 
   if (row) {
@@ -1980,7 +2235,7 @@ async function handleFormSubmit(e) {
   e.preventDefault();
   const btn = document.getElementById('btn-form-submit');
   btn.disabled = true;
-  btn.textContent = 'Saving...';
+  btn.textContent = t('misc.saving');
 
   const form = document.getElementById('project-form');
   const data = {};
@@ -1991,8 +2246,8 @@ async function handleFormSubmit(e) {
 
   const wasEntregado = editingRow && (editingRow['Estado'] || '').toLowerCase().includes('entregado');
   if (!wasEntregado && (data['Estado'] || '').toLowerCase().includes('entregado')) {
-    const t = new Date();
-    data['Fecha Limite'] = `${t.getDate()}/${t.getMonth()+1}/${t.getFullYear()}`;
+    const now = new Date();
+    data['Fecha Limite'] = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
   }
 
   try {
@@ -2009,7 +2264,7 @@ async function handleFormSubmit(e) {
 
     if (json.success) {
       closeFormModal();
-      showToast(editingRow ? 'Project updated' : 'Project added', 'success');
+      showToast(editingRow ? t('toast.projectUpdated') : t('toast.projectAdded'), 'success');
       setTimeout(() => loadData(), 1500);
     } else {
       throw new Error(json.error || 'Unknown error');
@@ -2018,7 +2273,7 @@ async function handleFormSubmit(e) {
     showToast('Error: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = editingRow ? 'Save changes' : 'Add project';
+    btn.textContent = editingRow ? t('btn.saveChanges') : t('btn.addProject');
   }
 }
 
@@ -2094,7 +2349,7 @@ function copyField(id, btn) {
   const el = document.getElementById(id);
   navigator.clipboard.writeText(el.value).then(() => {
     const orig = btn.textContent;
-    btn.textContent = '✓ Copiado';
+    btn.textContent = t('toast.copied');
     setTimeout(() => { btn.textContent = orig; }, 1800);
   });
 }
@@ -2102,7 +2357,7 @@ function copyField(id, btn) {
 async function executeDelete() {
   const btn = document.getElementById('btn-confirm-delete');
   btn.disabled = true;
-  btn.textContent = 'Deleting...';
+  btn.textContent = t('misc.deleting');
 
   try {
     const res  = await fetch(getApiUrl(), {
@@ -2114,7 +2369,7 @@ async function executeDelete() {
 
     if (json.success) {
       closeConfirm();
-      showToast('Project deleted', 'success');
+      showToast(t('toast.projectDeleted'), 'success');
       setTimeout(() => loadData(), 1500);
     } else {
       throw new Error(json.error || 'Unknown error');
@@ -2123,7 +2378,7 @@ async function executeDelete() {
     showToast('Error: ' + err.message, 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Delete';
+    btn.textContent = t('btn.delete');
   }
 }
 
@@ -2159,7 +2414,7 @@ document.addEventListener('contextmenu', function(e) {
 
       const editBtn = document.createElement('button');
       editBtn.className = 'row-ctx-menu-item';
-      editBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>Editar nota</span>';
+      editBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>'+t('ctx.editStickyNote')+'</span>';
       editBtn.onclick = function() {
         menu.remove();
         const textDiv = stickyEl.querySelector('.sticky-text');
@@ -2173,7 +2428,7 @@ document.addEventListener('contextmenu', function(e) {
 
       const colorLabel = document.createElement('div');
       colorLabel.className = 'row-ctx-label';
-      colorLabel.textContent = 'Color de nota';
+      colorLabel.textContent = t('ctx.noteColor');
       menu.appendChild(colorLabel);
 
       const swatchRow = document.createElement('div');
@@ -2249,7 +2504,7 @@ document.addEventListener('contextmenu', function(e) {
 //  PPTX Export
 // ─────────────────────────────────────────────────────────────
 function generatePPTX() {
-  if (!allData.length) { showToast('No hay datos para exportar'); return; }
+  if (!allData.length) { showToast(t('toast.noData')); return; }
 
   const btn = document.getElementById('btn-pptx');
 
@@ -2349,12 +2604,12 @@ function generatePPTX() {
 
   pptx.writeFile({ fileName: `reporte-W${getISOWeek(wkCur.mon)}.pptx` })
     .then(function() {
-      showToast('✓ Reporte exportado');
+      showToast(t('toast.pptxOk'));
       if (btn) btn.disabled = false;
     })
     .catch(function(err) {
       console.error(err);
-      showToast('Error al generar el reporte');
+      showToast(t('toast.pptxError'));
       if (btn) btn.disabled = false;
     });
   } // end runExport
@@ -2376,7 +2631,7 @@ function generatePPTX() {
   const CDN2 = 'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
   _loadScript(CDN1, function() { runExport(); }, function() {
     _loadScript(CDN2, function() { runExport(); }, function() {
-      showToast('No se pudo cargar la librería');
+      showToast(t('toast.libError'));
       if (btn) btn.disabled = false;
     });
   });
@@ -2404,12 +2659,12 @@ function _buildContextMenu(e, rowNum) {
   // Copy title
   const copyBtn = document.createElement('button');
   copyBtn.className = 'row-ctx-menu-item';
-  copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>Copiar título</span>';
+  copyBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg><span>'+t('ctx.copyTitle')+'</span>';
   copyBtn.onclick = function(ev) {
     ev.stopPropagation();
     menu.remove();
     navigator.clipboard.writeText(row['Titulo'] || '').then(function() {
-      showToast('Título copiado');
+      showToast(t('toast.titleCopied'));
     });
   };
   menu.appendChild(copyBtn);
@@ -2417,7 +2672,7 @@ function _buildContextMenu(e, rowNum) {
   // Rename title
   const renameBtn = document.createElement('button');
   renameBtn.className = 'row-ctx-menu-item';
-  renameBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>Cambiar título</span>';
+  renameBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg><span>'+t('ctx.renameTitle')+'</span>';
   renameBtn.onclick = function(ev) {
     ev.stopPropagation();
     menu.remove();
@@ -2429,7 +2684,7 @@ function _buildContextMenu(e, rowNum) {
   const noteBtn = document.createElement('button');
   noteBtn.className = 'row-ctx-menu-item';
   const hasNote = !!(row['Notas'] || '').trim();
-  noteBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>' + (hasNote ? 'Editar nota' : 'Agregar nota') + '</span>';
+  noteBtn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg><span>' + (hasNote ? t('ctx.editNote') : t('ctx.addNote')) + '</span>';
   noteBtn.onclick = function(ev) {
     ev.stopPropagation();
     menu.remove();
@@ -2449,7 +2704,8 @@ function _buildContextMenu(e, rowNum) {
     const hasLink = !!(row[field] || '').trim();
     const btn = document.createElement('button');
     btn.className = 'row-ctx-menu-item';
-    btn.innerHTML = icon + '<span>' + (hasLink ? 'Editar' : 'Agregar') + ' ' + titleLabel.replace('Link de ','') + '</span>';
+    const shortLabel = titleLabel.replace(/^Link de /,'');
+    btn.innerHTML = icon + '<span>' + (hasLink ? t('ctx.openLink') : t('ctx.addNote')) + ' — ' + shortLabel + '</span>';
     btn.onclick = function(ev) {
       ev.stopPropagation();
       menu.remove();
@@ -2591,7 +2847,7 @@ async function loadData() {
     }
 
     document.getElementById('last-update').textContent =
-      'Updated ' + new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+      t('header.updated', {time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })});
 
   } catch (err) {
     showError('Could not connect: ' + err.message);
@@ -2604,7 +2860,7 @@ async function loadData() {
 function showError(msg) {
   document.getElementById('main').innerHTML =
     `<div class="loading" style="color:var(--red)">${msg}<br><br>
-     <button class="btn-refresh" style="margin:0 auto" onclick="loadData()">Retry</button></div>`;
+     <button class="btn-refresh" style="margin:0 auto" onclick="loadData()">${t('misc.retry')}</button></div>`;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2756,6 +3012,9 @@ async function applyQuickStatus(rowNum, newStatus) {
   }
 })();
 updateApiMode();
+// Init language state
+document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+applyI18n();
 loadData();
 setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
 window.addEventListener('load', initGoogleAuth);
