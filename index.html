@@ -2671,12 +2671,69 @@ function generatePPTX(pptLang) {
   const nextItems = allData.filter(r => inWeek(r, wkNext));
   const total     = allData.length;
   const entregado = allData.filter(r => r['Estado'].toLowerCase().includes('entregado')).length;
+  const guionado  = allData.filter(r => r['Estado'].toLowerCase().includes('guionado')).length;
+  const grabacion = allData.filter(r => r['Estado'].toLowerCase().includes('grabaci')).length;
+  const edicion   = allData.filter(r => r['Estado'].toLowerCase().includes('edici')).length;
+  const semana    = curItems.length;
 
   const pptx = new PptxGenJS();
   pptx.layout = 'LAYOUT_WIDE';
   pptx.title  = 'Weekly Report';
 
-  // ── Slide: 3-column weekly view ───────────────────────────
+  // ── Slide 1: KPIs ─────────────────────────────────────────
+  const s1 = pptx.addSlide();
+  s1.background = { color: C.bg };
+  s1.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
+
+  // Título de la slide
+  s1.addText(tp('projects.title'), {
+    x:0.38, y:0.22, w:8, h:0.35,
+    fontSize:13, bold:true, color:C.text, fontFace:'Segoe UI'
+  });
+  s1.addText(`W${getISOWeek(wkCur.mon)} · ${wkRange(wkCur)}`, {
+    x:0.38, y:0.55, w:8, h:0.22,
+    fontSize:9, color:C.muted, fontFace:'Segoe UI'
+  });
+
+  // 6 KPI cards
+  const kpiDefs = [
+    { label: tp('kpi.total'),    value: total,    color: C.text,   sub: null },
+    { label: tp('kpi.delivered'), value: entregado, color: C.green, sub: tp('kpi.deliveredSub').replace('{n}', Math.round(entregado/(total||1)*100)) },
+    { label: tp('kpi.scripted'), value: guionado, color: C.yellow, sub: null },
+    { label: tp('kpi.filming'),  value: grabacion, color: C.orange, sub: null },
+    { label: tp('kpi.editing'),  value: edicion,  color: C.blue,  sub: null },
+    { label: tp('kpi.thisWeek'), value: semana,   color: C.purple, sub: tp('kpi.thisWeekSub') },
+  ];
+
+  const cW = 1.97, cH = 3.8, cY = 1.85, gap = 0.155;
+  const cLeft = (13.33 - (kpiDefs.length * cW + (kpiDefs.length - 1) * gap)) / 2;
+
+  kpiDefs.forEach(function(kpi, i) {
+    const cx = cLeft + i * (cW + gap);
+    // Card background
+    s1.addShape(pptx.ShapeType.rect, { x:cx, y:cY, w:cW, h:cH, fill:{ color:'1e293b' }, line:{ color:'334155', pt:0.5 } });
+    // Left accent bar
+    s1.addShape(pptx.ShapeType.rect, { x:cx, y:cY, w:0.055, h:cH, fill:{ color:kpi.color }, line:{ color:kpi.color, pt:0 } });
+    // Label
+    s1.addText(kpi.label.toUpperCase(), {
+      x:cx+0.14, y:cY+0.22, w:cW-0.18, h:0.28,
+      fontSize:7.5, bold:true, color:C.muted, fontFace:'Segoe UI', valign:'top'
+    });
+    // Value
+    s1.addText(String(kpi.value), {
+      x:cx+0.14, y:cY+0.6, w:cW-0.18, h:1.1,
+      fontSize:52, bold:true, color:kpi.color, fontFace:'Segoe UI', valign:'middle'
+    });
+    // Sub
+    if (kpi.sub) {
+      s1.addText(kpi.sub, {
+        x:cx+0.14, y:cY+1.85, w:cW-0.18, h:0.4,
+        fontSize:8.5, color:C.muted, fontFace:'Segoe UI', valign:'top'
+      });
+    }
+  });
+
+  // ── Slide 2: 3-column weekly view ─────────────────────────
   const s2 = pptx.addSlide();
   s2.background = { color: C.bg };
   // Top accent bar
