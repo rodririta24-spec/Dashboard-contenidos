@@ -452,7 +452,7 @@
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       <span data-i18n="btn.newProject">Nuevo proyecto</span>
     </button>
-    <button class="btn-refresh" id="btn-pptx" onclick="generatePPTX()" title="Exportar reporte semanal en PowerPoint">
+    <button class="btn-refresh" id="btn-pptx" onclick="openPptLangModal()" title="Exportar reporte semanal en PowerPoint">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
       </svg>
@@ -741,6 +741,26 @@
   </div>
 </div>
 
+<!-- ── PPT language picker ───────────────────────────────── -->
+<div class="modal-overlay hidden" id="overlay-ppt-lang" onclick="if(event.target===this)closePptLangModal()">
+  <div class="modal" style="max-width:300px">
+    <div class="modal-header">
+      <span class="modal-title" data-i18n="modal.pptLang">Idioma del reporte</span>
+      <button class="modal-close" onclick="closePptLangModal()">✕</button>
+    </div>
+    <p style="font-size:.82rem;color:var(--muted);margin:.1rem 0 1rem">Seleccioná en qué idioma se exporta la presentación.</p>
+    <div class="lang-toggle" style="justify-content:center;gap:.5rem;margin-bottom:1.2rem">
+      <button class="lang-btn active" id="ppt-lang-btn-es" onclick="selectPptLang('es')">ES</button>
+      <button class="lang-btn" id="ppt-lang-btn-en" onclick="selectPptLang('en')">EN</button>
+      <button class="lang-btn" id="ppt-lang-btn-ko" onclick="selectPptLang('ko')">한국어</button>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+      <button class="btn-secondary" onclick="closePptLangModal()" data-i18n="btn.cancel">Cancelar</button>
+      <button class="btn-new" onclick="confirmPptExport()" data-i18n="btn.exportPpt">Exportar PPT</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── Toast ─────────────────────────────────────────────── -->
 <div id="toast" class="hidden"></div>
 
@@ -863,6 +883,9 @@ const LANGS = {
     'misc.readOnly':'Modo solo lectura — para agregar y editar proyectos, <a onclick="openSettings()">configurá Apps Script</a> (gratis, 5 minutos).',
     'misc.loadingMain':'Cargando datos de Google Sheets...','misc.retry':'Reintentar',
     'misc.hasNotes':'Tiene notas','misc.noProjects':'Sin proyectos con fechas esta semana.',
+    'modal.pptLang':'Idioma del reporte',
+    'ppt.noProjects':'Sin proyectos esta semana',
+    'ppt.colProject':'PROYECTO','ppt.colStatus':'ESTADO',
   },
   en: {
     'header.title':'Dashboard · Content','header.search':'Search project…','header.updated':'Updated {time}',
@@ -931,6 +954,9 @@ const LANGS = {
     'misc.readOnly':'Read-only mode — to add and edit projects, <a onclick="openSettings()">configure Apps Script</a> (free, takes 5 minutes).',
     'misc.loadingMain':'Loading data from Google Sheets...','misc.retry':'Retry',
     'misc.hasNotes':'Has notes','misc.noProjects':'No projects with dates this week.',
+    'modal.pptLang':'Report language',
+    'ppt.noProjects':'No projects this week',
+    'ppt.colProject':'PROJECT','ppt.colStatus':'STATUS',
   },
   ko: {
     'header.title':'대시보드 · 콘텐츠','header.search':'프로젝트 검색…','header.updated':'업데이트 {time}',
@@ -999,6 +1025,9 @@ const LANGS = {
     'misc.readOnly':'읽기 전용 모드 — 프로젝트 추가/편집을 위해 <a onclick="openSettings()">Apps Script를 설정</a>하세요 (무료, 5분 소요).',
     'misc.loadingMain':'Google Sheets에서 데이터 로딩 중...','misc.retry':'다시 시도',
     'misc.hasNotes':'메모 있음','misc.noProjects':'이번 주 날짜가 있는 프로젝트 없음.',
+    'modal.pptLang':'보고서 언어',
+    'ppt.noProjects':'이번 주 프로젝트 없음',
+    'ppt.colProject':'프로젝트','ppt.colStatus':'상태',
   }
 };
 
@@ -2503,7 +2532,37 @@ document.addEventListener('contextmenu', function(e) {
 // ─────────────────────────────────────────────────────────────
 //  PPTX Export
 // ─────────────────────────────────────────────────────────────
-function generatePPTX() {
+// ─────────────────────────────────────────────────────────────
+//  PPT language picker
+// ─────────────────────────────────────────────────────────────
+let _pptLang = currentLang;
+
+function openPptLangModal() {
+  if (!allData.length) { showToast(t('toast.noData')); return; }
+  _pptLang = currentLang;
+  document.querySelectorAll('[id^="ppt-lang-btn-"]').forEach(b =>
+    b.classList.toggle('active', b.id === 'ppt-lang-btn-' + _pptLang)
+  );
+  applyI18n();
+  document.getElementById('overlay-ppt-lang').classList.remove('hidden');
+}
+function closePptLangModal() {
+  document.getElementById('overlay-ppt-lang').classList.add('hidden');
+}
+function selectPptLang(lang) {
+  _pptLang = lang;
+  document.querySelectorAll('[id^="ppt-lang-btn-"]').forEach(b =>
+    b.classList.toggle('active', b.id === 'ppt-lang-btn-' + lang)
+  );
+}
+function confirmPptExport() {
+  closePptLangModal();
+  generatePPTX(_pptLang);
+}
+
+function generatePPTX(pptLang) {
+  pptLang = pptLang || currentLang;
+  const tp = function(key) { return (LANGS[pptLang] || LANGS.es)[key] || LANGS.es[key] || key; };
   if (!allData.length) { showToast(t('toast.noData')); return; }
 
   const btn = document.getElementById('btn-pptx');
@@ -2551,9 +2610,9 @@ function generatePPTX() {
   s2.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
 
   const cols = [
-    { title:'Previous Week', wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
-    { title:'This Week',     wk:wkCur,  items:curItems,  color:C.purple, x:4.62 },
-    { title:'Next Week',     wk:wkNext, items:nextItems, color:C.blue,   x:8.96 },
+    { title:tp('week.prevWeek'), wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
+    { title:tp('week.thisWeek'), wk:wkCur,  items:curItems,  color:C.purple, x:4.62 },
+    { title:tp('week.nextWeek'), wk:wkNext, items:nextItems, color:C.blue,   x:8.96 },
   ];
   const colW = 4.1;
 
@@ -2566,16 +2625,16 @@ function generatePPTX() {
     s2.addShape(pptx.ShapeType.rect, { x:col.x, y:0.68, w:colW, h:0.015, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
 
     if (!col.items.length) {
-      s2.addText('No projects this week', { x:col.x, y:0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
+      s2.addText(tp('ppt.noProjects'), { x:col.x, y:0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
       return;
     }
 
     // Table rows
     const hdrOpts = { bold:true, color:C.muted, fill:{ color:C.surface }, fontFace:'Segoe UI', fontSize:8, valign:'middle' };
     const hdr = [
-      { text:'PROJECT',  options:{ ...hdrOpts, align:'left'   } },
-      { text:'DEADLINE', options:{ ...hdrOpts, align:'center' } },
-      { text:'STATUS',   options:{ ...hdrOpts, align:'center' } },
+      { text:tp('ppt.colProject').toUpperCase(), options:{ ...hdrOpts, align:'left'   } },
+      { text:'DEADLINE',                         options:{ ...hdrOpts, align:'center' } },
+      { text:tp('ppt.colStatus').toUpperCase(),  options:{ ...hdrOpts, align:'center' } },
     ];
     const rows = col.items.map(function(r, i) {
       const fill = { color: i % 2 === 0 ? '111827' : C.bg };
@@ -2797,6 +2856,7 @@ document.addEventListener('keydown', e => {
   if (!document.getElementById('overlay-settings').classList.contains('hidden')) closeSettings();
   if (!document.getElementById('overlay-confirm').classList.contains('hidden'))  closeConfirm();
   if (!document.getElementById('overlay-email').classList.contains('hidden'))    closeEmailModal();
+  if (!document.getElementById('overlay-ppt-lang').classList.contains('hidden')) closePptLangModal();
 });
 
 // Close modals on overlay click (only when mousedown also started on the overlay,
