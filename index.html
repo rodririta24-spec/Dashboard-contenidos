@@ -324,9 +324,20 @@
     .days-badge.soon    { background:rgba(251,146,60,.15); color:#fb923c; }
     .days-badge.ok      { background:rgba(100,116,139,.13); color:var(--muted); }
 
-    /* ── Lang toggle ────────────────────────────────────────── */
-    .lang-toggle { display:flex; gap:.2rem; }
-    .lang-btn { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:.28rem .5rem; cursor:pointer; font-size:.72rem; font-weight:600; letter-spacing:.02em; line-height:1.3; transition:border-color .15s, color .15s, background .15s; }
+    /* ── Lang dropdown ──────────────────────────────────────── */
+    .lang-drop { position:relative; }
+    .lang-drop-btn { background:var(--surface2); border:1px solid var(--border); color:var(--text); border-radius:6px; padding:.28rem .42rem .28rem .55rem; cursor:pointer; font-size:.72rem; font-weight:700; display:flex; align-items:center; gap:.25rem; transition:border-color .15s; white-space:nowrap; letter-spacing:.03em; }
+    .lang-drop-btn:hover, .lang-drop.open .lang-drop-btn { border-color:var(--blue); }
+    .lang-drop-chevron { transition:transform .18s; color:var(--muted); }
+    .lang-drop.open .lang-drop-chevron { transform:rotate(180deg); }
+    .lang-drop-menu { position:absolute; top:calc(100% + 5px); right:0; background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:.25rem; display:none; z-index:300; min-width:130px; box-shadow:0 6px 20px rgba(0,0,0,.35); }
+    .lang-drop.open .lang-drop-menu { display:block; }
+    .lang-drop-item { display:block; width:100%; text-align:left; padding:.34rem .65rem; font-size:.75rem; font-weight:500; border:none; background:none; cursor:pointer; border-radius:5px; color:var(--text); transition:background .12s; }
+    .lang-drop-item:hover { background:var(--border); }
+    .lang-drop-item.active { color:var(--blue); font-weight:700; }
+    /* reutilizado en modal PPT */
+    .lang-toggle { display:flex; gap:.35rem; }
+    .lang-btn { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:.28rem .55rem; cursor:pointer; font-size:.75rem; font-weight:600; letter-spacing:.02em; line-height:1.3; transition:border-color .15s, color .15s, background .15s; }
     .lang-btn.active { background:var(--blue); border-color:var(--blue); color:#fff; }
     .lang-btn:not(.active):hover { border-color:var(--blue); color:var(--text); }
 
@@ -424,10 +435,16 @@
     </div>
   </div>
   <div class="header-right">
-    <div class="lang-toggle">
-      <button class="lang-btn active" data-lang="es" onclick="setLang('es')">ES</button>
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')">EN</button>
-      <button class="lang-btn" data-lang="ko" onclick="setLang('ko')">한국어</button>
+    <div class="lang-drop" id="lang-drop">
+      <button class="lang-drop-btn" onclick="toggleLangDrop()" id="lang-drop-btn" aria-haspopup="listbox">
+        <span id="lang-drop-label">ES</span>
+        <svg class="lang-drop-chevron" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="lang-drop-menu" role="listbox">
+        <button class="lang-drop-item active" data-lang="es" onclick="setLang('es');closeLangDrop()">ES — Español</button>
+        <button class="lang-drop-item" data-lang="en" onclick="setLang('en');closeLangDrop()">EN — English</button>
+        <button class="lang-drop-item" data-lang="ko" onclick="setLang('ko');closeLangDrop()">KO — 한국어</button>
+      </div>
     </div>
     <button class="btn-icon" title="Settings" onclick="openSettings()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1049,13 +1066,36 @@ function nP(n) {
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
-  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  _updateLangDrop(lang);
   applyI18n();
   if (allData.length) {
     render(allData);
     renderHistory();
   }
 }
+
+function _updateLangDrop(lang) {
+  const labels = { es:'ES', en:'EN', ko:'KO' };
+  const el = document.getElementById('lang-drop-label');
+  if (el) el.textContent = labels[lang] || lang.toUpperCase();
+  document.querySelectorAll('.lang-drop-item').forEach(b =>
+    b.classList.toggle('active', b.dataset.lang === lang)
+  );
+}
+
+function toggleLangDrop() {
+  document.getElementById('lang-drop').classList.toggle('open');
+}
+
+function closeLangDrop() {
+  document.getElementById('lang-drop').classList.remove('open');
+}
+
+// Cierra el dropdown al hacer clic fuera
+document.addEventListener('click', function(e) {
+  const drop = document.getElementById('lang-drop');
+  if (drop && !drop.contains(e.target)) closeLangDrop();
+});
 
 function applyI18n() {
   document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
@@ -3073,7 +3113,7 @@ async function applyQuickStatus(rowNum, newStatus) {
 })();
 updateApiMode();
 // Init language state
-document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+_updateLangDrop(currentLang);
 applyI18n();
 loadData();
 setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
