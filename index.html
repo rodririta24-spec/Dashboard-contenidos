@@ -335,6 +335,16 @@
     .lang-drop-item { display:block; width:100%; text-align:left; padding:.34rem .65rem; font-size:.75rem; font-weight:500; border:none; background:none; cursor:pointer; border-radius:5px; color:var(--text); transition:background .12s; }
     .lang-drop-item:hover { background:var(--border); }
     .lang-drop-item.active { color:var(--blue); font-weight:700; }
+    /* ── Header overflow menu ───────────────────────────────── */
+    .hdr-menu { position:relative; }
+    .hdr-menu-panel { position:absolute; top:calc(100% + 6px); right:0; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.3rem; display:none; z-index:300; min-width:185px; box-shadow:0 6px 24px rgba(0,0,0,.35); }
+    .hdr-menu.open .hdr-menu-panel { display:block; }
+    .hdr-menu-item { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left; padding:.4rem .65rem; font-size:.79rem; font-weight:500; border:none; background:none; cursor:pointer; border-radius:6px; color:var(--text); transition:background .12s; }
+    .hdr-menu-item:hover { background:var(--border); }
+    .hdr-menu-item svg { flex-shrink:0; color:var(--muted); }
+    .hdr-menu-sep { height:1px; background:var(--border); margin:.28rem .3rem; }
+    /* btn-new icono-solo */
+    .btn-new.icon-only { padding:.35rem .42rem; gap:0; }
     /* reutilizado en modal PPT */
     .lang-toggle { display:flex; gap:.35rem; }
     .lang-btn { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:6px; padding:.28rem .55rem; cursor:pointer; font-size:.75rem; font-weight:600; letter-spacing:.02em; line-height:1.3; transition:border-color .15s, color .15s, background .15s; }
@@ -435,6 +445,7 @@
     </div>
   </div>
   <div class="header-right">
+    <!-- Idioma -->
     <div class="lang-drop" id="lang-drop">
       <button class="lang-drop-btn" onclick="toggleLangDrop()" id="lang-drop-btn" aria-haspopup="listbox">
         <span id="lang-drop-label">ES</span>
@@ -446,12 +457,7 @@
         <button class="lang-drop-item" data-lang="ko" onclick="setLang('ko');closeLangDrop()">KO — 한국어</button>
       </div>
     </div>
-    <button class="btn-icon" title="Settings" onclick="openSettings()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
-        <circle cx="12" cy="12" r="3"/>
-      </svg>
-    </button>
+    <!-- Cuenta Google -->
     <div id="auth-area" style="display:flex;align-items:center;gap:.4rem">
       <div id="gsi-btn"></div>
       <div id="user-chip" class="user-chip" style="display:none">
@@ -461,27 +467,39 @@
         <button class="btn-signout" onclick="signOut()" title="Sign out">✕</button>
       </div>
     </div>
-    <button class="btn-icon" id="btn-theme" title="Toggle theme" onclick="toggleTheme()">
-      <svg id="icon-theme-dark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-      <svg id="icon-theme-light" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+    <!-- Nuevo proyecto (solo ícono) -->
+    <button class="btn-new icon-only" id="btn-new" onclick="openFormModal(null)" disabled title="Nuevo proyecto">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
     </button>
-    <button class="btn-new" id="btn-new" onclick="openFormModal(null)" disabled>
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span data-i18n="btn.newProject">Nuevo proyecto</span>
-    </button>
-    <button class="btn-refresh" id="btn-pptx" onclick="openPptLangModal()" title="Exportar reporte semanal en PowerPoint">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      <span data-i18n="btn.exportPpt">Exportar PPT</span>
-    </button>
-    <button class="btn-refresh" id="btn-refresh" onclick="loadData()">
-      <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/>
-        <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/>
-      </svg>
-      <span data-i18n="btn.refresh">Actualizar</span>
-    </button>
+    <!-- Menú ⋮ -->
+    <div class="hdr-menu" id="hdr-menu">
+      <button class="btn-icon" onclick="toggleHdrMenu()" title="Más opciones" aria-haspopup="menu">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="5" r="1.2" fill="currentColor"/><circle cx="12" cy="12" r="1.2" fill="currentColor"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/>
+        </svg>
+      </button>
+      <div class="hdr-menu-panel" role="menu">
+        <button class="hdr-menu-item" onclick="openSettings();closeHdrMenu()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+          <span data-i18n="modal.settings">Configuración</span>
+        </button>
+        <div class="hdr-menu-sep"></div>
+        <button class="hdr-menu-item" id="btn-pptx" onclick="openPptLangModal();closeHdrMenu()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="btn.exportPpt">Exportar PPT</span>
+        </button>
+        <button class="hdr-menu-item" id="btn-refresh" onclick="loadData();closeHdrMenu()">
+          <svg id="refresh-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          <span data-i18n="btn.refresh">Actualizar</span>
+        </button>
+        <div class="hdr-menu-sep"></div>
+        <button class="hdr-menu-item" onclick="toggleTheme();closeHdrMenu()">
+          <svg id="icon-theme-dark" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          <svg id="icon-theme-light" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+          <span data-i18n="menu.theme">Cambiar tema</span>
+        </button>
+      </div>
+    </div>
   </div>
 </header>
 
@@ -903,6 +921,7 @@ const LANGS = {
     'modal.pptLang':'Idioma del reporte',
     'ppt.noProjects':'Sin proyectos esta semana',
     'ppt.colProject':'PROYECTO','ppt.colStatus':'ESTADO',
+    'menu.theme':'Cambiar tema',
   },
   en: {
     'header.title':'Dashboard · Content','header.search':'Search project…','header.updated':'Updated {time}',
@@ -974,6 +993,7 @@ const LANGS = {
     'modal.pptLang':'Report language',
     'ppt.noProjects':'No projects this week',
     'ppt.colProject':'PROJECT','ppt.colStatus':'STATUS',
+    'menu.theme':'Toggle theme',
   },
   ko: {
     'header.title':'대시보드 · 콘텐츠','header.search':'프로젝트 검색…','header.updated':'업데이트 {time}',
@@ -1045,6 +1065,7 @@ const LANGS = {
     'modal.pptLang':'보고서 언어',
     'ppt.noProjects':'이번 주 프로젝트 없음',
     'ppt.colProject':'프로젝트','ppt.colStatus':'상태',
+    'menu.theme':'테마 변경',
   }
 };
 
@@ -1084,6 +1105,7 @@ function _updateLangDrop(lang) {
 }
 
 function toggleLangDrop() {
+  closeHdrMenu();
   document.getElementById('lang-drop').classList.toggle('open');
 }
 
@@ -1091,10 +1113,21 @@ function closeLangDrop() {
   document.getElementById('lang-drop').classList.remove('open');
 }
 
-// Cierra el dropdown al hacer clic fuera
+function toggleHdrMenu() {
+  closeLangDrop();
+  document.getElementById('hdr-menu').classList.toggle('open');
+}
+
+function closeHdrMenu() {
+  document.getElementById('hdr-menu').classList.remove('open');
+}
+
+// Cierra dropdowns al hacer clic fuera
 document.addEventListener('click', function(e) {
   const drop = document.getElementById('lang-drop');
   if (drop && !drop.contains(e.target)) closeLangDrop();
+  const menu = document.getElementById('hdr-menu');
+  if (menu && !menu.contains(e.target)) closeHdrMenu();
 });
 
 function applyI18n() {
@@ -2897,6 +2930,8 @@ document.addEventListener('keydown', e => {
   if (!document.getElementById('overlay-confirm').classList.contains('hidden'))  closeConfirm();
   if (!document.getElementById('overlay-email').classList.contains('hidden'))    closeEmailModal();
   if (!document.getElementById('overlay-ppt-lang').classList.contains('hidden')) closePptLangModal();
+  closeLangDrop();
+  closeHdrMenu();
 });
 
 // Close modals on overlay click (only when mousedown also started on the overlay,
