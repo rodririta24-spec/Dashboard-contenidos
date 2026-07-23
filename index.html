@@ -799,7 +799,22 @@
           <span data-i18n="btn.download">Descargar</span>
         </button>
         <button class="btn-new" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem" onclick="confirmPptExport('drive')">
-          <svg width="15" height="13" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0-1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+          <svg width="16" height="14" viewBox="0 0 100 90" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="pdr-g" x1="50" y1="4" x2="50" y2="57" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#57c070"/><stop offset="100%" stop-color="#1e8e3e"/></linearGradient>
+              <linearGradient id="pdr-b" x1="50" y1="44" x2="6" y2="84" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#82adf9"/><stop offset="100%" stop-color="#1a73e8"/></linearGradient>
+              <linearGradient id="pdr-y" x1="50" y1="44" x2="94" y2="84" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#fdd663"/><stop offset="100%" stop-color="#f9ab00"/></linearGradient>
+              <clipPath id="pdr-clip"><path d="M46,11 Q50,3 54,11 L90.5,77 Q94,85 86,85 L14,85 Q6,85 9.5,77 Z"/></clipPath>
+              <filter id="pdr-sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="1" stdDeviation="1.5" flood-color="rgba(0,0,0,0.45)"/></filter>
+            </defs>
+            <g filter="url(#pdr-sh)">
+              <g clip-path="url(#pdr-clip)">
+                <polygon points="50,57 28,44 50,4 72,44" fill="url(#pdr-g)"/>
+                <polygon points="50,57 28,44 6,84 50,84" fill="url(#pdr-b)"/>
+                <polygon points="50,57 72,44 94,84 50,84" fill="url(#pdr-y)"/>
+              </g>
+            </g>
+          </svg>
           <span data-i18n="btn.saveToDrive">Drive</span>
         </button>
       </div>
