@@ -794,7 +794,8 @@
     </div>
     <div style="display:flex;gap:.5rem;justify-content:flex-end">
       <button class="btn-secondary" onclick="closePptLangModal()" data-i18n="btn.cancel">Cancelar</button>
-      <button class="btn-new" onclick="confirmPptExport()" data-i18n="btn.exportPpt">Exportar PPT</button>
+      <button class="btn-secondary" onclick="confirmPptExport('download')" data-i18n="btn.download">Descargar</button>
+      <button class="btn-new" onclick="confirmPptExport('drive')" data-i18n="btn.saveToDrive">Guardar en Drive</button>
     </div>
   </div>
 </div>
@@ -906,6 +907,8 @@ const LANGS = {
     'toast.projectAdded':'Proyecto agregado','toast.projectUpdated':'Proyecto actualizado',
     'toast.projectDeleted':'Proyecto eliminado','toast.pptxOk':'✓ Reporte exportado',
     'toast.pptxError':'Error al generar el reporte','toast.libError':'No se pudo cargar la librería',
+    'btn.saveToDrive':'Guardar en Drive','btn.download':'Descargar',
+    'toast.driveOk':'✓ Guardado en Google Drive','toast.driveError':'Error al subir a Drive','toast.driveNoLogin':'Iniciá sesión para guardar en Drive',
     'toast.csvExported':'✓ {n} proyectos exportados','toast.noData':'Sin datos para exportar',
     'toast.linkCopied':'Link copiado','toast.titleCopied':'Título copiado',
     'toast.copied':'✓ Copiado','toast.commentUpdated':'Comentario actualizado',
@@ -978,6 +981,8 @@ const LANGS = {
     'toast.projectAdded':'Project added','toast.projectUpdated':'Project updated',
     'toast.projectDeleted':'Project deleted','toast.pptxOk':'✓ Report exported',
     'toast.pptxError':'Error generating report','toast.libError':'Could not load library',
+    'btn.saveToDrive':'Save to Drive','btn.download':'Download',
+    'toast.driveOk':'✓ Saved to Google Drive','toast.driveError':'Error uploading to Drive','toast.driveNoLogin':'Sign in to save to Drive',
     'toast.csvExported':'✓ Exported {n} projects','toast.noData':'No data to export',
     'toast.linkCopied':'Link copied','toast.titleCopied':'Title copied',
     'toast.copied':'✓ Copied','toast.commentUpdated':'Comment updated',
@@ -1050,6 +1055,8 @@ const LANGS = {
     'toast.projectAdded':'프로젝트 추가됨','toast.projectUpdated':'프로젝트 업데이트됨',
     'toast.projectDeleted':'프로젝트 삭제됨','toast.pptxOk':'✓ 보고서 내보내기 완료',
     'toast.pptxError':'보고서 생성 오류','toast.libError':'라이브러리를 불러올 수 없음',
+    'btn.saveToDrive':'Drive에 저장','btn.download':'다운로드',
+    'toast.driveOk':'✓ Google Drive에 저장됨','toast.driveError':'Drive 업로드 오류','toast.driveNoLogin':'Drive에 저장하려면 로그인하세요',
     'toast.csvExported':'✓ {n}개 프로젝트 내보내기 완료','toast.noData':'내보낼 데이터 없음',
     'toast.linkCopied':'링크 복사됨','toast.titleCopied':'제목 복사됨',
     'toast.copied':'✓ 복사됨','toast.commentUpdated':'댓글 업데이트됨',
@@ -2631,15 +2638,17 @@ function selectPptLang(lang) {
     b.classList.toggle('active', b.id === 'ppt-lang-btn-' + lang)
   );
 }
-function confirmPptExport() {
+function confirmPptExport(mode) {
   closePptLangModal();
-  generatePPTX(_pptLang);
+  generatePPTX(_pptLang, mode || 'download');
 }
 
-function generatePPTX(pptLang) {
+function generatePPTX(pptLang, mode) {
   pptLang = pptLang || currentLang;
+  mode = mode || 'download';
   const tp = function(key) { return (LANGS[pptLang] || LANGS.es)[key] || LANGS.es[key] || key; };
   if (!allData.length) { showToast(t('toast.noData')); return; }
+  if (mode === 'drive' && !currentUser) { showToast(t('toast.driveNoLogin'), 'error'); return; }
 
   const btn = document.getElementById('btn-pptx');
 
@@ -2765,16 +2774,16 @@ function generatePPTX(pptLang) {
     s.addShape(pptx.ShapeType.rect, { x, y:wo+0.12, w:0.015, h:7.5-wo-0.22, fill:{ color:C.border }, line:{ color:C.border, pt:0 } });
   });
 
-  pptx.writeFile({ fileName: `reporte-W${getISOWeek(wkCur.mon)}.pptx` })
-    .then(function() {
-      showToast(t('toast.pptxOk'));
-      if (btn) btn.disabled = false;
-    })
-    .catch(function(err) {
-      console.error(err);
-      showToast(t('toast.pptxError'));
-      if (btn) btn.disabled = false;
-    });
+  const fileName = `reporte-W${getISOWeek(wkCur.mon)}.pptx`;
+  if (mode === 'drive') {
+    pptx.write({ outputType: 'blob' })
+      .then(function(blob) { uploadToDrive(blob, fileName, btn); })
+      .catch(function(err) { console.error(err); showToast(t('toast.pptxError')); if (btn) btn.disabled = false; });
+  } else {
+    pptx.writeFile({ fileName })
+      .then(function() { showToast(t('toast.pptxOk')); if (btn) btn.disabled = false; })
+      .catch(function(err) { console.error(err); showToast(t('toast.pptxError')); if (btn) btn.disabled = false; });
+  }
   } // end runExport
 
   if (typeof PptxGenJS !== 'undefined') {
@@ -2798,6 +2807,34 @@ function generatePPTX(pptLang) {
       if (btn) btn.disabled = false;
     });
   });
+}
+
+function uploadToDrive(blob, fileName, btn) {
+  if (!currentUser) { showToast(t('toast.driveNoLogin'), 'error'); if (btn) btn.disabled = false; return; }
+  const tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: GOOGLE_CLIENT_ID,
+    scope: 'https://www.googleapis.com/auth/drive.file',
+    callback: function(resp) {
+      if (resp.error) { showToast(t('toast.driveError'), 'error'); if (btn) btn.disabled = false; return; }
+      const meta = { name: fileName, mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' };
+      const form = new FormData();
+      form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
+      form.append('file', blob);
+      fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + resp.access_token },
+        body: form
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.id) showToast(t('toast.driveOk'));
+        else { console.error(data); showToast(t('toast.driveError'), 'error'); }
+        if (btn) btn.disabled = false;
+      })
+      .catch(function(err) { console.error(err); showToast(t('toast.driveError'), 'error'); if (btn) btn.disabled = false; });
+    }
+  });
+  tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function _buildContextMenu(e, rowNum) {
