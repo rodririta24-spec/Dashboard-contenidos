@@ -794,8 +794,14 @@
     </div>
     <div style="display:flex;flex-direction:column;gap:.5rem">
       <div style="display:flex;gap:.5rem;align-items:stretch">
-        <button class="btn-secondary" style="flex:1" onclick="confirmPptExport('download')" data-i18n="btn.download">Descargar</button>
-        <button class="btn-new" style="flex:1" onclick="confirmPptExport('drive')" data-i18n="btn.saveToDrive">Guardar en Drive</button>
+        <button class="btn-secondary" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem" onclick="confirmPptExport('download')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span data-i18n="btn.download">Descargar</span>
+        </button>
+        <button class="btn-new" style="flex:1;display:flex;align-items:center;justify-content:center;gap:.4rem" onclick="confirmPptExport('drive')">
+          <svg width="15" height="13" viewBox="0 0 87.3 78" xmlns="http://www.w3.org/2000/svg"><path d="m6.6 66.85 3.85 6.65c.8 1.4 1.95 2.5 3.3 3.3l13.75-23.8h-27.5c0 1.55.4 3.1 1.2 4.5z" fill="#0066da"/><path d="m43.65 25-13.75-23.8c-1.35.8-2.5 1.9-3.3 3.3l-25.4 44a9.06 9.06 0 0 0-1.2 4.5h27.5z" fill="#00ac47"/><path d="m73.55 76.8c1.35-.8 2.5-1.9 3.3-3.3l1.6-2.75 7.65-13.25c.8-1.4 1.2-2.95 1.2-4.5h-27.5l5.85 11.5z" fill="#ea4335"/><path d="m43.65 25 13.75-23.8c-1.35-.8-2.9-1.2-4.5-1.2h-18.5c-1.6 0-3.15.45-4.5 1.2z" fill="#00832d"/><path d="m59.8 53h-32.3l-13.75 23.8c1.35.8 2.9 1.2 4.5 1.2h50.8c1.6 0 3.15-.45 4.5-1.2z" fill="#2684fc"/><path d="m73.4 26.5-12.7-22c-.8-1.4-1.95-2.5-3.3-3.3l-13.75 23.8 16.15 28h27.45c0-1.55-.4-3.1-1.2-4.5z" fill="#ffba00"/></svg>
+          <span data-i18n="btn.saveToDrive">Drive</span>
+        </button>
       </div>
       <div style="text-align:center">
         <button class="btn-secondary" style="font-size:.78rem;padding:.22rem .75rem" onclick="closePptLangModal()" data-i18n="btn.cancel">Cancelar</button>
@@ -2509,6 +2515,13 @@ function showToast(msg, type = 'success') {
   if (toastTimer) clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.add('hidden'), 3500);
 }
+function showToastLink(msg, url, linkLabel) {
+  const el = document.getElementById('toast');
+  el.innerHTML = msg + ' <a href="' + url + '" target="_blank" rel="noopener" style="color:#fff;text-decoration:underline;margin-left:.35rem;white-space:nowrap">' + linkLabel + ' →</a>';
+  el.className = 'success';
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.add('hidden'), 9000);
+}
 
 // ─────────────────────────────────────────────────────────────
 //  Right-click context menu for quick link editing
@@ -2833,8 +2846,7 @@ function uploadToDrive(blob, fileName, btn) {
       .then(function(r) { return r.json(); })
       .then(function(data) {
         if (data.id) {
-          showToast(t('toast.driveOk'));
-          window.open('https://docs.google.com/presentation/d/' + data.id + '/edit', '_blank');
+          showToastLink(t('toast.driveOk'), 'https://docs.google.com/presentation/d/' + data.id + '/edit', 'Abrir');
         } else { console.error(data); showToast(t('toast.driveError'), 'error'); }
         if (btn) btn.disabled = false;
       })
