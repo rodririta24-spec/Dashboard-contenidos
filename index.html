@@ -781,7 +781,7 @@
 
 <!-- ── PPT language picker ───────────────────────────────── -->
 <div class="modal-overlay hidden" id="overlay-ppt-lang" onclick="if(event.target===this)closePptLangModal()">
-  <div class="modal" style="max-width:300px">
+  <div class="modal" style="max-width:360px">
     <div class="modal-header">
       <span class="modal-title" data-i18n="modal.pptLang">Idioma del reporte</span>
       <button class="modal-close" onclick="closePptLangModal()">✕</button>
@@ -792,10 +792,14 @@
       <button class="lang-btn" id="ppt-lang-btn-en" onclick="selectPptLang('en')">EN</button>
       <button class="lang-btn" id="ppt-lang-btn-ko" onclick="selectPptLang('ko')">한국어</button>
     </div>
-    <div style="display:flex;gap:.5rem;justify-content:flex-end">
-      <button class="btn-secondary" onclick="closePptLangModal()" data-i18n="btn.cancel">Cancelar</button>
-      <button class="btn-secondary" onclick="confirmPptExport('download')" data-i18n="btn.download">Descargar</button>
-      <button class="btn-new" onclick="confirmPptExport('drive')" data-i18n="btn.saveToDrive">Guardar en Drive</button>
+    <div style="display:flex;flex-direction:column;gap:.5rem">
+      <div style="display:flex;gap:.5rem">
+        <button class="btn-secondary" style="flex:1" onclick="confirmPptExport('download')" data-i18n="btn.download">Descargar</button>
+        <button class="btn-new" style="flex:1" onclick="confirmPptExport('drive')" data-i18n="btn.saveToDrive">Guardar en Drive</button>
+      </div>
+      <div style="text-align:center">
+        <button class="btn-secondary" style="font-size:.78rem;padding:.22rem .75rem" onclick="closePptLangModal()" data-i18n="btn.cancel">Cancelar</button>
+      </div>
     </div>
   </div>
 </div>
