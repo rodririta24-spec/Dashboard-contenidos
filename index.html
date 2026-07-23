@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard · Content</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PGNsaXBQYXRoIGlkPSJjIj48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iNyIgcng9IjEiLz48L2NsaXBQYXRoPjwvZGVmcz48cmVjdCB4PSI0IiB5PSIxNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjE0IiByeD0iMiIgZmlsbD0iIzFlMjkzYiIvPjxyZWN0IHg9IjgiIHk9IjE5IiB3aWR0aD0iMTIiIGhlaWdodD0iMS41IiByeD0iLjciIGZpbGw9IiMzMzQxNTUiLz48cmVjdCB4PSI4IiB5PSIyMyIgd2lkdGg9IjgiIGhlaWdodD0iMS41IiByeD0iLjciIGZpbGw9IiMzMzQxNTUiLz48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iNyIgcng9IjEiIGZpbGw9IiMxMTE4MjciLz48ZyBjbGlwLXBhdGg9InVybCgjYykiPjxwb2x5Z29uIHBvaW50cz0iNCw4IDgsOCAxNSwxNSAxMSwxNSIgZmlsbD0iI2YxZjVmOSIvPjxwb2x5Z29uIHBvaW50cz0iMTIsOCAxNiw4IDIzLDE1IDE5LDE1IiBmaWxsPSIjZjFmNWY5Ii8+PHBvbHlnb24gcG9pbnRzPSIyMCw4IDI0LDggMzEsMTUgMjcsMTUiIGZpbGw9IiNmMWY1ZjkiLz48L2c+PGNpcmNsZSBjeD0iOCIgY3k9IjE0LjUiIHI9IjEuOCIgZmlsbD0iIzQ3NTU2OSIvPjxjaXJjbGUgY3g9IjI0IiBjeT0iMTQuNSIgcj0iMS44IiBmaWxsPSIjNDc1NTY5Ii8+PHJlY3QgeD0iNCIgeT0iMTQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIxIiBmaWxsPSIjM2I4MmY2Ii8+PC9zdmc+">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" defer></script>
@@ -28,7 +31,7 @@
       --red:      #ef4444; --red-bg:    rgba(239,68,68,.15);
     }
 
-    body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+    body { font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
     /* ── Header ─────────────────────────────────────── */
     .header {
@@ -2680,64 +2683,35 @@ function generatePPTX(pptLang) {
   pptx.layout = 'LAYOUT_WIDE';
   pptx.title  = 'Weekly Report';
 
-  // ── Slide 1: KPIs ─────────────────────────────────────────
-  const s1 = pptx.addSlide();
-  s1.background = { color: C.bg };
-  s1.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
+  // ── Slide única: KPIs arriba + vista semanal abajo ────────
+  const s = pptx.addSlide();
+  s.background = { color: C.bg };
+  s.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
 
-  // Título de la slide
-  s1.addText(tp('projects.title'), {
-    x:0.38, y:0.22, w:8, h:0.35,
-    fontSize:13, bold:true, color:C.text, fontFace:'Segoe UI'
-  });
-  s1.addText(`W${getISOWeek(wkCur.mon)} · ${wkRange(wkCur)}`, {
-    x:0.38, y:0.55, w:8, h:0.22,
-    fontSize:9, color:C.muted, fontFace:'Segoe UI'
-  });
-
-  // 6 KPI cards
+  // ── KPI cards compactos ────────────────────────────────────
   const kpiDefs = [
-    { label: tp('kpi.total'),    value: total,    color: C.text,   sub: null },
-    { label: tp('kpi.delivered'), value: entregado, color: C.green, sub: tp('kpi.deliveredSub').replace('{n}', Math.round(entregado/(total||1)*100)) },
-    { label: tp('kpi.scripted'), value: guionado, color: C.yellow, sub: null },
-    { label: tp('kpi.filming'),  value: grabacion, color: C.orange, sub: null },
-    { label: tp('kpi.editing'),  value: edicion,  color: C.blue,  sub: null },
-    { label: tp('kpi.thisWeek'), value: semana,   color: C.purple, sub: tp('kpi.thisWeekSub') },
+    { label: tp('kpi.total'),     value: total,     color: C.text,   sub: null },
+    { label: tp('kpi.delivered'), value: entregado,  color: C.green,  sub: tp('kpi.deliveredSub').replace('{n}', Math.round(entregado/(total||1)*100)) },
+    { label: tp('kpi.scripted'),  value: guionado,  color: C.yellow, sub: null },
+    { label: tp('kpi.filming'),   value: grabacion, color: C.orange, sub: null },
+    { label: tp('kpi.editing'),   value: edicion,   color: C.blue,   sub: null },
+    { label: tp('kpi.thisWeek'),  value: semana,    color: C.purple, sub: tp('kpi.thisWeekSub') },
   ];
 
-  const cW = 1.97, cH = 3.8, cY = 1.85, gap = 0.155;
-  const cLeft = (13.33 - (kpiDefs.length * cW + (kpiDefs.length - 1) * gap)) / 2;
+  const cW = 1.97, cH = 1.45, cY = 0.15, cGap = 0.155;
+  const cLeft = (13.33 - (kpiDefs.length * cW + (kpiDefs.length - 1) * cGap)) / 2;
 
   kpiDefs.forEach(function(kpi, i) {
-    const cx = cLeft + i * (cW + gap);
-    // Card background
-    s1.addShape(pptx.ShapeType.rect, { x:cx, y:cY, w:cW, h:cH, fill:{ color:'1e293b' }, line:{ color:'334155', pt:0.5 } });
-    // Left accent bar
-    s1.addShape(pptx.ShapeType.rect, { x:cx, y:cY, w:0.055, h:cH, fill:{ color:kpi.color }, line:{ color:kpi.color, pt:0 } });
-    // Label
-    s1.addText(kpi.label.toUpperCase(), {
-      x:cx+0.14, y:cY+0.22, w:cW-0.18, h:0.28,
-      fontSize:7.5, bold:true, color:C.muted, fontFace:'Segoe UI', valign:'top'
-    });
-    // Value
-    s1.addText(String(kpi.value), {
-      x:cx+0.14, y:cY+0.6, w:cW-0.18, h:1.1,
-      fontSize:52, bold:true, color:kpi.color, fontFace:'Segoe UI', valign:'middle'
-    });
-    // Sub
-    if (kpi.sub) {
-      s1.addText(kpi.sub, {
-        x:cx+0.14, y:cY+1.85, w:cW-0.18, h:0.4,
-        fontSize:8.5, color:C.muted, fontFace:'Segoe UI', valign:'top'
-      });
-    }
+    const cx = cLeft + i * (cW + cGap);
+    s.addShape(pptx.ShapeType.rect, { x:cx, y:cY, w:cW, h:cH, fill:{ color:'1e293b' }, line:{ color:'334155', pt:0.5 } });
+    s.addShape(pptx.ShapeType.rect, { x:cx, y:cY, w:0.05, h:cH, fill:{ color:kpi.color }, line:{ color:kpi.color, pt:0 } });
+    s.addText(kpi.label.toUpperCase(), { x:cx+0.12, y:cY+0.1, w:cW-0.16, h:0.22, fontSize:6.5, bold:true, color:C.muted, fontFace:'Segoe UI' });
+    s.addText(String(kpi.value), { x:cx+0.12, y:cY+0.35, w:cW-0.16, h:0.65, fontSize:28, bold:true, color:kpi.color, fontFace:'Segoe UI', valign:'middle' });
+    if (kpi.sub) s.addText(kpi.sub, { x:cx+0.12, y:cY+1.05, w:cW-0.16, h:0.28, fontSize:7, color:C.muted, fontFace:'Segoe UI' });
   });
 
-  // ── Slide 2: 3-column weekly view ─────────────────────────
-  const s2 = pptx.addSlide();
-  s2.background = { color: C.bg };
-  // Top accent bar
-  s2.addShape(pptx.ShapeType.rect, { x:0, y:0, w:13.33, h:0.07, fill:{ color:C.blue }, line:{ color:C.blue, pt:0 } });
+  // ── Vista semanal (desplazada hacia abajo) ─────────────────
+  const wo = cY + cH + 0.15; // offset vertical = 1.75"
 
   const cols = [
     { title:tp('week.prevWeek'), wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
@@ -2747,19 +2721,16 @@ function generatePPTX(pptLang) {
   const colW = 4.1;
 
   cols.forEach(function(col) {
-    // Column header dot + title
-    s2.addShape(pptx.ShapeType.ellipse, { x:col.x, y:0.2, w:0.14, h:0.14, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
-    s2.addText(col.title, { x:col.x+0.22, y:0.16, w:colW-0.25, h:0.24, fontSize:11, bold:true, color:C.text, fontFace:'Segoe UI' });
-    s2.addText(`W${getISOWeek(col.wk.mon)} · ${wkRange(col.wk)}`, { x:col.x, y:0.42, w:colW, h:0.22, fontSize:8.5, color:C.muted, fontFace:'Segoe UI' });
-    // Divider below header
-    s2.addShape(pptx.ShapeType.rect, { x:col.x, y:0.68, w:colW, h:0.015, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
+    s.addShape(pptx.ShapeType.ellipse, { x:col.x, y:wo+0.2, w:0.14, h:0.14, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
+    s.addText(col.title, { x:col.x+0.22, y:wo+0.16, w:colW-0.25, h:0.24, fontSize:11, bold:true, color:C.text, fontFace:'Segoe UI' });
+    s.addText(`W${getISOWeek(col.wk.mon)} · ${wkRange(col.wk)}`, { x:col.x, y:wo+0.42, w:colW, h:0.22, fontSize:8.5, color:C.muted, fontFace:'Segoe UI' });
+    s.addShape(pptx.ShapeType.rect, { x:col.x, y:wo+0.68, w:colW, h:0.015, fill:{ color:col.color }, line:{ color:col.color, pt:0 } });
 
     if (!col.items.length) {
-      s2.addText(tp('ppt.noProjects'), { x:col.x, y:0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
+      s.addText(tp('ppt.noProjects'), { x:col.x, y:wo+0.85, w:colW, h:0.35, fontSize:9, color:C.dim, italic:true, fontFace:'Segoe UI' });
       return;
     }
 
-    // Table rows
     const hdrOpts = { bold:true, color:C.muted, fill:{ color:C.surface }, fontFace:'Segoe UI', fontSize:8, valign:'middle' };
     const hdr = [
       { text:tp('ppt.colProject').toUpperCase(), options:{ ...hdrOpts, align:'left'   } },
@@ -2775,20 +2746,16 @@ function generatePPTX(pptLang) {
       ];
     });
 
-    s2.addTable([hdr, ...rows], {
-      x:col.x, y:0.72, w:colW,
+    s.addTable([hdr, ...rows], {
+      x:col.x, y:wo+0.72, w:colW,
       colW:[2.1, 0.9, 1.1],
       rowH:0.34,
       border:{ type:'solid', color:C.border, pt:0.5 },
-      autoPage:true,
-      autoPageRepeatHeader:true,
-      autoPageSlideStartY:0.72,
     });
   });
 
-  // Vertical separators between columns
   [4.45, 8.79].forEach(function(x) {
-    s2.addShape(pptx.ShapeType.rect, { x, y:0.15, w:0.015, h:7.2, fill:{ color:C.border }, line:{ color:C.border, pt:0 } });
+    s.addShape(pptx.ShapeType.rect, { x, y:wo+0.12, w:0.015, h:7.5-wo-0.22, fill:{ color:C.border }, line:{ color:C.border, pt:0 } });
   });
 
   pptx.writeFile({ fileName: `reporte-W${getISOWeek(wkCur.mon)}.pptx` })
