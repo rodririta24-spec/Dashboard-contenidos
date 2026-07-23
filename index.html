@@ -793,7 +793,7 @@
       <button class="lang-btn" id="ppt-lang-btn-ko" onclick="selectPptLang('ko')">한국어</button>
     </div>
     <div style="display:flex;flex-direction:column;gap:.5rem">
-      <div style="display:flex;gap:.5rem">
+      <div style="display:flex;gap:.5rem;align-items:stretch">
         <button class="btn-secondary" style="flex:1" onclick="confirmPptExport('download')" data-i18n="btn.download">Descargar</button>
         <button class="btn-new" style="flex:1" onclick="confirmPptExport('drive')" data-i18n="btn.saveToDrive">Guardar en Drive</button>
       </div>
@@ -912,7 +912,7 @@ const LANGS = {
     'toast.projectDeleted':'Proyecto eliminado','toast.pptxOk':'✓ Reporte exportado',
     'toast.pptxError':'Error al generar el reporte','toast.libError':'No se pudo cargar la librería',
     'btn.saveToDrive':'Guardar en Drive','btn.download':'Descargar',
-    'toast.driveOk':'✓ Guardado en Google Drive','toast.driveError':'Error al subir a Drive','toast.driveNoLogin':'Iniciá sesión para guardar en Drive',
+    'toast.driveOk':'✓ Google Slide creado','toast.driveError':'Error al subir a Drive','toast.driveNoLogin':'Iniciá sesión para guardar en Drive',
     'toast.csvExported':'✓ {n} proyectos exportados','toast.noData':'Sin datos para exportar',
     'toast.linkCopied':'Link copiado','toast.titleCopied':'Título copiado',
     'toast.copied':'✓ Copiado','toast.commentUpdated':'Comentario actualizado',
@@ -928,7 +928,7 @@ const LANGS = {
     'misc.readOnly':'Modo solo lectura — para agregar y editar proyectos, <a onclick="openSettings()">configurá Apps Script</a> (gratis, 5 minutos).',
     'misc.loadingMain':'Cargando datos de Google Sheets...','misc.retry':'Reintentar',
     'misc.hasNotes':'Tiene notas','misc.noProjects':'Sin proyectos con fechas esta semana.',
-    'modal.pptLang':'Idioma del reporte',
+    'modal.pptLang':'Exportar reporte',
     'ppt.noProjects':'Sin proyectos esta semana',
     'ppt.colProject':'PROYECTO','ppt.colStatus':'ESTADO',
     'menu.theme':'Cambiar tema',
@@ -986,7 +986,7 @@ const LANGS = {
     'toast.projectDeleted':'Project deleted','toast.pptxOk':'✓ Report exported',
     'toast.pptxError':'Error generating report','toast.libError':'Could not load library',
     'btn.saveToDrive':'Save to Drive','btn.download':'Download',
-    'toast.driveOk':'✓ Saved to Google Drive','toast.driveError':'Error uploading to Drive','toast.driveNoLogin':'Sign in to save to Drive',
+    'toast.driveOk':'✓ Google Slide created','toast.driveError':'Error uploading to Drive','toast.driveNoLogin':'Sign in to save to Drive',
     'toast.csvExported':'✓ Exported {n} projects','toast.noData':'No data to export',
     'toast.linkCopied':'Link copied','toast.titleCopied':'Title copied',
     'toast.copied':'✓ Copied','toast.commentUpdated':'Comment updated',
@@ -1002,7 +1002,7 @@ const LANGS = {
     'misc.readOnly':'Read-only mode — to add and edit projects, <a onclick="openSettings()">configure Apps Script</a> (free, takes 5 minutes).',
     'misc.loadingMain':'Loading data from Google Sheets...','misc.retry':'Retry',
     'misc.hasNotes':'Has notes','misc.noProjects':'No projects with dates this week.',
-    'modal.pptLang':'Report language',
+    'modal.pptLang':'Export report',
     'ppt.noProjects':'No projects this week',
     'ppt.colProject':'PROJECT','ppt.colStatus':'STATUS',
     'menu.theme':'Toggle theme',
@@ -1060,7 +1060,7 @@ const LANGS = {
     'toast.projectDeleted':'프로젝트 삭제됨','toast.pptxOk':'✓ 보고서 내보내기 완료',
     'toast.pptxError':'보고서 생성 오류','toast.libError':'라이브러리를 불러올 수 없음',
     'btn.saveToDrive':'Drive에 저장','btn.download':'다운로드',
-    'toast.driveOk':'✓ Google Drive에 저장됨','toast.driveError':'Drive 업로드 오류','toast.driveNoLogin':'Drive에 저장하려면 로그인하세요',
+    'toast.driveOk':'✓ Google 슬라이드 생성됨','toast.driveError':'Drive 업로드 오류','toast.driveNoLogin':'Drive에 저장하려면 로그인하세요',
     'toast.csvExported':'✓ {n}개 프로젝트 내보내기 완료','toast.noData':'내보낼 데이터 없음',
     'toast.linkCopied':'링크 복사됨','toast.titleCopied':'제목 복사됨',
     'toast.copied':'✓ 복사됨','toast.commentUpdated':'댓글 업데이트됨',
@@ -1076,7 +1076,7 @@ const LANGS = {
     'misc.readOnly':'읽기 전용 모드 — 프로젝트 추가/편집을 위해 <a onclick="openSettings()">Apps Script를 설정</a>하세요 (무료, 5분 소요).',
     'misc.loadingMain':'Google Sheets에서 데이터 로딩 중...','misc.retry':'다시 시도',
     'misc.hasNotes':'메모 있음','misc.noProjects':'이번 주 날짜가 있는 프로젝트 없음.',
-    'modal.pptLang':'보고서 언어',
+    'modal.pptLang':'보고서 내보내기',
     'ppt.noProjects':'이번 주 프로젝트 없음',
     'ppt.colProject':'프로젝트','ppt.colStatus':'상태',
     'menu.theme':'테마 변경',
@@ -2820,10 +2820,11 @@ function uploadToDrive(blob, fileName, btn) {
     scope: 'https://www.googleapis.com/auth/drive.file',
     callback: function(resp) {
       if (resp.error) { showToast(t('toast.driveError'), 'error'); if (btn) btn.disabled = false; return; }
-      const meta = { name: fileName, mimeType: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' };
+      const slideName = fileName.replace(/\.pptx$/i, '');
+      const meta = { name: slideName, mimeType: 'application/vnd.google-apps.presentation' };
       const form = new FormData();
       form.append('metadata', new Blob([JSON.stringify(meta)], { type: 'application/json' }));
-      form.append('file', blob);
+      form.append('file', new Blob([blob], { type: 'application/vnd.openxmlformats-officedocument.presentationml.presentation' }));
       fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
         method: 'POST',
         headers: { Authorization: 'Bearer ' + resp.access_token },
@@ -2831,8 +2832,10 @@ function uploadToDrive(blob, fileName, btn) {
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
-        if (data.id) showToast(t('toast.driveOk'));
-        else { console.error(data); showToast(t('toast.driveError'), 'error'); }
+        if (data.id) {
+          showToast(t('toast.driveOk'));
+          window.open('https://docs.google.com/presentation/d/' + data.id + '/edit', '_blank');
+        } else { console.error(data); showToast(t('toast.driveError'), 'error'); }
         if (btn) btn.disabled = false;
       })
       .catch(function(err) { console.error(err); showToast(t('toast.driveError'), 'error'); if (btn) btn.disabled = false; });
