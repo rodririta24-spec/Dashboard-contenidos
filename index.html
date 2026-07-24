@@ -928,6 +928,9 @@ const LANGS = {
     'ctx.editScript':'Editar guión','ctx.addScript':'Agregar guión',
     'ctx.openLink':'Abrir link','ctx.copyLink':'Copiar link',
     'ctx.linkScript':'guión','ctx.linkMaterials':'materiales','ctx.linkResult':'resultado',
+    'ctx.openScript':'Abrir guión','ctx.addScript2':'Agregar guión',
+    'ctx.openMaterials':'Abrir materiales','ctx.addMaterials':'Agregar materiales',
+    'ctx.openResult':'Abrir resultado','ctx.addResult':'Agregar resultado',
     'ctx.noteColor':'Color de nota','ctx.editStickyNote':'Editar nota',
     'misc.today':'Hoy','misc.justNow':'ahora mismo',
     'misc.mAgo':'hace {n}m','misc.hAgo':'hace {n}h',
@@ -1003,6 +1006,9 @@ const LANGS = {
     'ctx.editScript':'Edit script','ctx.addScript':'Add script',
     'ctx.openLink':'Open link','ctx.copyLink':'Copy link',
     'ctx.linkScript':'script','ctx.linkMaterials':'materials','ctx.linkResult':'result',
+    'ctx.openScript':'Open script','ctx.addScript2':'Add script',
+    'ctx.openMaterials':'Open materials','ctx.addMaterials':'Add materials',
+    'ctx.openResult':'Open result','ctx.addResult':'Add result',
     'ctx.noteColor':'Note color','ctx.editStickyNote':'Edit note',
     'misc.today':'Today','misc.justNow':'just now',
     'misc.mAgo':'{n}m ago','misc.hAgo':'{n}h ago',
@@ -1078,6 +1084,9 @@ const LANGS = {
     'ctx.editScript':'대본 수정','ctx.addScript':'대본 추가',
     'ctx.openLink':'링크 열기','ctx.copyLink':'링크 복사',
     'ctx.linkScript':'대본','ctx.linkMaterials':'자료','ctx.linkResult':'결과물',
+    'ctx.openScript':'대본 열기','ctx.addScript2':'대본 추가',
+    'ctx.openMaterials':'자료 열기','ctx.addMaterials':'자료 추가',
+    'ctx.openResult':'결과물 열기','ctx.addResult':'결과물 추가',
     'ctx.noteColor':'메모 색상','ctx.editStickyNote':'메모 수정',
     'misc.today':'오늘','misc.justNow':'방금 전',
     'misc.mAgo':'{n}분 전','misc.hAgo':'{n}시간 전',
@@ -2919,19 +2928,18 @@ function _buildContextMenu(e, rowNum) {
   menu.appendChild(sep2);
 
   [
-    { icon: ICON_GUION,  field: colGuion,      labelKey: 'ctx.linkScript'    },
-    { icon: ICON_MAT,    field: colMateriales,  labelKey: 'ctx.linkMaterials' },
-    { icon: ICON_RESULT, field: colResultado,   labelKey: 'ctx.linkResult'    },
-  ].forEach(function({ icon, field, labelKey }) {
+    { icon: ICON_GUION,  field: colGuion,      labelKey: 'ctx.linkScript',    openKey: 'ctx.openScript',    addKey: 'ctx.addScript2'    },
+    { icon: ICON_MAT,    field: colMateriales,  labelKey: 'ctx.linkMaterials', openKey: 'ctx.openMaterials', addKey: 'ctx.addMaterials' },
+    { icon: ICON_RESULT, field: colResultado,   labelKey: 'ctx.linkResult',    openKey: 'ctx.openResult',    addKey: 'ctx.addResult'    },
+  ].forEach(function({ icon, field, labelKey, openKey, addKey }) {
     const hasLink = !!(row[field] || '').trim();
     const btn = document.createElement('button');
     btn.className = 'row-ctx-menu-item';
-    const shortLabel = t(labelKey);
-    btn.innerHTML = icon + '<span>' + (hasLink ? t('ctx.openLink') : t('ctx.addNote')) + ' — ' + shortLabel + '</span>';
+    btn.innerHTML = icon + '<span>' + t(hasLink ? openKey : addKey) + '</span>';
     btn.onclick = function(ev) {
       ev.stopPropagation();
       menu.remove();
-      openLinkPopup(rowNum, field, row[field] || '', shortLabel);
+      openLinkPopup(rowNum, field, row[field] || '', t(labelKey));
     };
     menu.appendChild(btn);
   });
