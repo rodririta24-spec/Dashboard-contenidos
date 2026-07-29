@@ -123,22 +123,22 @@
     .bottom-nav { display: none; }
 
     @media (max-width: 768px) {
+      html { height: 100dvh; overflow: hidden; }
+      body { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
       .header-center { display: none; }
-      .header { padding-left: 1rem; padding-right: 1rem; }
-      .main { padding: 1rem; gap: 1rem; padding-bottom: 72px; }
+      .header { position: relative; flex-shrink: 0; padding-left: 1rem; padding-right: 1rem; }
+      .main { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 1rem; gap: 1rem; }
 
       .nav-section { display: none; }
       .nav-section.active { display: flex; flex-direction: column; gap: 1rem; }
 
       .bottom-nav {
         display: flex;
-        position: fixed;
-        bottom: 0; left: 0; right: 0;
+        flex-shrink: 0;
         background: var(--surface);
         border-top: 1px solid var(--border);
         height: 60px;
         padding-bottom: env(safe-area-inset-bottom, 0px);
-        z-index: 100;
       }
       .nav-btn {
         flex: 1; display: flex; flex-direction: column;
@@ -152,9 +152,9 @@
       .nav-btn.active { color: var(--blue); }
       .nav-btn svg { width: 21px; height: 21px; }
 
-      /* KPI section fills the screen with equal top/bottom gap */
+      /* KPI section fills the main scroll container with equal top/bottom gap */
       #sec-kpis {
-        height: calc(100dvh - var(--header-h, 82px) - 60px - 2rem);
+        height: calc(100% - 2rem);
         overflow: hidden;
       }
       #kpi-grid {
