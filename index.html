@@ -3573,6 +3573,7 @@ const _fbConfig = {
 
 let _db = null;
 let _fbUser = null;
+let _fbAuthResolved = false;
 let _tableroUnsub = null;
 let _tableroCollapsed = localStorage.getItem('tableroCollapsed') === '1';
 let _lastTableroDocs = null;
@@ -3581,8 +3582,10 @@ let _lastTableroDocs = null;
   try {
     firebase.initializeApp(_fbConfig);
     _db = firebase.firestore();
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
     firebase.auth().onAuthStateChanged(function(user) {
       _fbUser = user;
+      _fbAuthResolved = true;
       _updateTableroUI();
     });
     _subscribeTablero();
@@ -3852,8 +3855,8 @@ function _updateTableroUI() {
     addWrap.style.display      = '';
     if (loginMsg)     loginMsg.style.display     = 'none';
     if (reconnectMsg) reconnectMsg.style.display = 'none';
-  } else if (currentUser) {
-    // GIS logged in but no Firebase session yet
+  } else if (currentUser && _fbAuthResolved) {
+    // GIS logged in but Firebase session expired — only show reconnect once Firebase has confirmed
     addWrap.style.display      = 'none';
     if (loginMsg)     loginMsg.style.display     = 'none';
     if (reconnectMsg) reconnectMsg.style.display = '';
