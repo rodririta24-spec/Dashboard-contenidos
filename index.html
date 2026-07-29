@@ -1881,6 +1881,11 @@ function updateCommentLock() {
 async function nativeGoogleSignIn() {
   try {
     const { GoogleAuth } = window.Capacitor.Plugins;
+    await GoogleAuth.initialize({
+      clientId: GOOGLE_CLIENT_ID,
+      scopes: ['profile', 'email'],
+      grantOfflineAccess: true
+    });
     const result = await GoogleAuth.signIn();
     currentUser = {
       name:    result.name    || result.displayName || result.email || 'User',
