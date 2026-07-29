@@ -119,6 +119,9 @@
     /* ── Layout ─────────────────────────────────────── */
     .main { max-width: 1440px; margin: 0 auto; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
 
+    /* ── Nav sections ──────────────────────────────── */
+    .nav-section { display: flex; flex-direction: column; gap: 1.5rem; }
+
     /* ── Bottom nav (mobile only) ───────────────────── */
     .bottom-nav { display: none; }
 
@@ -185,11 +188,13 @@
         flex: 1;
         display: flex;
         align-items: center;
-        /* font-size set per-card via inline style based on digit count */
         font-weight: 900;
         line-height: .9;
         letter-spacing: -.06em;
       }
+      .kpi-card .val.d1 { font-size: 8.5rem; }
+      .kpi-card .val.d2 { font-size: 6.5rem; }
+      .kpi-card .val.d3 { font-size: 4.5rem; }
       .kpi-card .sub {
         font-size: .7rem;
         font-weight: 500;
@@ -1653,12 +1658,12 @@ function renderKPIs() {
   const wk        = getWeek();
   const semana    = allData.filter(r => inWeek(r, wk)).length;
 
-  function kpiFs(n) {
+  function kpiDigitClass(n) {
     const d = String(n).length;
-    return d <= 1 ? '8.5rem' : d === 2 ? '6.5rem' : '4.5rem';
+    return d <= 1 ? 'd1' : d === 2 ? 'd2' : 'd3';
   }
   function kpiCard(cls, lbl, val, sub) {
-    return `<div class="kpi-card ${cls}"><div class="lbl">${lbl}</div><div class="val" style="font-size:${kpiFs(val)}">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+    return `<div class="kpi-card ${cls}"><div class="lbl">${lbl}</div><div class="val ${kpiDigitClass(val)}">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
   }
 
   document.getElementById('kpi-grid').innerHTML =
