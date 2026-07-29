@@ -1,0 +1,17 @@
+{
+  "name": "dashboard-contenidos",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "sync": "node -e \"require('fs').copyFileSync('index.html','www/index.html')\" && npx cap sync android"
+  },
+  "dependencies": {
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/core": "^7.0.0",
+    "@capacitor/status-bar": "^8.0.3",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.0.0"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "appId": "com.rodririta.dashboard",
+  "appName": "Dashboard",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "backgroundColor": "#0f172a"
+  },
+  "plugins": {
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "567960351432-kmo5rtdsapmd21ih9ac95u40i5klf9ti.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  }
+}
