@@ -74,7 +74,8 @@
     .comment-chip:hover { border-color:var(--blue); color:var(--text); }
 
     /* ── Right-click context menu ───────────────────────── */
-    .row-ctx-menu { position:fixed; z-index:1200; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.3rem; min-width:196px; box-shadow:0 8px 28px rgba(0,0,0,.45); }
+    @keyframes ctx-in { from { opacity:0; transform:scale(.88); } to { opacity:1; transform:scale(1); } }
+    .row-ctx-menu { position:fixed; z-index:1200; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:.3rem; min-width:196px; box-shadow:0 8px 28px rgba(0,0,0,.45); animation:ctx-in .16s cubic-bezier(.34,1.4,.64,1) both; transform-origin:top left; }
     .row-ctx-menu-item { display:flex; align-items:center; gap:.55rem; padding:.42rem .75rem; border-radius:7px; font-size:.82rem; cursor:pointer; color:var(--text); background:none; border:none; width:100%; text-align:left; transition:background .1s; }
     .row-ctx-menu-item:hover { background:var(--surface2); }
     .row-ctx-menu-item svg { flex-shrink:0; color:var(--muted); }
@@ -199,6 +200,34 @@
       .kpi-card.blue    { background: var(--blue-bg);           border-top-color: var(--blue); }
       .kpi-card.purple  { background: var(--purple-bg);         border-top-color: var(--purple); }
       .kpi-card.orange  { background: rgba(249,115,22,.15);     border-top-color: #f97316; }
+
+      /* ── Tab slide animations ───────────────────────── */
+      @keyframes tab-slide-right {
+        from { opacity:0; transform:translateX(24px); }
+        to   { opacity:1; transform:translateX(0); }
+      }
+      @keyframes tab-slide-left {
+        from { opacity:0; transform:translateX(-24px); }
+        to   { opacity:1; transform:translateX(0); }
+      }
+      .nav-section.slide-right { animation: tab-slide-right .22s cubic-bezier(.25,.46,.45,.94) both; }
+      .nav-section.slide-left  { animation: tab-slide-left  .22s cubic-bezier(.25,.46,.45,.94) both; }
+
+      /* ── Modal slide-up on mobile ───────────────────── */
+      @keyframes modal-in-mobile {
+        from { opacity:0; transform:translateY(40px) scale(.97); }
+        to   { opacity:1; transform:translateY(0) scale(1); }
+      }
+      .modal { animation: modal-in-mobile .28s cubic-bezier(.34,1.2,.64,1) both; }
+
+      /* ── Nav button tap feedback ────────────────────── */
+      .nav-btn { -webkit-tap-highlight-color: transparent; transition: color .15s, transform .12s; }
+      .nav-btn:active { transform: scale(.85); }
+      @keyframes nav-icon-pop {
+        from { transform: scale(.65); }
+        to   { transform: scale(1); }
+      }
+      .nav-btn.active svg { animation: nav-icon-pop .3s cubic-bezier(.34,1.56,.64,1) both; }
     }
 
     /* ── KPIs ───────────────────────────────────────── */
@@ -3182,12 +3211,21 @@ function saveLinkPopup() {
   closeLinkPopup();
 }
 
+const TAB_ORDER = ['kpis', 'tablero', 'semanas', 'graficos', 'general'];
+
 function switchTab(tab) {
+  const oldIdx = TAB_ORDER.indexOf(activeTab);
+  const newIdx = TAB_ORDER.indexOf(tab);
+  const goRight = oldIdx === -1 || newIdx >= oldIdx;
   activeTab = tab;
-  document.querySelectorAll('.nav-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-section').forEach(s => s.classList.remove('active', 'slide-right', 'slide-left'));
   document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
   const sec = document.getElementById('sec-' + tab);
-  if (sec) sec.classList.add('active');
+  if (sec) {
+    sec.classList.add('active');
+    void sec.offsetWidth;
+    sec.classList.add(goRight ? 'slide-right' : 'slide-left');
+  }
   const btn = document.querySelector('.nav-btn[data-tab="' + tab + '"]');
   if (btn) btn.classList.add('active');
   if (tab === 'graficos') setTimeout(renderCharts, 80);
