@@ -152,9 +152,9 @@
       .nav-btn.active { color: var(--blue); }
       .nav-btn svg { width: 21px; height: 21px; }
 
-      /* KPI section fills the screen */
+      /* KPI section fills the screen with equal top/bottom gap */
       #sec-kpis {
-        height: calc(100dvh - 145px);
+        height: calc(100dvh - var(--header-h, 82px) - 60px - 2rem);
         overflow: hidden;
       }
       #kpi-grid {
@@ -469,9 +469,10 @@
     .lang-drop-item:hover { background:var(--border); }
     .lang-drop-item.active { color:var(--blue); font-weight:700; }
     /* ── Header overflow menu ───────────────────────────────── */
+    @keyframes hdr-menu-in { from { opacity:0; transform:scale(.9) translateY(-6px); } to { opacity:1; transform:scale(1) translateY(0); } }
     .hdr-menu { position:relative; }
-    .hdr-menu-panel { position:absolute; top:calc(100% + 6px); right:0; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.3rem; display:none; z-index:300; min-width:185px; box-shadow:0 6px 24px rgba(0,0,0,.35); }
-    .hdr-menu.open .hdr-menu-panel { display:block; }
+    .hdr-menu-panel { position:absolute; top:calc(100% + 6px); right:0; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.3rem; display:none; z-index:300; min-width:185px; box-shadow:0 6px 24px rgba(0,0,0,.35); transform-origin:top right; }
+    .hdr-menu.open .hdr-menu-panel { display:block; animation:hdr-menu-in .18s cubic-bezier(.34,1.4,.64,1) both; }
     .hdr-menu-item { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left; padding:.4rem .65rem; font-size:.79rem; font-weight:500; border:none; background:none; cursor:pointer; border-radius:6px; color:var(--text); transition:background .12s; }
     .hdr-menu-item:hover { background:var(--border); }
     .hdr-menu-item svg { flex-shrink:0; color:var(--muted); }
@@ -566,7 +567,7 @@
 <body>
 
 <!-- ── Header ───────────────────────────────────────────── -->
-<header class="header">
+<header class="header" id="main-header">
   <div class="header-left">
     <h1>Dashboard · <span>Content</span></h1>
     <span class="header-meta" id="last-update">Loading...</span>
@@ -1635,6 +1636,7 @@ function render(data) {
   _rerenderTablero();
   _updateTableroUI();
   switchTab(activeTab);
+  _setKpiHeight();
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3212,6 +3214,31 @@ function saveLinkPopup() {
 }
 
 const TAB_ORDER = ['kpis', 'tablero', 'semanas', 'graficos', 'general'];
+
+function _setKpiHeight() {
+  const h = document.getElementById('main-header');
+  if (h) document.documentElement.style.setProperty('--header-h', h.offsetHeight + 'px');
+}
+window.addEventListener('resize', _setKpiHeight);
+document.addEventListener('DOMContentLoaded', _setKpiHeight);
+
+// Swipe between tabs
+(function() {
+  let sx = 0, sy = 0;
+  document.addEventListener('touchstart', function(e) {
+    sx = e.changedTouches[0].screenX;
+    sy = e.changedTouches[0].screenY;
+  }, { passive: true });
+  document.addEventListener('touchend', function(e) {
+    if (window.innerWidth > 768) return;
+    const dx = e.changedTouches[0].screenX - sx;
+    const dy = e.changedTouches[0].screenY - sy;
+    if (Math.abs(dx) < 55 || Math.abs(dy) > Math.abs(dx) * 0.8) return;
+    const idx = TAB_ORDER.indexOf(activeTab);
+    if (dx < 0 && idx < TAB_ORDER.length - 1) switchTab(TAB_ORDER[idx + 1]);
+    else if (dx > 0 && idx > 0) switchTab(TAB_ORDER[idx - 1]);
+  }, { passive: true });
+})();
 
 function switchTab(tab) {
   const oldIdx = TAB_ORDER.indexOf(activeTab);
