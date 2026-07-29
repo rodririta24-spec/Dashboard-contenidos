@@ -166,26 +166,32 @@
         border-left-width: 0;
         border-top: 5px solid;
         border-radius: 16px;
-        padding: 1rem .95rem .85rem;
+        padding: .8rem .85rem .7rem;
         display: flex;
         flex-direction: column;
-        justify-content: flex-end;
+        justify-content: flex-start;
         gap: 0;
         overflow: hidden;
       }
       .kpi-card .lbl {
-        font-size: .65rem; font-weight: 600;
-        letter-spacing: .09em;
-        margin-bottom: .3rem;
+        font-size: .6rem; font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
         color: var(--muted);
       }
       .kpi-card .val {
-        font-size: 4rem; font-weight: 800;
-        line-height: .9; letter-spacing: -.04em;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        font-size: clamp(4rem, 22vw, 6.5rem);
+        font-weight: 900;
+        line-height: 1;
+        letter-spacing: -.06em;
       }
       .kpi-card .sub {
-        font-size: .65rem; margin-top: .35rem;
-        font-weight: 500; color: var(--muted);
+        font-size: .63rem;
+        font-weight: 500;
+        color: var(--muted);
       }
       .kpi-card.neutral { background: var(--surface2);          border-top-color: var(--border); }
       .kpi-card.green   { background: var(--green-bg);          border-top-color: var(--green); }
@@ -1849,13 +1855,12 @@ function toggleTheme() {
 function _updateStatusBarTheme(theme) {
   if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
   const cap = window.Capacitor.Plugins;
-  if (!cap.StatusBar) return;
-  if (theme === 'light') {
-    cap.StatusBar.setStyle({ style: 'LIGHT' }).catch(function(){});
-    cap.StatusBar.setBackgroundColor({ color: '#ffffff' }).catch(function(){});
-  } else {
-    cap.StatusBar.setStyle({ style: 'DARK' }).catch(function(){});
-    cap.StatusBar.setBackgroundColor({ color: '#1e293b' }).catch(function(){});
+  if (cap.StatusBar) {
+    cap.StatusBar.setStyle({ style: theme === 'light' ? 'LIGHT' : 'DARK' }).catch(function(){});
+  }
+  // setBackgroundColor is ignored in Android 15+ — change decorView background via native bridge
+  if (window.NativeApp) {
+    window.NativeApp.setStatusBarBgColor(theme === 'light' ? '#ffffff' : '#1e293b');
   }
 }
 
