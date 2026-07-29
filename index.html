@@ -151,6 +151,36 @@
       }
       .nav-btn.active { color: var(--blue); }
       .nav-btn svg { width: 21px; height: 21px; }
+
+      /* KPI section fills the screen */
+      #sec-kpis {
+        height: calc(100dvh - 130px);
+      }
+      #kpi-grid {
+        height: 100%;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: repeat(3, 1fr);
+        gap: .6rem;
+      }
+      .kpi-card {
+        border-left-width: 0;
+        border-top: 4px solid;
+        border-radius: 14px;
+        padding: 1.1rem 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: .25rem;
+      }
+      .kpi-card .lbl { font-size: .68rem; margin-bottom: 0; }
+      .kpi-card .val { font-size: 2.8rem; line-height: 1; }
+      .kpi-card .sub { font-size: .68rem; margin-top: .15rem; }
+      .kpi-card.neutral { background: var(--surface2); border-top-color: var(--border); }
+      .kpi-card.green   { background: var(--green-bg);               border-top-color: var(--green); }
+      .kpi-card.yellow  { background: var(--yellow-bg);              border-top-color: var(--yellow); }
+      .kpi-card.blue    { background: var(--blue-bg);                border-top-color: var(--blue); }
+      .kpi-card.purple  { background: var(--purple-bg);              border-top-color: var(--purple); }
+      .kpi-card.orange  { background: rgba(249,115,22,.15);          border-top-color: #f97316; }
     }
 
     /* ── KPIs ───────────────────────────────────────── */
@@ -306,7 +336,7 @@
     /* ── Modal overlay ──────────────────────────────── */
     .modal-overlay {
       position: fixed; inset: 0; background: rgba(0,0,0,.65);
-      backdrop-filter: blur(4px); z-index: 50;
+      backdrop-filter: blur(4px); z-index: 200;
       display: flex; align-items: center; justify-content: center; padding: 1rem;
     }
     .modal-overlay.hidden { display: none; }
