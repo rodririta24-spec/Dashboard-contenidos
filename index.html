@@ -17,8 +17,7 @@
         var cap = window.Capacitor.Plugins;
         // Try plugin first (handles Android 15+ mandatory edge-to-edge)
         if (cap.StatusBar) {
-          cap.StatusBar.setBackgroundColor({ color: '#1e293b' }).catch(function() {});
-          cap.StatusBar.setStyle({ style: 'DARK' }).catch(function() {});
+          _updateStatusBarTheme(localStorage.getItem('theme') || 'dark');
         }
       }
       if (document.readyState === 'loading') {
@@ -154,33 +153,46 @@
 
       /* KPI section fills the screen */
       #sec-kpis {
-        height: calc(100dvh - 130px);
+        height: calc(100dvh - 145px);
+        overflow: hidden;
       }
       #kpi-grid {
         height: 100%;
         grid-template-columns: 1fr 1fr;
         grid-template-rows: repeat(3, 1fr);
-        gap: .6rem;
+        gap: .55rem;
       }
       .kpi-card {
         border-left-width: 0;
-        border-top: 4px solid;
-        border-radius: 14px;
-        padding: 1.1rem 1rem;
+        border-top: 5px solid;
+        border-radius: 16px;
+        padding: 1rem .95rem .85rem;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        gap: .25rem;
+        justify-content: flex-end;
+        gap: 0;
+        overflow: hidden;
       }
-      .kpi-card .lbl { font-size: .68rem; margin-bottom: 0; }
-      .kpi-card .val { font-size: 2.8rem; line-height: 1; }
-      .kpi-card .sub { font-size: .68rem; margin-top: .15rem; }
-      .kpi-card.neutral { background: var(--surface2); border-top-color: var(--border); }
-      .kpi-card.green   { background: var(--green-bg);               border-top-color: var(--green); }
-      .kpi-card.yellow  { background: var(--yellow-bg);              border-top-color: var(--yellow); }
-      .kpi-card.blue    { background: var(--blue-bg);                border-top-color: var(--blue); }
-      .kpi-card.purple  { background: var(--purple-bg);              border-top-color: var(--purple); }
-      .kpi-card.orange  { background: rgba(249,115,22,.15);          border-top-color: #f97316; }
+      .kpi-card .lbl {
+        font-size: .65rem; font-weight: 600;
+        letter-spacing: .09em;
+        margin-bottom: .3rem;
+        color: var(--muted);
+      }
+      .kpi-card .val {
+        font-size: 4rem; font-weight: 800;
+        line-height: .9; letter-spacing: -.04em;
+      }
+      .kpi-card .sub {
+        font-size: .65rem; margin-top: .35rem;
+        font-weight: 500; color: var(--muted);
+      }
+      .kpi-card.neutral { background: var(--surface2);          border-top-color: var(--border); }
+      .kpi-card.green   { background: var(--green-bg);          border-top-color: var(--green); }
+      .kpi-card.yellow  { background: var(--yellow-bg);         border-top-color: var(--yellow); }
+      .kpi-card.blue    { background: var(--blue-bg);           border-top-color: var(--blue); }
+      .kpi-card.purple  { background: var(--purple-bg);         border-top-color: var(--purple); }
+      .kpi-card.orange  { background: rgba(249,115,22,.15);     border-top-color: #f97316; }
     }
 
     /* ── KPIs ───────────────────────────────────────── */
@@ -1831,6 +1843,20 @@ function toggleTheme() {
   localStorage.setItem('theme', next);
   document.getElementById('icon-theme-dark').style.display  = next === 'dark'  ? '' : 'none';
   document.getElementById('icon-theme-light').style.display = next === 'light' ? '' : 'none';
+  _updateStatusBarTheme(next);
+}
+
+function _updateStatusBarTheme(theme) {
+  if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+  const cap = window.Capacitor.Plugins;
+  if (!cap.StatusBar) return;
+  if (theme === 'light') {
+    cap.StatusBar.setStyle({ style: 'LIGHT' }).catch(function(){});
+    cap.StatusBar.setBackgroundColor({ color: '#ffffff' }).catch(function(){});
+  } else {
+    cap.StatusBar.setStyle({ style: 'DARK' }).catch(function(){});
+    cap.StatusBar.setBackgroundColor({ color: '#1e293b' }).catch(function(){});
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
