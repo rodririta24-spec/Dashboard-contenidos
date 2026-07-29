@@ -396,7 +396,9 @@
       animation: modal-in .18s ease;
     }
     .modal.small { max-width: 420px; }
-    @keyframes modal-in { from { opacity:0; transform: scale(.97) translateY(8px); } to { opacity:1; transform: none; } }
+    @keyframes modal-in  { from { opacity:0; transform:scale(.97) translateY(8px); } to { opacity:1; transform:none; } }
+    @keyframes modal-out { from { opacity:1; transform:scale(1) translateY(0);    } to { opacity:0; transform:scale(.97) translateY(16px); } }
+    @keyframes ctx-out   { from { opacity:1; transform:scale(1); } to { opacity:0; transform:scale(.88); } }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.3rem; }
     .modal-title { font-size: 1rem; font-weight: 700; }
     .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.2rem; line-height: 1; padding: .2rem; }
@@ -469,10 +471,11 @@
     .lang-drop-item:hover { background:var(--border); }
     .lang-drop-item.active { color:var(--blue); font-weight:700; }
     /* ── Header overflow menu ───────────────────────────────── */
-    @keyframes hdr-menu-in { from { opacity:0; transform:scale(.9) translateY(-6px); } to { opacity:1; transform:scale(1) translateY(0); } }
     .hdr-menu { position:relative; }
-    .hdr-menu-panel { position:absolute; top:calc(100% + 6px); right:0; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.3rem; display:none; z-index:300; min-width:185px; box-shadow:0 6px 24px rgba(0,0,0,.35); transform-origin:top right; }
-    .hdr-menu.open .hdr-menu-panel { display:block; animation:hdr-menu-in .18s cubic-bezier(.34,1.4,.64,1) both; }
+    .hdr-menu-panel { position:absolute; top:calc(100% + 6px); right:0; background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:.3rem; z-index:300; min-width:185px; box-shadow:0 6px 24px rgba(0,0,0,.35); transform-origin:top right;
+      opacity:0; pointer-events:none; transform:scale(.9) translateY(-8px);
+      transition:opacity .18s ease, transform .18s cubic-bezier(.34,1.4,.64,1); }
+    .hdr-menu.open .hdr-menu-panel { opacity:1; pointer-events:auto; transform:none; }
     .hdr-menu-item { display:flex; align-items:center; gap:.55rem; width:100%; text-align:left; padding:.4rem .65rem; font-size:.79rem; font-weight:500; border:none; background:none; cursor:pointer; border-radius:6px; color:var(--text); transition:background .12s; }
     .hdr-menu-item:hover { background:var(--border); }
     .hdr-menu-item svg { flex-shrink:0; color:var(--muted); }
@@ -1340,9 +1343,7 @@ function openSettings() {
   document.getElementById('input-api-url').value = getApiUrl();
   document.getElementById('overlay-settings').classList.remove('hidden');
 }
-function closeSettings() {
-  document.getElementById('overlay-settings').classList.add('hidden');
-}
+function closeSettings() { _closeOverlay('overlay-settings'); }
 function saveSettings() {
   const url = document.getElementById('input-api-url').value.trim();
   setApiUrl(url);
@@ -2515,10 +2516,10 @@ function openFormModal(row) {
 }
 
 function closeFormModal() {
-  document.getElementById('overlay-form').classList.add('hidden');
+  editingRow = null;
   const section = document.getElementById('modal-comments');
   if (section) section.style.display = 'none';
-  editingRow = null;
+  _closeOverlay('overlay-form');
   commentingRow = null;
 }
 
@@ -2624,10 +2625,7 @@ function confirmDeleteCurrent() {
   confirmDelete(row);
 }
 
-function closeConfirm() {
-  document.getElementById('overlay-confirm').classList.add('hidden');
-  rowToDelete = null;
-}
+function closeConfirm() { rowToDelete = null; _closeOverlay('overlay-confirm'); }
 
 function openEmailModal() {
   const wk    = getWeek();
@@ -2655,9 +2653,7 @@ function openEmailModal() {
   document.getElementById('overlay-email').classList.remove('hidden');
 }
 
-function closeEmailModal() {
-  document.getElementById('overlay-email').classList.add('hidden');
-}
+function closeEmailModal() { _closeOverlay('overlay-email'); }
 
 function headerSearch(val) {
   const searchEl = document.getElementById('search');
@@ -2748,6 +2744,8 @@ document.addEventListener('contextmenu', function(e) {
       const docId = stickyEl.dataset.noteId;
       const menu = document.createElement('div');
       menu.className = 'row-ctx-menu';
+      const _origRemove1 = menu.remove.bind(menu);
+      menu.remove = function() { menu.style.animation = 'ctx-out .14s ease-in both'; menu.style.pointerEvents = 'none'; setTimeout(_origRemove1, 130); };
 
       const editBtn = document.createElement('button');
       editBtn.className = 'row-ctx-menu-item';
@@ -2806,6 +2804,8 @@ document.addEventListener('contextmenu', function(e) {
     const url = driveAnchor.dataset.driveUrl;
     const menu = document.createElement('div');
     menu.className = 'row-ctx-menu';
+    const _origRemove2 = menu.remove.bind(menu);
+    menu.remove = function() { menu.style.animation = 'ctx-out .14s ease-in both'; menu.style.pointerEvents = 'none'; setTimeout(_origRemove2, 130); };
 
     const openBtn = document.createElement('button');
     openBtn.className = 'row-ctx-menu-item';
@@ -2854,9 +2854,7 @@ function openPptLangModal() {
   applyI18n();
   document.getElementById('overlay-ppt-lang').classList.remove('hidden');
 }
-function closePptLangModal() {
-  document.getElementById('overlay-ppt-lang').classList.add('hidden');
-}
+function closePptLangModal() { _closeOverlay('overlay-ppt-lang'); }
 function selectPptLang(lang) {
   _pptLang = lang;
   document.querySelectorAll('[id^="ppt-lang-btn-"]').forEach(b =>
@@ -3073,6 +3071,8 @@ function _buildContextMenu(e, rowNum) {
 
   const menu = document.createElement('div');
   menu.className = 'row-ctx-menu';
+  const _origRemove3 = menu.remove.bind(menu);
+  menu.remove = function() { menu.style.animation = 'ctx-out .14s ease-in both'; menu.style.pointerEvents = 'none'; setTimeout(_origRemove3, 130); };
 
   const label = document.createElement('div');
   label.className = 'row-ctx-label';
@@ -3158,11 +3158,7 @@ function openTitlePopup(rowNum, current) {
   document.getElementById('overlay-title-popup').classList.remove('hidden');
   setTimeout(function() { inp.focus(); inp.select(); }, 50);
 }
-function closeTitlePopup() {
-  document.getElementById('overlay-title-popup').classList.add('hidden');
-  _ctxRowNum = null;
-  _ctxField  = null;
-}
+function closeTitlePopup() { _ctxRowNum = null; _ctxField = null; _closeOverlay('overlay-title-popup'); }
 function saveTitlePopup() {
   const val = document.getElementById('title-popup-input').value.trim();
   if (_ctxRowNum !== null && val) applyInlineEdit(_ctxRowNum, 'Titulo', val);
@@ -3179,11 +3175,7 @@ function openNotePopup(rowNum, current, projectTitle) {
   setTimeout(function() { ta.focus(); ta.setSelectionRange(ta.value.length, ta.value.length); }, 50);
 }
 
-function closeNotePopup() {
-  document.getElementById('overlay-note-popup').classList.add('hidden');
-  _ctxRowNum = null;
-  _ctxField  = null;
-}
+function closeNotePopup() { _ctxRowNum = null; _ctxField = null; _closeOverlay('overlay-note-popup'); }
 
 function saveNotePopup() {
   const val = document.getElementById('note-popup-input').value.trim();
@@ -3201,11 +3193,7 @@ function openLinkPopup(rowNum, field, current, title) {
   setTimeout(() => { inp.focus(); inp.select(); }, 50);
 }
 
-function closeLinkPopup() {
-  document.getElementById('overlay-link-popup').classList.add('hidden');
-  _ctxRowNum = null;
-  _ctxField  = null;
-}
+function closeLinkPopup() { _ctxRowNum = null; _ctxField = null; _closeOverlay('overlay-link-popup'); }
 
 function saveLinkPopup() {
   const val = document.getElementById('link-popup-input').value.trim();
@@ -3221,6 +3209,29 @@ function _setKpiHeight() {
 }
 window.addEventListener('resize', _setKpiHeight);
 document.addEventListener('DOMContentLoaded', _setKpiHeight);
+
+// Animated overlay close
+function _closeOverlay(id) {
+  const overlay = document.getElementById(id);
+  if (!overlay || overlay.classList.contains('hidden')) return;
+  const box = overlay.querySelector('.modal, .link-popup');
+  if (box) {
+    box.style.animation = 'modal-out .2s ease-in both';
+    setTimeout(function() { overlay.classList.add('hidden'); box.style.animation = ''; }, 185);
+  } else {
+    overlay.classList.add('hidden');
+  }
+}
+
+// Context menu with exit animation
+function _animateRemoveMenu(menu) {
+  menu.style.animation = 'ctx-out .14s ease-in both';
+  menu.style.pointerEvents = 'none';
+  setTimeout(function() { if (menu.parentNode) menu.parentNode.removeChild(menu); }, 130);
+}
+function _removeCtxMenus() {
+  document.querySelectorAll('.row-ctx-menu').forEach(function(m) { m.remove(); });
+}
 
 // Swipe between tabs
 (function() {
