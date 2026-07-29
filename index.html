@@ -1895,9 +1895,9 @@ async function nativeGoogleSignIn() {
     localStorage.setItem('gUser', JSON.stringify(currentUser));
     updateAuthUI();
     updateCommentLock();
-    _updateTableroUI();
     const idToken = result.authentication && result.authentication.idToken;
     if (idToken) _fbSignIn(idToken);
+    else _updateTableroUI();
   } catch(e) {
     if (e && e.error !== 'popup_closed_by_user') console.error('Google sign-in error', e);
   }
@@ -3866,6 +3866,10 @@ function _updateTableroUI() {
 
 function _fbReconnect() {
   if (!firebase.apps.length) return;
+  if (window.Capacitor && window.Capacitor.isNativePlatform()) {
+    nativeGoogleSignIn();
+    return;
+  }
   const provider = new firebase.auth.GoogleAuthProvider();
   if (currentUser && currentUser.email) provider.setCustomParameters({ login_hint: currentUser.email });
   firebase.auth().signInWithPopup(provider).catch(function(e) {
