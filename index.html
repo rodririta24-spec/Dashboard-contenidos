@@ -2,13 +2,32 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Dashboard · Content</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PGRlZnM+PGNsaXBQYXRoIGlkPSJjIj48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iNyIgcng9IjEiLz48L2NsaXBQYXRoPjwvZGVmcz48cmVjdCB4PSI0IiB5PSIxNCIgd2lkdGg9IjI0IiBoZWlnaHQ9IjE0IiByeD0iMiIgZmlsbD0iIzFlMjkzYiIvPjxyZWN0IHg9IjgiIHk9IjE5IiB3aWR0aD0iMTIiIGhlaWdodD0iMS41IiByeD0iLjciIGZpbGw9IiMzMzQxNTUiLz48cmVjdCB4PSI4IiB5PSIyMyIgd2lkdGg9IjgiIGhlaWdodD0iMS41IiByeD0iLjciIGZpbGw9IiMzMzQxNTUiLz48cmVjdCB4PSI0IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iNyIgcng9IjEiIGZpbGw9IiMxMTE4MjciLz48ZyBjbGlwLXBhdGg9InVybCgjYykiPjxwb2x5Z29uIHBvaW50cz0iNCw4IDgsOCAxNSwxNSAxMSwxNSIgZmlsbD0iI2YxZjVmOSIvPjxwb2x5Z29uIHBvaW50cz0iMTIsOCAxNiw4IDIzLDE1IDE5LDE1IiBmaWxsPSIjZjFmNWY5Ii8+PHBvbHlnb24gcG9pbnRzPSIyMCw4IDI0LDggMzEsMTUgMjcsMTUiIGZpbGw9IiNmMWY1ZjkiLz48L2c+PGNpcmNsZSBjeD0iOCIgY3k9IjE0LjUiIHI9IjEuOCIgZmlsbD0iIzQ3NTU2OSIvPjxjaXJjbGUgY3g9IjI0IiBjeT0iMTQuNSIgcj0iMS44IiBmaWxsPSIjNDc1NTY5Ii8+PHJlY3QgeD0iNCIgeT0iMTQiIHdpZHRoPSIyNCIgaGVpZ2h0PSIxIiBmaWxsPSIjM2I4MmY2Ii8+PC9zdmc+">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..700;1,14..32,300..700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    // Android edge-to-edge: push header below status bar
+    (function() {
+      function applyStatusBarPadding() {
+        if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+        var cap = window.Capacitor.Plugins;
+        // Try plugin first (handles Android 15+ mandatory edge-to-edge)
+        if (cap.StatusBar) {
+          cap.StatusBar.setBackgroundColor({ color: '#1e293b' }).catch(function() {});
+          cap.StatusBar.setStyle({ style: 'DARK' }).catch(function() {});
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyStatusBarPadding);
+      } else {
+        applyStatusBarPadding();
+      }
+    })();
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
@@ -99,6 +118,40 @@
 
     /* ── Layout ─────────────────────────────────────── */
     .main { max-width: 1440px; margin: 0 auto; padding: 1.5rem 2rem; display: flex; flex-direction: column; gap: 1.5rem; }
+
+    /* ── Bottom nav (mobile only) ───────────────────── */
+    .bottom-nav { display: none; }
+
+    @media (max-width: 768px) {
+      .header-center { display: none; }
+      .header { padding-left: 1rem; padding-right: 1rem; }
+      .main { padding: 1rem; gap: 1rem; padding-bottom: 72px; }
+
+      .nav-section { display: none; }
+      .nav-section.active { display: flex; flex-direction: column; gap: 1rem; }
+
+      .bottom-nav {
+        display: flex;
+        position: fixed;
+        bottom: 0; left: 0; right: 0;
+        background: var(--surface);
+        border-top: 1px solid var(--border);
+        height: 60px;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        z-index: 100;
+      }
+      .nav-btn {
+        flex: 1; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; gap: .14rem;
+        background: none; border: none; color: var(--muted);
+        font-size: .6rem; font-family: inherit; font-weight: 500;
+        cursor: pointer; padding: .35rem 0;
+        transition: color .15s;
+        letter-spacing: .01em;
+      }
+      .nav-btn.active { color: var(--blue); }
+      .nav-btn svg { width: 21px; height: 21px; }
+    }
 
     /* ── KPIs ───────────────────────────────────────── */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 1rem; }
@@ -816,6 +869,29 @@
 <!-- ── Floating note tooltip ─────────────────────────────── -->
 <div id="floating-tip"></div>
 
+<nav class="bottom-nav" id="bottom-nav">
+  <button class="nav-btn active" data-tab="kpis" onclick="switchTab('kpis')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="18" y="3" width="4" height="18" rx="1"/><rect x="10" y="8" width="4" height="13" rx="1"/><rect x="2" y="13" width="4" height="8" rx="1"/></svg>
+    <span data-i18n="nav.kpis">KPIs</span>
+  </button>
+  <button class="nav-btn" data-tab="tablero" onclick="switchTab('tablero')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    <span data-i18n="nav.tablero">Tablero</span>
+  </button>
+  <button class="nav-btn" data-tab="semanas" onclick="switchTab('semanas')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    <span data-i18n="nav.semanas">Semanas</span>
+  </button>
+  <button class="nav-btn" data-tab="graficos" onclick="switchTab('graficos')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+    <span data-i18n="nav.graficos">Gráficos</span>
+  </button>
+  <button class="nav-btn" data-tab="general" onclick="switchTab('general')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    <span data-i18n="nav.general">General</span>
+  </button>
+</nav>
+
 <!-- ── Main ─────────────────────────────────────────────── -->
 <main class="main" id="main">
   <div class="loading">
@@ -841,6 +917,7 @@ const ICON_GUION   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none
 const ICON_MAT     = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
 const ICON_RESULT  = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>`;
 let currentPage  = 1;
+let activeTab    = 'kpis';
 const PAGE_SIZE  = 20;
 let currentView  = 'table';
 let historyData  = [];
@@ -942,6 +1019,7 @@ const LANGS = {
     'ppt.noProjects':'Sin proyectos esta semana',
     'ppt.colProject':'PROYECTO','ppt.colStatus':'ESTADO',
     'menu.theme':'Cambiar tema',
+    'nav.kpis':'KPIs','nav.tablero':'Tablero','nav.semanas':'Semanas','nav.graficos':'Gráficos','nav.general':'General',
   },
   en: {
     'header.title':'Dashboard · Content','header.search':'Search project…','header.updated':'Updated {time}',
@@ -1020,6 +1098,7 @@ const LANGS = {
     'ppt.noProjects':'No projects this week',
     'ppt.colProject':'PROJECT','ppt.colStatus':'STATUS',
     'menu.theme':'Toggle theme',
+    'nav.kpis':'KPIs','nav.tablero':'Board','nav.semanas':'Weeks','nav.graficos':'Charts','nav.general':'All',
   },
   ko: {
     'header.title':'대시보드 · 콘텐츠','header.search':'프로젝트 검색…','header.updated':'업데이트 {time}',
@@ -1098,6 +1177,7 @@ const LANGS = {
     'ppt.noProjects':'이번 주 프로젝트 없음',
     'ppt.colProject':'프로젝트','ppt.colStatus':'상태',
     'menu.theme':'테마 변경',
+    'nav.kpis':'KPI','nav.tablero':'보드','nav.semanas':'주간','nav.graficos':'차트','nav.general':'전체',
   }
 };
 
@@ -1332,13 +1412,17 @@ function render(data) {
   const hasApi = !!getApiUrl();
 
   document.getElementById('main').innerHTML = `
-    ${!hasApi ? `<div class="banner">
-      <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      ${t('misc.readOnly')}
-    </div>` : ''}
-    <div class="kpi-grid" id="kpi-grid"></div>
+    <!-- sec: KPIs -->
+    <div class="nav-section active" id="sec-kpis">
+      ${!hasApi ? `<div class="banner">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        ${t('misc.readOnly')}
+      </div>` : ''}
+      <div class="kpi-grid" id="kpi-grid"></div>
+    </div>
 
-    <!-- Team board -->
+    <!-- sec: Tablero -->
+    <div class="nav-section" id="sec-tablero">
     <div class="card" id="card-tablero">
       <div class="card-title" style="cursor:pointer;user-select:none" onclick="toggleTablero()">
         <div class="dot" style="background:var(--yellow)"></div>
@@ -1371,7 +1455,10 @@ function render(data) {
         </div>
       </div>
     </div>
+    </div><!-- /sec-tablero -->
 
+    <!-- sec: Semanas -->
+    <div class="nav-section" id="sec-semanas">
     <div class="row2">
       <div class="card" id="card-semana"></div>
       <div class="card" id="card-next-week"></div>
@@ -1380,6 +1467,10 @@ function render(data) {
       <div class="card" id="card-pendientes"></div>
       <div class="card" id="card-prev-week"></div>
     </div>
+    </div><!-- /sec-semanas -->
+
+    <!-- sec: Gráficos -->
+    <div class="nav-section" id="sec-graficos">
     <div class="row2">
       <div class="card">
         <div class="card-title"><div class="dot" style="background:var(--blue)"></div>${t('chart.status')}</div>
@@ -1400,6 +1491,10 @@ function render(data) {
         <div class="chart-wrap"><canvas id="chart-solicitante"></canvas></div>
       </div>
     </div>
+    </div><!-- /sec-graficos -->
+
+    <!-- sec: General -->
+    <div class="nav-section" id="sec-general">
     <div class="card">
       <div class="card-title">
         <div class="dot" style="background:var(--muted)"></div>${t('projects.title')}
@@ -1447,6 +1542,7 @@ function render(data) {
       </div>
       <div class="history-list" id="history-list"></div>
     </div>
+    </div><!-- /sec-general -->
   `;
 
   renderKPIs();
@@ -1461,6 +1557,7 @@ function render(data) {
   _applyTableroCollapse();
   _rerenderTablero();
   _updateTableroUI();
+  switchTab(activeTab);
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3015,6 +3112,18 @@ function saveLinkPopup() {
   const val = document.getElementById('link-popup-input').value.trim();
   if (_ctxRowNum !== null && _ctxField) applyInlineEdit(_ctxRowNum, _ctxField, val);
   closeLinkPopup();
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  document.querySelectorAll('.nav-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  const sec = document.getElementById('sec-' + tab);
+  if (sec) sec.classList.add('active');
+  const btn = document.querySelector('.nav-btn[data-tab="' + tab + '"]');
+  if (btn) btn.classList.add('active');
+  if (tab === 'graficos') setTimeout(renderCharts, 80);
+  window.scrollTo(0, 0);
 }
 
 // Close modals with Escape
