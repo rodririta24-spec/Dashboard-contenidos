@@ -174,8 +174,8 @@
         overflow: hidden;
       }
       .kpi-card .lbl {
-        font-size: .6rem; font-weight: 700;
-        letter-spacing: .1em;
+        font-size: .72rem; font-weight: 700;
+        letter-spacing: .08em;
         text-transform: uppercase;
         color: var(--muted);
       }
@@ -183,13 +183,13 @@
         flex: 1;
         display: flex;
         align-items: center;
-        font-size: clamp(4rem, 22vw, 6.5rem);
+        /* font-size set per-card via inline style based on digit count */
         font-weight: 900;
-        line-height: 1;
+        line-height: .9;
         letter-spacing: -.06em;
       }
       .kpi-card .sub {
-        font-size: .63rem;
+        font-size: .7rem;
         font-weight: 500;
         color: var(--muted);
       }
@@ -1620,14 +1620,21 @@ function renderKPIs() {
   const wk        = getWeek();
   const semana    = allData.filter(r => inWeek(r, wk)).length;
 
-  document.getElementById('kpi-grid').innerHTML = `
-    <div class="kpi-card neutral"><div class="lbl">${t('kpi.total')}</div><div class="val">${total}</div></div>
-    <div class="kpi-card green"><div class="lbl">${t('kpi.delivered')}</div><div class="val">${entregado}</div><div class="sub">${t('kpi.deliveredSub',{n:Math.round(entregado/total*100)})}</div></div>
-    <div class="kpi-card yellow"><div class="lbl">${t('kpi.scripted')}</div><div class="val">${guionado}</div></div>
-    <div class="kpi-card orange"><div class="lbl">${t('kpi.filming')}</div><div class="val">${grabacion}</div></div>
-    <div class="kpi-card blue"><div class="lbl">${t('kpi.editing')}</div><div class="val">${edicion}</div></div>
-    <div class="kpi-card purple"><div class="lbl">${t('kpi.thisWeek')}</div><div class="val">${semana}</div><div class="sub">${t('kpi.thisWeekSub')}</div></div>
-  `;
+  function kpiFs(n) {
+    const d = String(n).length;
+    return d <= 1 ? '8.5rem' : d === 2 ? '6.5rem' : '4.5rem';
+  }
+  function kpiCard(cls, lbl, val, sub) {
+    return `<div class="kpi-card ${cls}"><div class="lbl">${lbl}</div><div class="val" style="font-size:${kpiFs(val)}">${val}</div>${sub ? `<div class="sub">${sub}</div>` : ''}</div>`;
+  }
+
+  document.getElementById('kpi-grid').innerHTML =
+    kpiCard('neutral', t('kpi.total'),     total,     '') +
+    kpiCard('green',   t('kpi.delivered'), entregado, t('kpi.deliveredSub',{n:Math.round(entregado/total*100)})) +
+    kpiCard('yellow',  t('kpi.scripted'),  guionado,  '') +
+    kpiCard('orange',  t('kpi.filming'),   grabacion, '') +
+    kpiCard('blue',    t('kpi.editing'),   edicion,   '') +
+    kpiCard('purple',  t('kpi.thisWeek'),  semana,    t('kpi.thisWeekSub'));
 }
 
 // ─────────────────────────────────────────────────────────────
