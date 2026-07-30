@@ -237,6 +237,17 @@
         to   { transform: scale(1); }
       }
       .nav-btn.active svg { animation: nav-icon-pop .3s cubic-bezier(.34,1.56,.64,1) both; }
+
+      /* ── General: sin overflow lateral ────────────── */
+      .main { margin: 0; width: 100%; overflow-x: hidden; }
+      .card { max-width: 100%; min-width: 0; }
+      .filters { gap: .45rem; flex-direction: column; }
+      .filter-sel, .search-inp { width: 100%; min-width: 0; box-sizing: border-box; }
+      #tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+      /* ── Tablero: sticky touch-action ──────────────── */
+      .sticky { touch-action: none; }
+      .sticky-resize { touch-action: none; }
     }
 
     /* ── KPIs ───────────────────────────────────────── */
@@ -3757,13 +3768,12 @@ function _createStickyEl(docId, d, index) {
 }
 
 function _makeStickyDraggable(el, docId) {
-  el.addEventListener('mousedown', function(e) {
-    el.style.zIndex = ++_stickyZMax;
+  el.addEventListener('pointerdown', function(e) {
     if (e.target.closest('.sticky-del') || e.target.closest('.sticky-resize') || e.target.closest('.sticky-text')) return;
     if (el.classList.contains('is-editing')) return;
     e.preventDefault();
-    const board = document.getElementById('tablero-board');
-    const boardRect = board.getBoundingClientRect();
+    el.setPointerCapture(e.pointerId);
+    el.style.zIndex = ++_stickyZMax;
     const startLeft = parseFloat(el.style.left);
     const startTop  = parseFloat(el.style.top);
     const startMX   = e.clientX;
@@ -3776,8 +3786,8 @@ function _makeStickyDraggable(el, docId) {
       el.style.top  = Math.max(0, startTop  + e.clientY - startMY) + 'px';
     }
     function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
+      el.removeEventListener('pointermove', onMove);
+      el.removeEventListener('pointerup', onUp);
       el.classList.remove('is-dragging');
       const rot = ((_hashStr(docId + 'r') % 9) - 4) * 0.55;
       el.style.transform = `rotate(${rot}deg)`;
@@ -3786,17 +3796,18 @@ function _makeStickyDraggable(el, docId) {
       if (_db && _fbUser) _db.collection('tablero').doc(docId).update({ x, y }).catch(console.warn);
       _updateBoardHeight();
     }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    el.addEventListener('pointermove', onMove);
+    el.addEventListener('pointerup', onUp);
   });
 }
 
 function _makeStickyResizable(el, docId) {
   const handle = el.querySelector('.sticky-resize');
   if (!handle) return;
-  handle.addEventListener('mousedown', function(e) {
+  handle.addEventListener('pointerdown', function(e) {
     e.stopPropagation();
     e.preventDefault();
+    handle.setPointerCapture(e.pointerId);
     const startW  = el.offsetWidth;
     const startH  = el.offsetHeight;
     const startMX = e.clientX;
@@ -3807,15 +3818,15 @@ function _makeStickyResizable(el, docId) {
       _updateStickyFontSize(el);
     }
     function onUp() {
-      document.removeEventListener('mousemove', onMove);
-      document.removeEventListener('mouseup', onUp);
+      handle.removeEventListener('pointermove', onMove);
+      handle.removeEventListener('pointerup', onUp);
       const w = Math.round(el.offsetWidth);
       const h = Math.round(el.offsetHeight);
       if (_db && _fbUser) _db.collection('tablero').doc(docId).update({ w, h }).catch(console.warn);
       _updateBoardHeight();
     }
-    document.addEventListener('mousemove', onMove);
-    document.addEventListener('mouseup', onUp);
+    handle.addEventListener('pointermove', onMove);
+    handle.addEventListener('pointerup', onUp);
   });
 }
 
