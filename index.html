@@ -247,6 +247,7 @@
 
       /* ── Tablero: board y sticky responsivos ───────── */
       .tablero-board { min-height: min(460px, 55dvh); }
+      .tablero-hint { display: none; }
       .sticky { touch-action: none; }
       .sticky-resize { touch-action: none; }
     }
@@ -466,7 +467,11 @@
 
     /* ── Responsive ─────────────────────────────────── */
     @media (max-width: 900px) { .row2 { grid-template-columns: 1fr; } .main { padding: 1rem; } .header { padding: .8rem 1rem; } }
-    @media (max-width: 640px) { .tbl th:nth-child(n+5), .tbl td:nth-child(n+5) { display: none; } .form-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 640px) {
+      .tbl th:nth-child(n+5), .tbl td:nth-child(n+5) { display: none; }
+      .tbl-semana th:nth-child(2), .tbl-semana td:nth-child(2) { display: none; }
+      .form-grid { grid-template-columns: 1fr; }
+    }
 
     /* ── Row urgency ────────────────────────────────────────── */
     .tbl tbody tr.row-overdue td { background: rgba(239,68,68,.06); }
@@ -1716,7 +1721,7 @@ function renderSemana() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noCurrent')}</p>`
-      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl tbl-semana"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1745,7 +1750,7 @@ function renderNextWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noNext')}</p>`
-      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl tbl-semana"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1773,7 +1778,7 @@ function renderPrevWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noPrev')}</p>`
-      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl tbl-semana"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
