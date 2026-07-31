@@ -3751,6 +3751,44 @@ let _lastTableroDocs = null;
   }
 })();
 
+// ─────────────────────────────────────────────────────────────
+//  Push notifications
+// ─────────────────────────────────────────────────────────────
+async function initPushNotifications() {
+  if (!window.Capacitor || !window.Capacitor.isNativePlatform()) return;
+  const PushNotifications = window.Capacitor.Plugins.PushNotifications;
+  if (!PushNotifications) return;
+
+  const perm = await PushNotifications.requestPermissions();
+  if (perm.receive !== 'granted') return;
+
+  await PushNotifications.register();
+
+  PushNotifications.addListener('registration', async ({ value: token }) => {
+    console.log('FCM token:', token);
+    if (!_db) return;
+    try {
+      await _db.collection('fcmTokens').doc(token).set({
+        token,
+        platform: 'android',
+        registeredAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      const apiUrl = getApiUrl();
+      if (apiUrl) await _db.collection('config').doc('settings').set({ apiUrl }, { merge: true });
+    } catch(e) { console.warn('Push token save error:', e); }
+  });
+
+  PushNotifications.addListener('registrationError', err => {
+    console.warn('Push registration error:', err);
+  });
+
+  PushNotifications.addListener('pushNotificationActionPerformed', () => {
+    switchTab('semanas');
+  });
+}
+
+window.addEventListener('load', () => { initPushNotifications(); });
+
 function _fbSignIn(idToken) {
   if (!firebase.apps.length) return;
   try {

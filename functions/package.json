@@ -1,0 +1,13 @@
+{
+  "name": "dashboard-functions",
+  "description": "Firebase Cloud Functions for Dashboard Contenidos",
+  "scripts": {
+    "deploy": "firebase deploy --only functions"
+  },
+  "engines": { "node": "18" },
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^12.0.0",
+    "firebase-functions": "^6.0.0"
+  }
+}
