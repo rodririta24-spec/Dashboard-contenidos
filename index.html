@@ -195,9 +195,9 @@
         line-height: .9;
         letter-spacing: -.06em;
       }
-      .kpi-card .val.d1 { font-size: 8.5rem; }
-      .kpi-card .val.d2 { font-size: 6.5rem; }
-      .kpi-card .val.d3 { font-size: 4.5rem; }
+      .kpi-card .val.d1 { font-size: min(8.5rem, 15dvh); }
+      .kpi-card .val.d2 { font-size: min(6.5rem, 11dvh); }
+      .kpi-card .val.d3 { font-size: min(4.5rem, 8dvh); }
       .kpi-card .sub {
         font-size: .7rem;
         font-weight: 500;
@@ -245,7 +245,8 @@
       .filter-sel, .search-inp { width: 100%; min-width: 0; box-sizing: border-box; }
       #tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
-      /* ── Tablero: sticky touch-action ──────────────── */
+      /* ── Tablero: board y sticky responsivos ───────── */
+      .tablero-board { min-height: min(460px, 55dvh); }
       .sticky { touch-action: none; }
       .sticky-resize { touch-action: none; }
     }
@@ -342,6 +343,7 @@
     .dt.soon    { color: #fb923c; }
 
     /* ── Tables ─────────────────────────────────────── */
+    .tbl-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
     .tbl { width: 100%; border-collapse: collapse; font-size: .85rem; }
     .tbl th { text-align: left; padding: .5rem .75rem; color: var(--muted); font-weight: 500; font-size: .7rem; text-transform: uppercase; letter-spacing: .04em; border-bottom: 1px solid var(--border); white-space: nowrap; }
     .tbl td { padding: .65rem .75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
@@ -1714,7 +1716,7 @@ function renderSemana() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noCurrent')}</p>`
-      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1723,7 +1725,7 @@ function renderSemana() {
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
             ${driveLink(getLink(r, colMateriales), ICON_MAT)}
           </tr>`).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
   `;
 }
 
@@ -1743,7 +1745,7 @@ function renderNextWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noNext')}</p>`
-      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1751,7 +1753,7 @@ function renderNextWeek() {
             <td><span class="badge ${badgeClass(r['Estado'])} status-badge" onclick="showStatusPicker(event,${r._row},'${r['Estado']||''}')">${r['Estado']||'—'}</span></td>
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
           </tr>`).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
   `;
 }
 
@@ -1771,7 +1773,7 @@ function renderPrevWeek() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noPrev')}</p>`
-      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Resultado" style="width:32px;text-align:center">${ICON_RESULT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
@@ -1780,7 +1782,7 @@ function renderPrevWeek() {
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
             ${driveLink(getLink(r, colResultado), ICON_RESULT)}
           </tr>`).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
   `;
 }
 
@@ -1804,7 +1806,7 @@ function renderPendientes() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.allDelivered')}</p>`
-      : `<table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.client')}</th><th>${t('col.start')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.client')}</th><th>${t('col.start')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td style="color:var(--muted);font-size:.8rem"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
@@ -1813,7 +1815,7 @@ function renderPendientes() {
             ${driveLink(getLink(r, colGuion), ICON_GUION)}
             ${driveLink(getLink(r, colMateriales), ICON_MAT)}
           </tr>`).join('')}
-        </tbody></table>`}
+        </tbody></table></div>`}
   `;
 }
 
