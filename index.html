@@ -470,6 +470,7 @@
     @media (max-width: 640px) {
       .tbl th:nth-child(n+5), .tbl td:nth-child(n+5) { display: none; }
       .tbl-semana th:nth-child(2), .tbl-semana td:nth-child(2) { display: none; }
+      .tbl-pendientes th:nth-child(3), .tbl-pendientes td:nth-child(3) { display: none; }
       .form-grid { grid-template-columns: 1fr; }
     }
 
@@ -592,6 +593,31 @@
     [data-theme="light"] .tbl tbody tr.row-overdue:hover td { background:rgba(239,68,68,.1); }
     [data-theme="light"] .tbl tbody tr.row-soon td { background:rgba(249,115,22,.04); }
     [data-theme="light"] .tbl tbody tr.row-soon:hover td { background:rgba(249,115,22,.08); }
+
+    /* ── Skeleton loader ───────────────────────────────── */
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+    .skel { background:linear-gradient(90deg,var(--surface2) 25%,var(--border) 37%,var(--surface2) 63%); background-size:400% 100%; animation:shimmer 1.4s ease infinite; border-radius:6px; }
+    .skel-kpi-card { background:var(--surface); border-radius:16px; border-top:5px solid var(--border); padding:.8rem .85rem .7rem; display:flex; flex-direction:column; overflow:hidden; }
+    #loading-skeleton { display:none; }
+    @media (max-width:768px) {
+      #loading-spinner { display:none; }
+      #loading-skeleton { display:flex; flex-direction:column; height:calc(100% - 2rem); overflow:hidden; }
+      #skel-kpi-grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(3,1fr); gap:.55rem; height:100%; }
+    }
+
+    /* ── Pull-to-refresh ───────────────────────────────── */
+    #ptr-wrap { display:none; }
+    @media (max-width:768px) {
+      #ptr-wrap { display:flex; align-items:center; justify-content:center; gap:.5rem; flex-shrink:0; max-height:0; opacity:0; overflow:hidden; color:var(--muted); font-size:.82rem; transition:max-height .2s ease,opacity .15s; }
+      #ptr-wrap svg { animation:spin .8s linear infinite; color:var(--blue); }
+      #ptr-wrap.ptr-loading { max-height:52px; opacity:1; }
+    }
+
+    /* ── Filter chips (Semanas) ────────────────────────── */
+    .semana-chips { display:flex; gap:.4rem; flex-wrap:wrap; margin:.5rem 0 .35rem; }
+    .semana-chip { background:var(--surface2); border:1px solid var(--border); color:var(--muted); border-radius:20px; padding:.2rem .7rem; font-size:.72rem; cursor:pointer; transition:border-color .15s,color .15s,background .15s; font-family:inherit; }
+    .semana-chip.active { border-color:var(--blue); color:var(--blue); background:var(--blue-bg); font-weight:600; }
+    .semana-chip:hover:not(.active) { border-color:var(--blue); color:var(--blue); }
   </style>
 </head>
 <body>
@@ -1006,10 +1032,24 @@
 </nav>
 
 <!-- ── Main ─────────────────────────────────────────────── -->
+<div id="ptr-wrap">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+  Actualizando…
+</div>
 <main class="main" id="main">
-  <div class="loading">
+  <div class="loading" id="loading-spinner">
     <div class="spinner"></div>
     <span data-i18n="misc.loadingMain">Cargando datos de Google Sheets...</span>
+  </div>
+  <div id="loading-skeleton">
+    <div id="skel-kpi-grid">
+      <div class="skel-kpi-card"><div class="skel" style="height:11px;width:50%;margin-bottom:.5rem"></div><div class="skel" style="flex:1;border-radius:8px;min-height:40px"></div></div>
+      <div class="skel-kpi-card"><div class="skel" style="height:11px;width:60%;margin-bottom:.5rem"></div><div class="skel" style="flex:1;border-radius:8px;min-height:40px"></div></div>
+      <div class="skel-kpi-card"><div class="skel" style="height:11px;width:45%;margin-bottom:.5rem"></div><div class="skel" style="flex:1;border-radius:8px;min-height:40px"></div></div>
+      <div class="skel-kpi-card"><div class="skel" style="height:11px;width:55%;margin-bottom:.5rem"></div><div class="skel" style="flex:1;border-radius:8px;min-height:40px"></div></div>
+      <div class="skel-kpi-card"><div class="skel" style="height:11px;width:50%;margin-bottom:.5rem"></div><div class="skel" style="flex:1;border-radius:8px;min-height:40px"></div></div>
+      <div class="skel-kpi-card"><div class="skel" style="height:11px;width:65%;margin-bottom:.5rem"></div><div class="skel" style="flex:1;border-radius:8px;min-height:40px"></div></div>
+    </div>
   </div>
 </main>
 
@@ -1024,6 +1064,7 @@ const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTnydry1o935VKl
 // ─────────────────────────────────────────────────────────────
 let allData      = [];
 let filteredData = [];
+let semanaFilter = '';
 let allStatuses  = ['Solicitado', 'Guionado', 'Grabación', 'Edición', 'Entregado'];
 const esc = v => String(v||'').replace(/'/g,'&#39;');
 const ICON_GUION   = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`;
@@ -1706,9 +1747,11 @@ function renderKPIs() {
 // ─────────────────────────────────────────────────────────────
 function renderSemana() {
   const wk = getWeek();
-  const items = allData.filter(r => inWeek(r, wk));
+  const allWeekItems = allData.filter(r => inWeek(r, wk));
+  const items = semanaFilter ? allWeekItems.filter(r => r['Estado'] === semanaFilter) : allWeekItems;
   const card = document.getElementById('card-semana');
   const weekLabel = `${wk.mon.toLocaleDateString('es-AR',{day:'numeric',month:'short'})} – ${wk.sun.toLocaleDateString('es-AR',{day:'numeric',month:'short',year:'numeric'})}`;
+  const statuses = [...new Set(allWeekItems.map(r => r['Estado']).filter(Boolean))];
 
   card.innerHTML = `
     <div class="card-title">
@@ -1719,6 +1762,10 @@ function renderSemana() {
       </button>
       <span style="margin-left:auto;font-weight:400;font-size:.7rem">W${getISOWeek(wk.mon)} · ${nP(items.length)} · ${weekLabel}</span>
     </div>
+    ${statuses.length > 1 ? `<div class="semana-chips">
+      <button class="semana-chip${!semanaFilter?' active':''}" onclick="setSemanaFilter('')">Todos</button>
+      ${statuses.map(s=>`<button class="semana-chip${semanaFilter===s?' active':''}" onclick="setSemanaFilter(${JSON.stringify(s)})">${s}</button>`).join('')}
+    </div>` : ''}
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noCurrent')}</p>`
       : `<div class="tbl-scroll"><table class="tbl tbl-semana"><thead><tr><th>${t('col.project')}</th><th>${t('col.start')}</th><th>${t('col.deadline')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
@@ -1811,7 +1858,7 @@ function renderPendientes() {
     </div>
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.allDelivered')}</p>`
-      : `<div class="tbl-scroll"><table class="tbl"><thead><tr><th>${t('col.project')}</th><th>${t('col.client')}</th><th>${t('col.start')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
+      : `<div class="tbl-scroll"><table class="tbl tbl-pendientes"><thead><tr><th>${t('col.project')}</th><th>${t('col.client')}</th><th>${t('col.start')}</th><th>${t('col.status')}</th><th title="Guión" style="width:32px;text-align:center">${ICON_GUION}</th><th title="Materiales" style="width:32px;text-align:center">${ICON_MAT}</th></tr></thead><tbody>
           ${items.map(r=>`<tr data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
             <td class="titulo-cell" style="cursor:pointer" onclick='openFormModal(${JSON.stringify(r).replace(/'/g,"&#39;")})'>${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
             <td style="color:var(--muted);font-size:.8rem"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
@@ -3384,6 +3431,15 @@ document.addEventListener('keydown', e => {
 // ─────────────────────────────────────────────────────────────
 //  Data loading
 // ─────────────────────────────────────────────────────────────
+function _loadCache() {
+  try {
+    const raw = localStorage.getItem('dashCache');
+    return raw ? JSON.parse(raw) : null;
+  } catch(_) { return null; }
+}
+
+function setSemanaFilter(f) { semanaFilter = f; renderSemana(); }
+
 async function loadData() {
   const btn  = document.getElementById('btn-refresh');
   const icon = document.getElementById('refresh-icon');
@@ -3399,6 +3455,7 @@ async function loadData() {
       if (json.statuses  && json.statuses.length) allStatuses = json.statuses;
       if (json.history)  historyData  = json.history;
       if (json.comments) allComments  = json.comments;
+      try { localStorage.setItem('dashCache', JSON.stringify({ts: Date.now(), json})); } catch(_) {}
       render(json.data || []);
     } else {
       const res  = await fetch(CSV_URL + '&cb=' + Date.now());
@@ -3410,11 +3467,25 @@ async function loadData() {
       });
     }
 
-    document.getElementById('last-update').textContent =
-      t('header.updated', {time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })});
+    const lu = document.getElementById('last-update');
+    if (lu) lu.textContent = t('header.updated', {time: new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })});
 
   } catch (err) {
-    showError('Could not connect: ' + err.message);
+    const cached = _loadCache();
+    if (cached && cached.json) {
+      if (cached.json.statuses && cached.json.statuses.length) allStatuses = cached.json.statuses;
+      if (cached.json.history)  historyData  = cached.json.history;
+      if (cached.json.comments) allComments  = cached.json.comments;
+      render(cached.json.data || []);
+      const lu = document.getElementById('last-update');
+      if (lu) {
+        const age = Math.round((Date.now() - cached.ts) / 60000);
+        lu.textContent = `⚠ Datos de hace ${age < 60 ? age + 'm' : Math.round(age/60) + 'h'}`;
+        lu.style.color = 'var(--yellow)';
+      }
+    } else {
+      showError('Could not connect: ' + err.message);
+    }
   } finally {
     if (btn)  btn.disabled = false;
     if (icon) icon.parentElement.classList.remove('spinning');
@@ -3579,8 +3650,69 @@ updateApiMode();
 // Init language state
 _updateLangDrop(currentLang);
 applyI18n();
+
+// Show cached data immediately, then fetch fresh in background
+(function initCache() {
+  const cached = _loadCache();
+  if (cached && cached.json) {
+    if (cached.json.statuses && cached.json.statuses.length) allStatuses = cached.json.statuses;
+    if (cached.json.history)  historyData  = cached.json.history;
+    if (cached.json.comments) allComments  = cached.json.comments;
+    render(cached.json.data || []);
+    const lu = document.getElementById('last-update');
+    if (lu) {
+      const age = Math.round((Date.now() - cached.ts) / 60000);
+      lu.textContent = age < 2 ? 'Caché reciente' : `Caché de hace ${age < 60 ? age + 'm' : Math.round(age/60) + 'h'}`;
+    }
+  }
+})();
+
 loadData();
 setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
+
+function initPullToRefresh() {
+  const ptrWrap = document.getElementById('ptr-wrap');
+  const main    = document.getElementById('main');
+  if (!ptrWrap || !main || !('ontouchstart' in window)) return;
+
+  let startY = 0, curY = 0, pulling = false;
+  const THRESH = 65;
+
+  main.addEventListener('touchstart', e => {
+    if (main.scrollTop > 2) return;
+    startY = e.touches[0].clientY;
+    curY   = startY;
+    pulling = true;
+  }, { passive: true });
+
+  main.addEventListener('touchmove', e => {
+    if (!pulling) return;
+    curY = e.touches[0].clientY;
+    const dy = curY - startY;
+    if (dy <= 0) { pulling = false; return; }
+    ptrWrap.style.maxHeight = Math.min(dy * 0.5, 52) + 'px';
+    ptrWrap.style.opacity   = String(Math.min(dy / THRESH, 1));
+  }, { passive: true });
+
+  main.addEventListener('touchend', () => {
+    if (!pulling) return;
+    pulling = false;
+    const dy = curY - startY;
+    if (dy >= THRESH) {
+      ptrWrap.classList.add('ptr-loading');
+      loadData().finally(() => {
+        ptrWrap.classList.remove('ptr-loading');
+        ptrWrap.style.maxHeight = '';
+        ptrWrap.style.opacity   = '';
+      });
+    } else {
+      ptrWrap.style.maxHeight = '';
+      ptrWrap.style.opacity   = '';
+    }
+    startY = 0; curY = 0;
+  }, { passive: true });
+}
+initPullToRefresh();
 window.addEventListener('load', initGoogleAuth);
 
 // ─────────────────────────────────────────────────────────────
