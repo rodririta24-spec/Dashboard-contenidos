@@ -3651,22 +3651,6 @@ updateApiMode();
 _updateLangDrop(currentLang);
 applyI18n();
 
-// Show cached data immediately, then fetch fresh in background
-(function initCache() {
-  const cached = _loadCache();
-  if (cached && cached.json) {
-    if (cached.json.statuses && cached.json.statuses.length) allStatuses = cached.json.statuses;
-    if (cached.json.history)  historyData  = cached.json.history;
-    if (cached.json.comments) allComments  = cached.json.comments;
-    render(cached.json.data || []);
-    const lu = document.getElementById('last-update');
-    if (lu) {
-      const age = Math.round((Date.now() - cached.ts) / 60000);
-      lu.textContent = age < 2 ? 'Caché reciente' : `Caché de hace ${age < 60 ? age + 'm' : Math.round(age/60) + 'h'}`;
-    }
-  }
-})();
-
 loadData();
 setInterval(() => { if (getApiUrl()) loadData(); }, 5 * 60 * 1000);
 
@@ -3748,6 +3732,22 @@ let _lastTableroDocs = null;
     _applyTableroCollapse();
   } catch(e) {
     console.warn('Firebase init error:', e);
+  }
+})();
+
+// Show cached data immediately while fresh fetch runs in background
+(function initCache() {
+  const cached = _loadCache();
+  if (cached && cached.json) {
+    if (cached.json.statuses && cached.json.statuses.length) allStatuses = cached.json.statuses;
+    if (cached.json.history)  historyData  = cached.json.history;
+    if (cached.json.comments) allComments  = cached.json.comments;
+    render(cached.json.data || []);
+    const lu = document.getElementById('last-update');
+    if (lu) {
+      const age = Math.round((Date.now() - cached.ts) / 60000);
+      lu.textContent = age < 2 ? 'Caché reciente' : `Caché de hace ${age < 60 ? age + 'm' : Math.round(age/60) + 'h'}`;
+    }
   }
 })();
 
