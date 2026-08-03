@@ -371,6 +371,9 @@
     .tbl tbody tr:hover .btn-row-delete { opacity: 1; }
     .btn-row-edit:hover   { color: var(--blue); }
     .btn-row-delete:hover { color: var(--red);  }
+    body.guest .btn-row-edit, body.guest .btn-row-delete { display: none; }
+    body.guest .editable-cell { cursor: default; pointer-events: none; }
+    body.guest .status-badge  { cursor: default; pointer-events: none; }
 
     /* ── Charts ─────────────────────────────────────── */
     .chart-wrap { position: relative; height: 230px; }
@@ -1424,9 +1427,14 @@ function saveSettings() {
   updateApiMode();
   loadData();
 }
+function requireAuth() {
+  if (currentUser) return true;
+  showToast('Necesitás iniciar sesión para hacer cambios', 'error');
+  return false;
+}
 function updateApiMode() {
   const hasApi = !!getApiUrl();
-  document.getElementById('btn-new').disabled = !hasApi;
+  document.getElementById('btn-new').disabled = !hasApi || !currentUser;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1561,7 +1569,7 @@ function render(data) {
   filteredData = [...allData];
   detectLinkColumns(allData);
 
-  const hasApi = !!getApiUrl();
+  const hasApi = !!getApiUrl() && !!currentUser;
 
   document.getElementById('main').innerHTML = `
     <!-- sec: KPIs -->
@@ -1925,6 +1933,8 @@ function updateAuthUI() {
   const show = isNative && !!currentUser;
   if (signoutItem) signoutItem.style.display = show ? '' : 'none';
   if (signoutSep)  signoutSep.style.display  = show ? '' : 'none';
+  updateApiMode();
+  document.body.classList.toggle('guest', !currentUser);
 }
 
 function updateCommentLock() {
@@ -2143,6 +2153,7 @@ function kanbanDragLeave(e) {
 async function kanbanDrop(e, status) {
   e.preventDefault();
   e.currentTarget.classList.remove('drag-over');
+  if (!requireAuth()) return;
   const rowNum = dragRowNum || e.dataTransfer.getData('text/plain');
   if (!rowNum) return;
   const row = allData.find(r => String(r._row) === String(rowNum));
@@ -2689,6 +2700,7 @@ function updateResultadoLink() {
 // ─────────────────────────────────────────────────────────────
 async function handleFormSubmit(e) {
   e.preventDefault();
+  if (!requireAuth()) return;
   const btn = document.getElementById('btn-form-submit');
   btn.disabled = true;
   btn.textContent = t('misc.saving');
@@ -2806,6 +2818,7 @@ function copyField(id, btn) {
 }
 
 async function executeDelete() {
+  if (!requireAuth()) return;
   const btn = document.getElementById('btn-confirm-delete');
   btn.disabled = true;
   btn.textContent = t('misc.deleting');
@@ -3285,6 +3298,7 @@ function openTitlePopup(rowNum, current) {
 }
 function closeTitlePopup() { _ctxRowNum = null; _ctxField = null; _closeOverlay('overlay-title-popup'); }
 function saveTitlePopup() {
+  if (!requireAuth()) { closeTitlePopup(); return; }
   const val = document.getElementById('title-popup-input').value.trim();
   if (_ctxRowNum !== null && val) applyInlineEdit(_ctxRowNum, 'Titulo', val);
   closeTitlePopup();
@@ -3303,6 +3317,7 @@ function openNotePopup(rowNum, current, projectTitle) {
 function closeNotePopup() { _ctxRowNum = null; _ctxField = null; _closeOverlay('overlay-note-popup'); }
 
 function saveNotePopup() {
+  if (!requireAuth()) { closeNotePopup(); return; }
   const val = document.getElementById('note-popup-input').value.trim();
   if (_ctxRowNum !== null) applyInlineEdit(_ctxRowNum, 'Notas', val);
   closeNotePopup();
@@ -3321,6 +3336,7 @@ function openLinkPopup(rowNum, field, current, title) {
 function closeLinkPopup() { _ctxRowNum = null; _ctxField = null; _closeOverlay('overlay-link-popup'); }
 
 function saveLinkPopup() {
+  if (!requireAuth()) { closeLinkPopup(); return; }
   const val = document.getElementById('link-popup-input').value.trim();
   if (_ctxRowNum !== null && _ctxField) applyInlineEdit(_ctxRowNum, _ctxField, val);
   closeLinkPopup();
@@ -3505,6 +3521,7 @@ function showInlineEdit(e, rowNum, field, current, type) {
   e.stopPropagation();
   document.querySelectorAll('.inline-editor').forEach(el => el.remove());
   if (!getApiUrl()) { openSettings(); return; }
+  if (!requireAuth()) return;
 
   let input;
   if (type === 'select') {
@@ -3546,6 +3563,7 @@ function showInlineEdit(e, rowNum, field, current, type) {
 }
 
 function commitInlineEdit(input, rowNum, field, type) {
+  if (!requireAuth()) { input.remove(); return; }
   const val = type === 'date' ? isoToSheet(input.value) : input.value;
   input.remove();
   applyInlineEdit(rowNum, field, val);
@@ -3583,6 +3601,7 @@ function showStatusPicker(e, rowNum, current) {
   e.stopPropagation();
   document.querySelectorAll('.status-picker').forEach(p => p.remove());
   if (!getApiUrl()) { openSettings(); return; }
+  if (!requireAuth()) return;
 
   const options = allStatuses.length ? allStatuses : uniqueSorted(allData, 'Estado');
 
@@ -3608,6 +3627,7 @@ function showStatusPicker(e, rowNum, current) {
 
 async function applyQuickStatus(rowNum, newStatus) {
   document.querySelectorAll('.status-picker').forEach(p => p.remove());
+  if (!requireAuth()) return;
   const row = allData.find(r => String(r._row) === String(rowNum));
   if (!row || row['Estado'] === newStatus) return;
 
