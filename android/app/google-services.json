@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "293503739926",
+    "project_id": "dashboard-contenidos-cb284",
+    "storage_bucket": "dashboard-contenidos-cb284.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293503739926:android:9e920cbbf4b955d4386d37",
+        "android_client_info": {
+          "package_name": "com.rodririta.dashboard"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "293503739926-o2hev1mceijd2m1cvito4h49fab4ci69.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8Ds9NHnwgvJn7dEZW1wOxCc4BnJKEhTY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "293503739926-o2hev1mceijd2m1cvito4h49fab4ci69.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
