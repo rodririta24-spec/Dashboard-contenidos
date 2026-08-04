@@ -1772,7 +1772,7 @@ function renderSemana() {
     </div>
     ${statuses.length > 1 ? `<div class="semana-chips">
       <button class="semana-chip${!semanaFilter?' active':''}" onclick="setSemanaFilter('')">Todos</button>
-      ${statuses.map(s=>`<button class="semana-chip${semanaFilter===s?' active':''}" onclick="setSemanaFilter(${JSON.stringify(s)})">${s}</button>`).join('')}
+      ${statuses.map(s=>`<button class="semana-chip${semanaFilter===s?' active':''}" onclick='setSemanaFilter(${JSON.stringify(s)})'>${s}</button>`).join('')}
     </div>` : ''}
     ${items.length === 0
       ? `<p style="color:var(--muted);font-size:.85rem">${t('week.noCurrent')}</p>`
