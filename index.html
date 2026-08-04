@@ -3083,15 +3083,19 @@ function generatePPTX(pptLang, mode) {
   // ── Vista semanal (desplazada hacia abajo) ─────────────────
   const wo = cY + cH + 0.12; // ~1.02"
 
-  const cols = [
-    { title:tp('week.prevWeek'), wk:wkPrev, items:prevItems, color:C.green,  x:0.28 },
-    { title:tp('week.thisWeek'), wk:wkCur,  items:curItems,  color:C.purple, x:4.62 },
-    { title:tp('week.nextWeek'), wk:wkNext, items:nextItems, color:C.blue,   x:8.96 },
-  ];
-  const colW = 4.1;
+  const allCols = [
+    { title:tp('week.prevWeek'), wk:wkPrev, items:prevItems, color:C.green  },
+    { title:tp('week.thisWeek'), wk:wkCur,  items:curItems,  color:C.purple },
+    { title:tp('week.nextWeek'), wk:wkNext, items:nextItems, color:C.blue   },
+  ].filter(function(col) { return col.items.length > 0; });
+  const activeCols = allCols.length ? allCols : [{ title:tp('week.thisWeek'), wk:wkCur, items:curItems, color:C.purple }];
+  const nCols  = activeCols.length;
+  const margin = 0.28, colGap = 0.235;
+  const colW   = (13.33 - 2 * margin - (nCols - 1) * colGap) / nCols;
+  const cols   = activeCols.map(function(col, i) { return Object.assign({}, col, { x: margin + i * (colW + colGap) }); });
 
   // Altura de fila dinámica para que todos los proyectos entren en el slide
-  const maxItems = Math.max(prevItems.length, curItems.length, nextItems.length, 1);
+  const maxItems = Math.max.apply(null, cols.map(function(c) { return c.items.length; }).concat([1]));
   const tableStartY = wo + 0.72;
   const hdrH = 0.28;
   const rowH = Math.min(0.32, Math.max(0.17, (7.5 - tableStartY - 0.08 - hdrH) / maxItems));
@@ -3125,15 +3129,16 @@ function generatePPTX(pptLang, mode) {
 
     s.addTable([hdr, ...rows], {
       x:col.x, y:tableStartY, w:colW,
-      colW:[2.1, 0.9, 1.1],
+      colW:[colW*2.1/4.1, colW*0.9/4.1, colW*1.1/4.1],
       rowH:rowH,
       border:{ type:'solid', color:C.border, pt:0.5 },
     });
   });
 
-  [4.45, 8.79].forEach(function(x) {
-    s.addShape(pptx.ShapeType.rect, { x, y:wo+0.12, w:0.015, h:7.5-wo-0.22, fill:{ color:C.border }, line:{ color:C.border, pt:0 } });
-  });
+  for (var si = 0; si < cols.length - 1; si++) {
+    var sepX = cols[si].x + colW + colGap / 2 - 0.0075;
+    s.addShape(pptx.ShapeType.rect, { x:sepX, y:wo+0.12, w:0.015, h:7.5-wo-0.22, fill:{ color:C.border }, line:{ color:C.border, pt:0 } });
+  }
 
   const fileName = `reporte-W${getISOWeek(wkCur.mon)}.pptx`;
   if (mode === 'drive') {
