@@ -1081,6 +1081,7 @@ let historyData  = [];
 let allComments   = {};
 let commentingRow = null;
 let currentUser   = null;
+let canEdit       = false;
 const GOOGLE_CLIENT_ID = '567960351432-kmo5rtdsapmd21ih9ac95u40i5klf9ti.apps.googleusercontent.com';
 const escAttr = v => String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'&#10;');
 let chartEstado     = null;
@@ -3744,7 +3745,6 @@ const _fbConfig = {
 let _db = null;
 let _fbUser = null;
 let _fbAuthResolved = false;
-let canEdit = false;
 let _tableroUnsub = null;
 let _tableroCollapsed = localStorage.getItem('tableroCollapsed') === '1';
 let _lastTableroDocs = null;
