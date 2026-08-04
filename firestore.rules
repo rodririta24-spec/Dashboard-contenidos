@@ -23,5 +23,10 @@ service cloud.firestore {
       allow write: if request.auth != null;
       allow read: if false; // solo la Cloud Function (Admin SDK) lee
     }
+
+    // Editors whitelist — cualquier usuario autenticado puede leer su propio doc
+    match /editors/{email} {
+      allow read: if request.auth != null && request.auth.token.email == email;
+    }
   }
 }
