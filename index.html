@@ -1438,7 +1438,8 @@ function requireAuth() {
 }
 function updateApiMode() {
   const hasApi = !!getApiUrl();
-  document.getElementById('btn-new').disabled = !hasApi || !canEdit;
+  const btn = document.getElementById('btn-new');
+  if (btn) btn.disabled = !hasApi || !canEdit;
 }
 
 // ─────────────────────────────────────────────────────────────
