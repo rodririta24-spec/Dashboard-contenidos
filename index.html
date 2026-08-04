@@ -1170,6 +1170,7 @@ const LANGS = {
     'misc.mAgo':'hace {n}m','misc.hAgo':'hace {n}h',
     'misc.saving':'Guardando...','misc.deleting':'Eliminando...',
     'misc.readOnly':'Modo solo lectura — <span style="color:var(--blue);cursor:pointer" onclick="document.getElementById(\'gsi-btn\').firstElementChild&&document.getElementById(\'gsi-btn\').firstElementChild.click()">Iniciá sesión con tu cuenta de Google</span> para agregar y editar proyectos.',
+    'misc.readOnlyNoPermission':'Modo solo lectura — tu cuenta no tiene permisos de edición.',
     'misc.loadingMain':'Cargando datos de Google Sheets...','misc.retry':'Reintentar',
     'misc.hasNotes':'Tiene notas','misc.noProjects':'Sin proyectos con fechas esta semana.',
     'modal.pptLang':'Exportar reporte',
@@ -1249,6 +1250,7 @@ const LANGS = {
     'misc.mAgo':'{n}m ago','misc.hAgo':'{n}h ago',
     'misc.saving':'Saving...','misc.deleting':'Deleting...',
     'misc.readOnly':'Read-only mode — <span style="color:var(--blue);cursor:pointer" onclick="document.getElementById(\'gsi-btn\').firstElementChild&&document.getElementById(\'gsi-btn\').firstElementChild.click()">Sign in with your Google account</span> to add and edit projects.',
+    'misc.readOnlyNoPermission':'Read-only mode — your account does not have edit permissions.',
     'misc.loadingMain':'Loading data from Google Sheets...','misc.retry':'Retry',
     'misc.hasNotes':'Has notes','misc.noProjects':'No projects with dates this week.',
     'modal.pptLang':'Export report',
@@ -1328,6 +1330,7 @@ const LANGS = {
     'misc.mAgo':'{n}분 전','misc.hAgo':'{n}시간 전',
     'misc.saving':'저장 중...','misc.deleting':'삭제 중...',
     'misc.readOnly':'읽기 전용 모드 — <span style="color:var(--blue);cursor:pointer" onclick="document.getElementById(\'gsi-btn\').firstElementChild&&document.getElementById(\'gsi-btn\').firstElementChild.click()">Google 계정으로 로그인</span>하여 프로젝트를 추가/편집하세요.',
+    'misc.readOnlyNoPermission':'읽기 전용 모드 — 이 계정에는 편집 권한이 없습니다.',
     'misc.loadingMain':'Google Sheets에서 데이터 로딩 중...','misc.retry':'다시 시도',
     'misc.hasNotes':'메모 있음','misc.noProjects':'이번 주 날짜가 있는 프로젝트 없음.',
     'modal.pptLang':'보고서 내보내기',
@@ -1428,13 +1431,14 @@ function saveSettings() {
   loadData();
 }
 function requireAuth() {
-  if (currentUser) return true;
-  showToast('Necesitás iniciar sesión para hacer cambios', 'error');
+  if (canEdit) return true;
+  if (!currentUser) showToast('Necesitás iniciar sesión para hacer cambios', 'error');
+  else showToast('Tu cuenta no tiene permisos de edición', 'error');
   return false;
 }
 function updateApiMode() {
   const hasApi = !!getApiUrl();
-  document.getElementById('btn-new').disabled = !hasApi || !currentUser;
+  document.getElementById('btn-new').disabled = !hasApi || !canEdit;
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -1569,14 +1573,14 @@ function render(data) {
   filteredData = [...allData];
   detectLinkColumns(allData);
 
-  const hasApi = !!getApiUrl() && !!currentUser;
+  const hasApi = !!getApiUrl() && canEdit;
 
   document.getElementById('main').innerHTML = `
     <!-- sec: KPIs -->
     <div class="nav-section active" id="sec-kpis">
       ${!hasApi ? `<div class="banner">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        ${t('misc.readOnly')}
+        ${currentUser && !canEdit ? t('misc.readOnlyNoPermission') : t('misc.readOnly')}
       </div>` : ''}
       <div class="kpi-grid" id="kpi-grid"></div>
     </div>
@@ -1934,7 +1938,7 @@ function updateAuthUI() {
   if (signoutItem) signoutItem.style.display = show ? '' : 'none';
   if (signoutSep)  signoutSep.style.display  = show ? '' : 'none';
   updateApiMode();
-  document.body.classList.toggle('guest', !currentUser);
+  document.body.classList.toggle('guest', !canEdit);
 }
 
 function updateCommentLock() {
@@ -3739,6 +3743,7 @@ const _fbConfig = {
 let _db = null;
 let _fbUser = null;
 let _fbAuthResolved = false;
+let canEdit = false;
 let _tableroUnsub = null;
 let _tableroCollapsed = localStorage.getItem('tableroCollapsed') === '1';
 let _lastTableroDocs = null;
@@ -3751,7 +3756,21 @@ let _lastTableroDocs = null;
     firebase.auth().onAuthStateChanged(function(user) {
       _fbUser = user;
       _fbAuthResolved = true;
-      _updateTableroUI();
+      if (user && user.email && _db) {
+        _db.collection('editors').doc(user.email).get().then(function(doc) {
+          canEdit = doc.exists;
+          updateAuthUI();
+          _updateTableroUI();
+        }).catch(function() {
+          canEdit = false;
+          updateAuthUI();
+          _updateTableroUI();
+        });
+      } else {
+        canEdit = false;
+        updateAuthUI();
+        _updateTableroUI();
+      }
     });
     _subscribeTablero();
     _applyTableroCollapse();
