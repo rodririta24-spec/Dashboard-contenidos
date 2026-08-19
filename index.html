@@ -1084,10 +1084,17 @@ let currentUser   = null;
 let canEdit       = false;
 const GOOGLE_CLIENT_ID = '567960351432-kmo5rtdsapmd21ih9ac95u40i5klf9ti.apps.googleusercontent.com';
 const escAttr = v => String(v||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'&#10;');
-let chartEstado     = null;
-let chartCliente    = null;
-let chartHost       = null;
-let chartSolicitante = null;
+let chartEstado        = null;
+let chartCliente       = null;
+let chartHost          = null;
+let chartSolicitante   = null;
+let chartMonetizacion  = null;
+
+const NO_MONETIZADOS = ['social','producción','produccion','members','cheil'];
+function isMonetizado(solicitante) {
+  const s = (solicitante || '').toLowerCase();
+  return !NO_MONETIZADOS.some(n => s.includes(n));
+}
 let editingRow   = null;
 let colGuion      = 'Guión';
 let colMateriales = 'Materiales';
@@ -1118,14 +1125,14 @@ const LANGS = {
     'week.noPrev':'Sin proyectos con fechas la semana anterior.',
     'week.allDelivered':'Todo entregado.',
     'projects.title':'Todos los proyectos',
-    'col.project':'Proyecto','col.client':'Cliente','col.requester':'Solicitante',
+    'col.project':'Proyecto','col.client':'Cliente','col.requester':'Solicitante','col.monetizado':'Monetizado',
     'col.host':'Host','col.start':'Inicio','col.deadline':'Deadline',
     'col.daysLeft':'Días restantes','col.status':'Estado',
     'filter.allStatuses':'Todos los estados','filter.allClients':'Todos los clientes',
     'filter.allHosts':'Todos los hosts','filter.allReq':'Todos los solicitantes',
     'filter.search':'Buscar proyecto...','table.noResults':'Sin resultados para los filtros aplicados.',
     'chart.status':'Estado de proyectos','chart.client':'Proyectos por cliente',
-    'chart.host':'Proyectos por host','chart.requester':'Proyectos por solicitante',
+    'chart.host':'Proyectos por host','chart.requester':'Proyectos por solicitante','chart.monetizacion':'Monetización',
     'history.title':'Historial de cambios','history.subtitle':'Últimos 50 cambios',
     'history.empty':'Sin cambios registrados.',
     'history.created':'creado','history.deleted':'eliminado',
@@ -1198,14 +1205,14 @@ const LANGS = {
     'week.noPrev':'No projects with dates last week.',
     'week.allDelivered':'All delivered.',
     'projects.title':'All projects',
-    'col.project':'Project','col.client':'Client','col.requester':'Requester',
+    'col.project':'Project','col.client':'Client','col.requester':'Requester','col.monetizado':'Monetized',
     'col.host':'Host','col.start':'Start','col.deadline':'Deadline',
     'col.daysLeft':'Days left','col.status':'Status',
     'filter.allStatuses':'All statuses','filter.allClients':'All clients',
     'filter.allHosts':'All hosts','filter.allReq':'All requesters',
     'filter.search':'Search project...','table.noResults':'No results for the applied filters.',
     'chart.status':'Project status','chart.client':'Projects by client',
-    'chart.host':'Projects by host','chart.requester':'Projects by requester',
+    'chart.host':'Projects by host','chart.requester':'Projects by requester','chart.monetizacion':'Monetization',
     'history.title':'Change history','history.subtitle':'Last 50 changes',
     'history.empty':'No changes recorded yet.',
     'history.created':'created','history.deleted':'deleted',
@@ -1278,14 +1285,14 @@ const LANGS = {
     'week.noPrev':'지난 주 날짜가 있는 프로젝트 없음.',
     'week.allDelivered':'모두 납품 완료.',
     'projects.title':'전체 프로젝트',
-    'col.project':'프로젝트','col.client':'클라이언트','col.requester':'요청자',
+    'col.project':'프로젝트','col.client':'클라이언트','col.requester':'요청자','col.monetizado':'수익화',
     'col.host':'Host','col.start':'시작','col.deadline':'Deadline',
     'col.daysLeft':'남은 일수','col.status':'상태',
     'filter.allStatuses':'모든 상태','filter.allClients':'모든 클라이언트',
     'filter.allHosts':'모든 호스트','filter.allReq':'모든 요청자',
     'filter.search':'프로젝트 검색...','table.noResults':'적용된 필터에 결과 없음.',
     'chart.status':'프로젝트 현황','chart.client':'클라이언트별 프로젝트',
-    'chart.host':'호스트별 프로젝트','chart.requester':'요청자별 프로젝트',
+    'chart.host':'호스트별 프로젝트','chart.requester':'요청자별 프로젝트','chart.monetizacion':'수익화',
     'history.title':'변경 이력','history.subtitle':'최근 50개 변경',
     'history.empty':'변경 사항 없음.',
     'history.created':'생성됨','history.deleted':'삭제됨',
@@ -1655,6 +1662,12 @@ function render(data) {
       <div class="card">
         <div class="card-title"><div class="dot" style="background:var(--purple)"></div>${t('chart.requester')}</div>
         <div class="chart-wrap"><canvas id="chart-solicitante"></canvas></div>
+      </div>
+    </div>
+    <div class="row2">
+      <div class="card">
+        <div class="card-title"><div class="dot" style="background:var(--green)"></div>${t('chart.monetizacion')}</div>
+        <div class="chart-wrap"><canvas id="chart-monetizacion"></canvas></div>
       </div>
     </div>
     </div><!-- /sec-graficos -->
@@ -2476,6 +2489,25 @@ function renderCharts() {
     data: { labels: Object.keys(solCounts), datasets: [{ label: 'Projects', data: Object.values(solCounts), backgroundColor: Object.keys(solCounts).map((_,i)=>solColors[i%solColors.length]), borderRadius: 6, borderWidth: 0 }] },
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true } } }
   });
+
+  const monetCount    = allData.filter(r => isMonetizado(r['Solicitante'])).length;
+  const noMonetCount  = allData.length - monetCount;
+  if (chartMonetizacion) chartMonetizacion.destroy();
+  chartMonetizacion = new Chart(document.getElementById('chart-monetizacion'), {
+    type: 'bar',
+    data: {
+      labels: ['Monetizado', 'No monetizado'],
+      datasets: [{ data: [monetCount, noMonetCount], backgroundColor: ['#10b981', '#f97316'], borderRadius: 8, borderWidth: 0 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} proyectos` } } },
+      scales: {
+        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 13, weight: '600' } } },
+        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
+      }
+    }
+  });
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -2561,6 +2593,7 @@ function renderTable() {
         <th class="${thClass('Titulo')}"         onclick="setSort('Titulo')">${t('col.project')}</th>
         <th class="${thClass('Cliente')}"     onclick="setSort('Cliente')">${t('col.client')}</th>
         <th class="${thClass('Solicitante')}" onclick="setSort('Solicitante')">${t('col.requester')}</th>
+        <th style="white-space:nowrap;font-size:.68rem;color:var(--muted);font-weight:500">${t('col.monetizado')}</th>
         <th class="${thClass('Host')}"        onclick="setSort('Host')">${t('col.host')}</th>
         <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">${t('col.start')}</th>
         <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">${t('col.deadline')}</th>
@@ -2579,12 +2612,13 @@ function renderTable() {
       </tr></thead>
       <tbody>
         ${pageData.length === 0
-          ? `<tr class="empty-row"><td colspan="${hasApi?13:12}">${t('table.noResults')}</td></tr>`
+          ? `<tr class="empty-row"><td colspan="${hasApi?14:13}">${t('table.noResults')}</td></tr>`
           : pageData.map((r,i)=>`<tr class="${rowUrgency(r)}" data-note="${escAttr(r['Notas']||'')}" data-ctx-row="${r._row}">
               <td style="color:var(--muted);font-size:.75rem">${start+i+1}</td>
               <td class="titulo-cell">${r['Titulo']}${r['Notas']?`<span class="note-dot" title="Has notes"><svg width="8" height="8" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10"/></svg></span>`:''}</td>
               <td style="color:var(--muted)"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Cliente','${esc(r['Cliente'])}','select')">${r['Cliente']||'—'}</span></td>
               <td style="color:var(--muted)"><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Solicitante','${esc(r['Solicitante'])}','select')">${r['Solicitante']||'—'}</span></td>
+              <td style="text-align:center"><span style="font-size:.72rem;font-weight:600;color:${isMonetizado(r['Solicitante'])?'#10b981':'#f97316'}">${isMonetizado(r['Solicitante'])?'Sí':'No'}</span></td>
               <td><span class="editable-cell" onclick="showInlineEdit(event,${r._row},'Host','${esc(r['Host'])}','select')">${r['Host']||'—'}</span></td>
               <td><span class="dt editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha de inicio','${r['Fecha de inicio']||''}','date')">${fmtDate(r['Fecha de inicio'])||'—'}</span></td>
               <td><span class="dt ${dtClassRow(r['Fecha Limite'],r['Estado'])} editable-cell" onclick="showInlineEdit(event,${r._row},'Fecha Limite','${r['Fecha Limite']||''}','date')">${fmtDate(r['Fecha Limite'])||'—'}</span></td>
