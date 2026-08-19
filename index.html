@@ -1664,11 +1664,9 @@ function render(data) {
         <div class="chart-wrap"><canvas id="chart-solicitante"></canvas></div>
       </div>
     </div>
-    <div class="row2">
-      <div class="card">
-        <div class="card-title"><div class="dot" style="background:var(--green)"></div>${t('chart.monetizacion')}</div>
-        <div class="chart-wrap"><canvas id="chart-monetizacion"></canvas></div>
-      </div>
+    <div class="card">
+      <div class="card-title"><div class="dot" style="background:var(--green)"></div>${t('chart.monetizacion')}</div>
+      <div class="chart-wrap"><canvas id="chart-monetizacion"></canvas></div>
     </div>
     </div><!-- /sec-graficos -->
 
@@ -2500,11 +2498,12 @@ function renderCharts() {
       datasets: [{ data: [monetCount, noMonetCount], backgroundColor: ['#10b981', '#f97316'], borderRadius: 8, borderWidth: 0 }]
     },
     options: {
+      indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} proyectos` } } },
       scales: {
-        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 13, weight: '600' } } },
-        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
+        y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 13, weight: '600' } } },
+        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
       }
     }
   });
