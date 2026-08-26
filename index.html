@@ -1129,7 +1129,7 @@ const LANGS = {
     'col.host':'Host','col.start':'Inicio','col.deadline':'Deadline',
     'col.daysLeft':'Días restantes','col.status':'Estado',
     'filter.allStatuses':'Todos los estados','filter.allClients':'Todos los clientes',
-    'filter.allHosts':'Todos los hosts','filter.allReq':'Todos los solicitantes',
+    'filter.allHosts':'Todos los hosts','filter.allReq':'Todos los solicitantes','filter.allMonet':'Todos (monetización)',
     'filter.search':'Buscar proyecto...','table.noResults':'Sin resultados para los filtros aplicados.',
     'chart.status':'Estado de proyectos','chart.client':'Proyectos por cliente',
     'chart.host':'Proyectos por host','chart.requester':'Proyectos por solicitante','chart.monetizacion':'Monetización',
@@ -1209,7 +1209,7 @@ const LANGS = {
     'col.host':'Host','col.start':'Start','col.deadline':'Deadline',
     'col.daysLeft':'Days left','col.status':'Status',
     'filter.allStatuses':'All statuses','filter.allClients':'All clients',
-    'filter.allHosts':'All hosts','filter.allReq':'All requesters',
+    'filter.allHosts':'All hosts','filter.allReq':'All requesters','filter.allMonet':'All (monetization)',
     'filter.search':'Search project...','table.noResults':'No results for the applied filters.',
     'chart.status':'Project status','chart.client':'Projects by client',
     'chart.host':'Projects by host','chart.requester':'Projects by requester','chart.monetizacion':'Monetization',
@@ -1289,7 +1289,7 @@ const LANGS = {
     'col.host':'Host','col.start':'시작','col.deadline':'Deadline',
     'col.daysLeft':'남은 일수','col.status':'상태',
     'filter.allStatuses':'모든 상태','filter.allClients':'모든 클라이언트',
-    'filter.allHosts':'모든 호스트','filter.allReq':'모든 요청자',
+    'filter.allHosts':'모든 호스트','filter.allReq':'모든 요청자','filter.allMonet':'전체 (수익화)',
     'filter.search':'프로젝트 검색...','table.noResults':'적용된 필터에 결과 없음.',
     'chart.status':'프로젝트 현황','chart.client':'클라이언트별 프로젝트',
     'chart.host':'호스트별 프로젝트','chart.requester':'요청자별 프로젝트','chart.monetizacion':'수익화',
@@ -1705,6 +1705,11 @@ function render(data) {
         <select class="filter-sel" id="f-solicitante" onchange="applyFilters()">
           <option value="">${t('filter.allReq')}</option>
           ${uniqueSorted(allData,'Solicitante').map(v=>`<option>${v}</option>`).join('')}
+        </select>
+        <select class="filter-sel" id="f-monetizado" onchange="applyFilters()">
+          <option value="">${t('filter.allMonet')}</option>
+          <option value="si">${t('col.monetizado')}: Sí</option>
+          <option value="no">${t('col.monetizado')}: No</option>
         </select>
         <input class="search-inp" id="search" type="text" placeholder="${t('filter.search')}" oninput="applyFilters()" />
       </div>
@@ -2517,12 +2522,15 @@ function applyFilters() {
   const cliente     = document.getElementById('f-cliente')?.value     || '';
   const host        = document.getElementById('f-host')?.value        || '';
   const solicitante = document.getElementById('f-solicitante')?.value || '';
+  const monetizado  = document.getElementById('f-monetizado')?.value  || '';
   const search  = (document.getElementById('search')?.value   || '').toLowerCase();
   filteredData = allData.filter(r => {
     if (estado      && r['Estado']      !== estado)      return false;
     if (cliente     && r['Cliente']     !== cliente)     return false;
     if (host        && r['Host']        !== host)        return false;
     if (solicitante && r['Solicitante'] !== solicitante) return false;
+    if (monetizado === 'si' && !isMonetizado(r['Solicitante'])) return false;
+    if (monetizado === 'no' &&  isMonetizado(r['Solicitante'])) return false;
     if (search  && !r['Titulo'].toLowerCase().includes(search)) return false;
     return true;
   });
