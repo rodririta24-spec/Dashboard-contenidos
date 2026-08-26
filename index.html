@@ -1797,6 +1797,8 @@ function render(data) {
   _updateTableroUI();
   switchTab(activeTab);
   _setKpiHeight();
+  const _evb = document.getElementById('btn-edit-valor');
+  if (_evb) _evb.style.display = canEdit ? '' : 'none';
 }
 
 // ─────────────────────────────────────────────────────────────
