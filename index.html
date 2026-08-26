@@ -2650,7 +2650,7 @@ async function saveValorProyecto() {
     document.getElementById('edit-valor-panel').style.display = 'none';
     const btn = document.getElementById('btn-edit-valor');
     if (btn) btn.textContent = '✏️ ' + (val ? formatRevenue(val) + ' ' + t('chart.porProy') : t('chart.configValor'));
-    renderGraficos();
+    if (document.getElementById('chart-monetizacion')) renderGraficos();
     showToast(t('toast.valorSaved'));
   } catch(e) {
     console.error('Error saving revenue config:', e);
