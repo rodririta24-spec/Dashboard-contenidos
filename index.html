@@ -2548,6 +2548,11 @@ function getSorted() {
   if (!sortKey) return filteredData;
   const isDate = sortKey === 'Fecha de inicio' || sortKey === 'Fecha Limite';
   return [...filteredData].sort((a, b) => {
+    if (sortKey === '_monetizado') {
+      const ma = isMonetizado(a['Solicitante']) ? 1 : 0;
+      const mb = isMonetizado(b['Solicitante']) ? 1 : 0;
+      return (ma - mb) * sortDir;
+    }
     if (isDate) {
       const da = parseDate(a[sortKey]) || new Date(sortDir > 0 ? 9999 : -1, 0, 1);
       const db = parseDate(b[sortKey]) || new Date(sortDir > 0 ? 9999 : -1, 0, 1);
@@ -2592,7 +2597,7 @@ function renderTable() {
         <th class="${thClass('Titulo')}"         onclick="setSort('Titulo')">${t('col.project')}</th>
         <th class="${thClass('Cliente')}"     onclick="setSort('Cliente')">${t('col.client')}</th>
         <th class="${thClass('Solicitante')}" onclick="setSort('Solicitante')">${t('col.requester')}</th>
-        <th style="white-space:nowrap;font-size:.68rem;color:var(--muted);font-weight:500">${t('col.monetizado')}</th>
+        <th class="${thClass('_monetizado')}" onclick="setSort('_monetizado')" style="white-space:nowrap">${t('col.monetizado')}</th>
         <th class="${thClass('Host')}"        onclick="setSort('Host')">${t('col.host')}</th>
         <th class="${thClass('Fecha de inicio')}" onclick="setSort('Fecha de inicio')">${t('col.start')}</th>
         <th class="${thClass('Fecha Limite')}"    onclick="setSort('Fecha Limite')">${t('col.deadline')}</th>
