@@ -1091,6 +1091,8 @@ let chartSolicitante   = null;
 let chartMonetizacion  = null;
 let valorPorProyecto   = 0;
 let tasaDeCambio       = 1000;
+let tipoTasa           = 'blue';
+let dolarRates         = null;
 
 const NO_MONETIZADOS = ['social','producción','produccion','members','cheil'];
 function isMonetizado(solicitante) {
@@ -1694,9 +1696,25 @@ function render(data) {
             <label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:.25rem">${t('chart.arsLabel')}</label>
             <input id="input-valor" type="number" min="0" step="1000" value="${valorPorProyecto}" style="width:100%;padding:.3rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
           </div>
-          <div style="flex:1;min-width:130px">
+          <div style="flex:1;min-width:160px">
             <label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:.25rem">${t('chart.usdRate')}</label>
-            <input id="input-tasa" type="number" min="1" step="100" value="${tasaDeCambio}" style="width:100%;padding:.3rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
+            <div style="display:flex;flex-direction:column;gap:.3rem;margin-top:.15rem">
+              <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;color:var(--text)">
+                <input type="radio" name="tipo-tasa" value="blue" onchange="onTasaChange('blue')" ${tipoTasa==='blue'?'checked':''}>
+                <span id="label-blue">Blue${dolarRates?' ($'+dolarRates.blue.toLocaleString('es-AR')+')':' (cargando…)'}</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;color:var(--text)">
+                <input type="radio" name="tipo-tasa" value="oficial" onchange="onTasaChange('oficial')" ${tipoTasa==='oficial'?'checked':''}>
+                <span id="label-oficial">Oficial${dolarRates?' ($'+dolarRates.oficial.toLocaleString('es-AR')+')':' (cargando…)'}</span>
+              </label>
+              <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;color:var(--text)">
+                <input type="radio" name="tipo-tasa" value="manual" onchange="onTasaChange('manual')" ${tipoTasa==='manual'?'checked':''}>
+                <span>Manual</span>
+              </label>
+              <div id="manual-tasa-div" style="display:${tipoTasa==='manual'?'block':'none'}">
+                <input id="input-tasa" type="number" min="1" step="100" value="${tasaDeCambio}" style="width:100%;padding:.3rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
+              </div>
+            </div>
           </div>
           <div style="display:flex;gap:.4rem">
             <button onclick="saveValorProyecto()" style="padding:.3rem .75rem;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">${t('btn.save')}</button>
@@ -2569,22 +2587,62 @@ function renderCharts() {
   });
 }
 
+async function fetchDolarRates() {
+  const cached = JSON.parse(localStorage.getItem('dolar_rates') || 'null');
+  if (cached && cached.data && Date.now() - cached.ts < 3600000) {
+    dolarRates = cached.data;
+    _applyAutoTasa();
+    return;
+  }
+  try {
+    const res  = await fetch('https://api.bluelytics.com.ar/v2/latest');
+    const data = await res.json();
+    dolarRates = { blue: Math.round(data.blue.value_sell), oficial: Math.round(data.oficial.value_sell) };
+    localStorage.setItem('dolar_rates', JSON.stringify({ data: dolarRates, ts: Date.now() }));
+    _applyAutoTasa();
+  } catch(e) { console.warn('Cotización no disponible:', e); }
+}
+
+function _applyAutoTasa() {
+  if (tipoTasa === 'blue'    && dolarRates) tasaDeCambio = dolarRates.blue;
+  if (tipoTasa === 'oficial' && dolarRates) tasaDeCambio = dolarRates.oficial;
+  if (allData.length && document.getElementById('chart-monetizacion')) renderGraficos();
+}
+
+function onTasaChange(val) {
+  document.getElementById('manual-tasa-div').style.display = val === 'manual' ? 'block' : 'none';
+}
+
 function openEditValor() {
   const panel = document.getElementById('edit-valor-panel');
   if (!panel) return;
-  document.getElementById('input-valor').value  = valorPorProyecto;
-  document.getElementById('input-tasa').value   = tasaDeCambio;
+  document.getElementById('input-valor').value = valorPorProyecto;
+  if (tipoTasa === 'manual') {
+    const inp = document.getElementById('input-tasa');
+    if (inp) inp.value = tasaDeCambio;
+  }
+  if (dolarRates) {
+    const lb = document.getElementById('label-blue');
+    const lo = document.getElementById('label-oficial');
+    if (lb) lb.textContent = `Blue ($${dolarRates.blue.toLocaleString('es-AR')})`;
+    if (lo) lo.textContent = `Oficial ($${dolarRates.oficial.toLocaleString('es-AR')})`;
+  }
   panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
 }
 
 async function saveValorProyecto() {
   if (!_db) return;
-  const val  = parseInt(document.getElementById('input-valor')?.value  || '0',    10) || 0;
-  const tasa = parseInt(document.getElementById('input-tasa')?.value   || '1000', 10) || 1000;
+  const val  = parseInt(document.getElementById('input-valor')?.value || '0', 10) || 0;
+  const tipo = document.querySelector('input[name="tipo-tasa"]:checked')?.value || 'blue';
+  let tasa = tasaDeCambio;
+  if (tipo === 'blue'    && dolarRates) tasa = dolarRates.blue;
+  if (tipo === 'oficial' && dolarRates) tasa = dolarRates.oficial;
+  if (tipo === 'manual') tasa = parseInt(document.getElementById('input-tasa')?.value || '1000', 10) || 1000;
   try {
-    await _db.collection('configuracion').doc('revenue').set({ valorPorProyecto: val, tasaDeCambio: tasa });
+    await _db.collection('configuracion').doc('revenue').set({ valorPorProyecto: val, tasaDeCambio: tasa, tipoTasa: tipo });
     valorPorProyecto = val;
     tasaDeCambio     = tasa;
+    tipoTasa         = tipo;
     document.getElementById('edit-valor-panel').style.display = 'none';
     const btn = document.getElementById('btn-edit-valor');
     if (btn) btn.textContent = '✏️ ' + (val ? formatRevenue(val) + ' ' + t('chart.porProy') : t('chart.configValor'));
@@ -3886,9 +3944,11 @@ let _lastTableroDocs = null;
         const d = doc.data();
         if (d.valorPorProyecto != null) valorPorProyecto = d.valorPorProyecto;
         if (d.tasaDeCambio     != null) tasaDeCambio     = d.tasaDeCambio;
-        if (allData.length && document.getElementById('chart-monetizacion')) renderGraficos();
+        if (d.tipoTasa         != null) tipoTasa         = d.tipoTasa;
       }
-    }).catch(function(){});
+      fetchDolarRates();
+      if (allData.length && document.getElementById('chart-monetizacion')) renderGraficos();
+    }).catch(function() { fetchDolarRates(); });
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
     firebase.auth().onAuthStateChanged(function(user) {
       _fbUser = user;
