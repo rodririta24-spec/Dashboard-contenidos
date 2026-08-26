@@ -1089,6 +1089,8 @@ let chartCliente       = null;
 let chartHost          = null;
 let chartSolicitante   = null;
 let chartMonetizacion  = null;
+let valorPorProyecto   = 0;
+let tasaDeCambio       = 1000;
 
 const NO_MONETIZADOS = ['social','producción','produccion','members','cheil'];
 function isMonetizado(solicitante) {
@@ -1133,6 +1135,9 @@ const LANGS = {
     'filter.search':'Buscar proyecto...','table.noResults':'Sin resultados para los filtros aplicados.',
     'chart.status':'Estado de proyectos','chart.client':'Proyectos por cliente',
     'chart.host':'Proyectos por host','chart.requester':'Proyectos por solicitante','chart.monetizacion':'Monetización',
+    'chart.ingresos':'Ingresos generados','chart.potencial':'Potencial no realizado',
+    'chart.configValor':'Configurar valor','chart.arsLabel':'Valor por proyecto (ARS)','chart.usdRate':'Tasa ARS / USD','chart.porProy':'/ proyecto',
+    'toast.valorSaved':'Valor guardado',
     'history.title':'Historial de cambios','history.subtitle':'Últimos 50 cambios',
     'history.empty':'Sin cambios registrados.',
     'history.created':'creado','history.deleted':'eliminado',
@@ -1213,6 +1218,9 @@ const LANGS = {
     'filter.search':'Search project...','table.noResults':'No results for the applied filters.',
     'chart.status':'Project status','chart.client':'Projects by client',
     'chart.host':'Projects by host','chart.requester':'Projects by requester','chart.monetizacion':'Monetization',
+    'chart.ingresos':'Revenue generated','chart.potencial':'Unrealized potential',
+    'chart.configValor':'Set value','chart.arsLabel':'Value per project (ARS)','chart.usdRate':'ARS / USD rate','chart.porProy':'/ project',
+    'toast.valorSaved':'Value saved',
     'history.title':'Change history','history.subtitle':'Last 50 changes',
     'history.empty':'No changes recorded yet.',
     'history.created':'created','history.deleted':'deleted',
@@ -1293,6 +1301,9 @@ const LANGS = {
     'filter.search':'프로젝트 검색...','table.noResults':'적용된 필터에 결과 없음.',
     'chart.status':'프로젝트 현황','chart.client':'클라이언트별 프로젝트',
     'chart.host':'호스트별 프로젝트','chart.requester':'요청자별 프로젝트','chart.monetizacion':'수익화',
+    'chart.ingresos':'창출된 수익','chart.potencial':'미실현 잠재력',
+    'chart.configValor':'값 설정','chart.arsLabel':'프로젝트당 가치 (ARS)','chart.usdRate':'ARS / USD 환율','chart.porProy':'/ 프로젝트',
+    'toast.valorSaved':'값 저장됨',
     'history.title':'변경 이력','history.subtitle':'최근 50개 변경',
     'history.empty':'변경 사항 없음.',
     'history.created':'생성됨','history.deleted':'삭제됨',
@@ -1356,6 +1367,14 @@ function t(key, vars) {
   if (str === undefined) str = LANGS.es[key] || key;
   if (vars) for (const [k, v] of Object.entries(vars)) str = str.replace(new RegExp('\\{'+k+'\\}','g'), String(v));
   return str;
+}
+
+function formatRevenue(arsAmount) {
+  if (currentLang === 'es') {
+    return '$' + Math.round(arsAmount).toLocaleString('es-AR');
+  }
+  const usd = Math.round(arsAmount / (tasaDeCambio || 1));
+  return 'USD ' + usd.toLocaleString('en-US');
 }
 
 function nP(n) {
@@ -1664,8 +1683,27 @@ function render(data) {
         <div class="chart-wrap"><canvas id="chart-solicitante"></canvas></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-title"><div class="dot" style="background:var(--green)"></div>${t('chart.monetizacion')}</div>
+    <div class="card" id="card-monetizacion">
+      <div class="card-title">
+        <div class="dot" style="background:var(--green)"></div>${t('chart.monetizacion')}
+        ${canEdit ? `<button id="btn-edit-valor" onclick="openEditValor()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.18rem .5rem;font-size:.7rem;cursor:pointer;line-height:1.5">✏️ ${valorPorProyecto ? formatRevenue(valorPorProyecto)+' '+t('chart.porProy') : t('chart.configValor')}</button>` : ''}
+      </div>
+      <div id="edit-valor-panel" style="display:none;background:var(--surface2,#1e293b);border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem">
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
+          <div style="flex:1;min-width:130px">
+            <label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:.25rem">${t('chart.arsLabel')}</label>
+            <input id="input-valor" type="number" min="0" step="1000" value="${valorPorProyecto}" style="width:100%;padding:.3rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
+          </div>
+          <div style="flex:1;min-width:130px">
+            <label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:.25rem">${t('chart.usdRate')}</label>
+            <input id="input-tasa" type="number" min="1" step="100" value="${tasaDeCambio}" style="width:100%;padding:.3rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
+          </div>
+          <div style="display:flex;gap:.4rem">
+            <button onclick="saveValorProyecto()" style="padding:.3rem .75rem;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:.8rem">${t('btn.save')}</button>
+            <button onclick="document.getElementById('edit-valor-panel').style.display='none'" style="padding:.3rem .75rem;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;cursor:pointer;font-size:.8rem">${t('btn.cancel')}</button>
+          </div>
+        </div>
+      </div>
       <div class="chart-wrap"><canvas id="chart-monetizacion"></canvas></div>
     </div>
     </div><!-- /sec-graficos -->
@@ -2493,25 +2531,69 @@ function renderCharts() {
     options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8' } }, y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true } } }
   });
 
-  const monetCount    = allData.filter(r => isMonetizado(r['Solicitante'])).length;
-  const noMonetCount  = allData.length - monetCount;
+  const monetCount     = allData.filter(r => isMonetizado(r['Solicitante'])).length;
+  const noMonetCount   = allData.length - monetCount;
+  const monetRevenue   = monetCount   * valorPorProyecto;
+  const noMonetRevenue = noMonetCount * valorPorProyecto;
+  const useRevenue     = valorPorProyecto > 0;
   if (chartMonetizacion) chartMonetizacion.destroy();
   chartMonetizacion = new Chart(document.getElementById('chart-monetizacion'), {
     type: 'bar',
     data: {
-      labels: ['Monetizado', 'No monetizado'],
-      datasets: [{ data: [monetCount, noMonetCount], backgroundColor: ['#10b981', '#f97316'], borderRadius: 8, borderWidth: 0 }]
+      labels: [t('chart.ingresos'), t('chart.potencial')],
+      datasets: [{ data: useRevenue ? [monetRevenue, noMonetRevenue] : [monetCount, noMonetCount], backgroundColor: ['#10b981', '#f97316'], borderRadius: 8, borderWidth: 0 }]
     },
     options: {
       indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw} proyectos` } } },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => {
+          const cnt = ctx.dataIndex === 0 ? monetCount : noMonetCount;
+          return useRevenue ? ` ${formatRevenue(ctx.raw)}  (${nP(cnt)})` : ` ${nP(ctx.raw)}`;
+        }}}
+      },
       scales: {
         y: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', font: { size: 13, weight: '600' } } },
-        x: { grid: { color: '#334155' }, ticks: { color: '#94a3b8', stepSize: 1 }, beginAtZero: true }
+        x: {
+          grid: { color: '#334155' },
+          ticks: {
+            color: '#94a3b8',
+            stepSize: useRevenue ? Math.max(Math.round((Math.max(monetRevenue, noMonetRevenue) || 1) / 4), 1) : 1,
+            callback: val => useRevenue ? formatRevenue(val) : val
+          },
+          beginAtZero: true
+        }
       }
     }
   });
+}
+
+function openEditValor() {
+  const panel = document.getElementById('edit-valor-panel');
+  if (!panel) return;
+  document.getElementById('input-valor').value  = valorPorProyecto;
+  document.getElementById('input-tasa').value   = tasaDeCambio;
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+
+async function saveValorProyecto() {
+  if (!_db) return;
+  const val  = parseInt(document.getElementById('input-valor')?.value  || '0',    10) || 0;
+  const tasa = parseInt(document.getElementById('input-tasa')?.value   || '1000', 10) || 1000;
+  try {
+    await _db.collection('configuracion').doc('revenue').set({ valorPorProyecto: val, tasaDeCambio: tasa });
+    valorPorProyecto = val;
+    tasaDeCambio     = tasa;
+    document.getElementById('edit-valor-panel').style.display = 'none';
+    const btn = document.getElementById('btn-edit-valor');
+    if (btn) btn.textContent = '✏️ ' + (val ? formatRevenue(val) + ' ' + t('chart.porProy') : t('chart.configValor'));
+    renderGraficos();
+    showToast(t('toast.valorSaved'));
+  } catch(e) {
+    console.error('Error saving revenue config:', e);
+    showToast('Error al guardar');
+  }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -3799,6 +3881,14 @@ let _lastTableroDocs = null;
   try {
     firebase.initializeApp(_fbConfig);
     _db = firebase.firestore();
+    _db.collection('configuracion').doc('revenue').get().then(function(doc) {
+      if (doc.exists) {
+        const d = doc.data();
+        if (d.valorPorProyecto != null) valorPorProyecto = d.valorPorProyecto;
+        if (d.tasaDeCambio     != null) tasaDeCambio     = d.tasaDeCambio;
+        if (allData.length && document.getElementById('chart-monetizacion')) renderGraficos();
+      }
+    }).catch(function(){});
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
     firebase.auth().onAuthStateChanged(function(user) {
       _fbUser = user;
