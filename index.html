@@ -1688,7 +1688,7 @@ function render(data) {
     <div class="card" id="card-monetizacion">
       <div class="card-title">
         <div class="dot" style="background:var(--green)"></div>${t('chart.monetizacion')}
-        ${canEdit ? `<button id="btn-edit-valor" onclick="openEditValor()" style="margin-left:auto;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.18rem .5rem;font-size:.7rem;cursor:pointer;line-height:1.5">✏️ ${valorPorProyecto ? formatRevenue(valorPorProyecto)+' '+t('chart.porProy') : t('chart.configValor')}</button>` : ''}
+        <button id="btn-edit-valor" onclick="openEditValor()" style="margin-left:auto;display:none;background:none;border:1px solid var(--border);color:var(--muted);border-radius:6px;padding:.18rem .5rem;font-size:.7rem;cursor:pointer;line-height:1.5">✏️ ${valorPorProyecto ? formatRevenue(valorPorProyecto)+' '+t('chart.porProy') : t('chart.configValor')}</button>
       </div>
       <div id="edit-valor-panel" style="display:none;background:var(--surface2,#1e293b);border-radius:8px;padding:.75rem 1rem;margin-bottom:.75rem">
         <div style="display:flex;gap:.75rem;flex-wrap:wrap;align-items:flex-end">
@@ -2013,6 +2013,8 @@ function updateAuthUI() {
   if (signoutSep)  signoutSep.style.display  = show ? '' : 'none';
   updateApiMode();
   document.body.classList.toggle('guest', !canEdit);
+  const editValorBtn = document.getElementById('btn-edit-valor');
+  if (editValorBtn) editValorBtn.style.display = canEdit ? '' : 'none';
 }
 
 function updateCommentLock() {
