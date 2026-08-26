@@ -1697,7 +1697,10 @@ function render(data) {
             <input id="input-valor" type="number" min="0" step="1000" value="${valorPorProyecto}" style="width:100%;padding:.3rem .5rem;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
           </div>
           <div style="flex:1;min-width:160px">
-            <label style="font-size:.7rem;color:var(--muted);display:block;margin-bottom:.25rem">${t('chart.usdRate')}</label>
+            <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.25rem">
+              <label style="font-size:.7rem;color:var(--muted)">${t('chart.usdRate')}</label>
+              <button id="btn-refresh-dolar" onclick="refreshDolarRates()" title="Actualizar cotización" style="background:none;border:none;cursor:pointer;font-size:.8rem;padding:0;line-height:1;color:var(--muted)">🔄</button>
+            </div>
             <div style="display:flex;flex-direction:column;gap:.3rem;margin-top:.15rem">
               <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.82rem;color:var(--text)">
                 <input type="radio" name="tipo-tasa" value="blue" onchange="onTasaChange('blue')" ${tipoTasa==='blue'?'checked':''}>
@@ -2605,6 +2608,18 @@ async function fetchDolarRates() {
     localStorage.setItem('dolar_rates', JSON.stringify({ data: dolarRates, ts: Date.now() }));
     _applyAutoTasa();
   } catch(e) { console.warn('Cotización no disponible:', e); }
+}
+
+async function refreshDolarRates() {
+  localStorage.removeItem('dolar_rates');
+  const btn = document.getElementById('btn-refresh-dolar');
+  if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+  await fetchDolarRates();
+  if (btn) { btn.disabled = false; btn.textContent = '🔄'; }
+  const lb = document.getElementById('label-blue');
+  const lo = document.getElementById('label-oficial');
+  if (lb && dolarRates) lb.textContent = `Blue ($${dolarRates.blue.toLocaleString('es-AR')})`;
+  if (lo && dolarRates) lo.textContent = `Oficial ($${dolarRates.oficial.toLocaleString('es-AR')})`;
 }
 
 function _applyAutoTasa() {
