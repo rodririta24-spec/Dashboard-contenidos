@@ -2610,7 +2610,7 @@ async function fetchDolarRates() {
 function _applyAutoTasa() {
   if (tipoTasa === 'blue'    && dolarRates) tasaDeCambio = dolarRates.blue;
   if (tipoTasa === 'oficial' && dolarRates) tasaDeCambio = dolarRates.oficial;
-  if (allData.length && document.getElementById('chart-monetizacion')) renderGraficos();
+  if (allData.length && document.getElementById('chart-monetizacion')) renderCharts();
 }
 
 function onTasaChange(val) {
@@ -2650,7 +2650,7 @@ async function saveValorProyecto() {
     document.getElementById('edit-valor-panel').style.display = 'none';
     const btn = document.getElementById('btn-edit-valor');
     if (btn) btn.textContent = '✏️ ' + (val ? formatRevenue(val) + ' ' + t('chart.porProy') : t('chart.configValor'));
-    if (document.getElementById('chart-monetizacion')) renderGraficos();
+    if (document.getElementById('chart-monetizacion')) renderCharts();
     showToast(t('toast.valorSaved'));
   } catch(e) {
     console.error('Error saving revenue config:', e);
@@ -3951,7 +3951,7 @@ let _lastTableroDocs = null;
         if (d.tipoTasa         != null) tipoTasa         = d.tipoTasa;
       }
       fetchDolarRates();
-      if (allData.length && document.getElementById('chart-monetizacion')) renderGraficos();
+      if (allData.length && document.getElementById('chart-monetizacion')) renderCharts();
     }).catch(function() { fetchDolarRates(); });
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(function(){});
     firebase.auth().onAuthStateChanged(function(user) {
